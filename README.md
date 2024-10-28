@@ -6,7 +6,6 @@ This repository supports the manuscript "Identification of Digital Twins to Guid
 ### i) Source Data
 - **AllPatients.mat**: A struct containing de-identified clinical measurements of example patients.
 - **Sims folder**: Stores optimization results from supercomputer nodes.
-- **Movies folder**: Contains simulated TriSeg geometries.
 
 ### ii) Functions
 - **Driver.m**: Runs a patient simulation. Several boolean options control execution, such as running pre-saved simulations, assigning modifier values, and printing/plotting options.
