@@ -1,32 +1,30 @@
-% Runs the simulation and gathers all outputs.
-% Can be a function, but is a script. whatever.
-init_vec = cell2mat(struct2cell(init))';
+%% Script Summary:
+% This script is primarily designed to solve differential equations using the function dXdT.m with
+% ode15s, and to collect the corresponding simulation output.
+% A cost function is embedded in the last several sections of the script .
+% Created by Andrew Meyer and Feng Gu
+% Last modified: 10/29/2024
 
-%% Simulations
-lastwarn('', '');
+%% Solve differential equations via ode solver
 T = params.T;
 HR = params.HR;
+init_vec = cell2mat(struct2cell(init))';
 M = eye(length(init_vec));
 M(1,1) = 0;
 M(2,2) = 0;
 M(3,3) = 0;
 M(4,4) = 0;
-options = odeset('Mass', M, 'RelTol', 1e-7, 'AbsTol', 1e-7, 'MaxStep', T/30); % Keep other options unchanged
-% Turn warnings off temporarily
-warning('off', 'all');
-maxTime = 10; % Maximum time, assuming your odeWithTimeout function has a time limit parameter
-lastwarn('', ''); % Clear the warning
-[~, ~] = odeWithTimeout(@dXdT, [0, 20*T], init_vec, options, params, maxTime); % Run the ODE solver
-[lastWarnMsg, ~] = lastwarn; % Get warning information
-WON = false;
-if isempty(lastWarnMsg)
-    WON = true; % If no warnings, update success status
-end
+options = odeset('Mass', M, 'RelTol', 1e-7, 'AbsTol', 1e-7, 'MaxStep', T/30); % set options for ode
+warning('off', 'all'); % turn off warnings message on the command window
+maxTime = 10; % maximum time for odeWithTimeout function
+lastwarn('', ''); % clear the warning
 initialStep = 1; % Initial step size
 success = false; % Flag for success status
+
+% 11/06/2024 clean up codes
 while true
     options.InitialStep = initialStep;  % Update the initial step size
-    [t, y] = odeWithTimeout(@dXdT, [0, 20*T], init_vec, options, params, maxTime); % Run the ODE solver
+    [t, y] = odeWithTimeout(@dXdT, [0, 20*T], init_vec, options, params, maxTime); % run the ODE solver
     [lastWarnMsg, lastWarnId] = lastwarn; % Get warning information
     if isempty(lastWarnMsg)
         success = true; % If no warnings, update success status
@@ -49,20 +47,8 @@ else
 end
 t = lastTwoPeriodsT-lastTwoPeriodsT(1);
 y = lastTwoPeriodsY;
-% for circle = 1:100
-% if  ~isempty(lastwarn)
-%     lastwarn('', '');
-%     [~,y] = odeWithTimeout(@dXdT, [0, 20*T], y(end,:), options, params, maxTime);
-% end
-% end
-% [t,y] = odeWithTimeout(@dXdT, [0, 2*T], y(end,:), options, params, maxTime);
-% [~,y]  = ode15s(@dXdT,[0 20*T],init_vec,options, params);
-% [t,y]  = ode15s(@dXdT,[0 2*T], y(end,:),options, params);
-%%
-if ~isempty(lastwarn)
-    error('ODEslover is not stable')
-end
-% Outputs
+
+%% Outputs
 output_no = 50;
 o = zeros(output_no,length(t));
 for i = 1:length(t)
