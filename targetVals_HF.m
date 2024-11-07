@@ -3,6 +3,7 @@ function [Windowdate, targetVals, inputVals, mods] = targetVals_HF(data,Patient_
 % Retrieves data for input and target, with default modifiers assigned.
 % No processing decisions—only data collection.
 % Sets direct measurements from Echo, RHC, and Cardiac MRI as targets.
+
 % Created by Feng Gu
 % Last modified: 10/29/2024
 

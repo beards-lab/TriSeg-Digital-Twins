@@ -5,8 +5,7 @@ function [Error,params, init] = estimParams(targets, inputs, mods, modifiers)
 % Outputs of this function include a structure of parameters used in the model and initial
 % conditions for the ODE solver (dXdT.m function).
 
-% Created by EB Randall, modified by Filip Jezek,
-% Andrew Meyer, and Feng Gu
+% Created by EB Randall, modified by Filip Jezek, Andrew Meyer, and Feng Gu
 % Last modified: 10/29/2024
 
 % Inputs: 

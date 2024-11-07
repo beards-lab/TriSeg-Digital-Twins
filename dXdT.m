@@ -1,18 +1,20 @@
 function [dxdt, outputs] = dXdT(t,x, params)     
+%% Function Purpose:
+% This function contains the differential equations that the ODE solver calls.
 
+% Created by EB Randall, modified by Filip Jezek, Andrew Meyer, and Feng Gu
+% Last modified: 10/29/2024
 
-% Sarcomere length parameters (um)
-Lsref   = 2;
-Lsc0    = 1.51; 
-Lse_iso = 0.04;
-    
-% Sarcomere length shortening velocity (um s^(-1))
-v_max = 3.5; % 7 / 2
-% Passive stress steepness parameter (dimensionless) 
-gamma = 7.5; 
+% Inputs: 
+% t       - Time vector for simulation
+% x       - Variables to be solved
+% params  - Structure of parameter values
+
+% Outputs: 
+% dxdt    - Differential equations
+% outputs - Simulation outputs
 
 %% Variables 
-
 % TriSeg geometries (cm)
 xm_LV  = x(1); 
 xm_SEP = x(2); 
@@ -36,9 +38,6 @@ V_RA = x(15); % right atrium
 
 %% Activation function 
 T = 60/params.HR; 
-% TS_v = k_TS * T;  % Time to maximal systole 
-% TR_v = k_TR * T; % Time from maximal systole to relaxation 
-
 % Ventricular activation function 
 tc_v = mod(t,T) / T; % Fraction of cardiac cycle elapsed (t mod T)
 if tc_v >= 0 && tc_v < params.tau_TS 
@@ -50,6 +49,15 @@ else
 end
 
 %% Heart model
+% Sarcomere length parameters (um)
+Lsref   = 2;
+Lsc0    = 1.51; 
+Lse_iso = 0.04;
+    
+% Sarcomere length shortening velocity (um s^(-1))
+v_max = 3.5; % 7 / 2
+% Passive stress steepness parameter (dimensionless) 
+gamma = 7.5; 
 
 % Volume of spherical cap formed by midwall surface (mL)
 Vm_LV  = (pi / 6) * xm_LV  * (xm_LV^2  + 3 * ym^2); 
@@ -61,7 +69,6 @@ Am_LV  = pi * (xm_LV^2  + ym^2);
 Am_SEP = pi * (xm_SEP^2 + ym^2); 
 Am_RV  = pi * (xm_RV^2  + ym^2); 
 
-
 % Curvature of midwall surface (cm^(-1))
 Cm_LV  = 2 * xm_LV  / (xm_LV^2  + ym^2);
 Cm_SEP = 2 * xm_SEP / (xm_SEP^2 + ym^2);
@@ -72,15 +79,6 @@ z_LV  = 3 * Cm_LV  * params.Vw_LV  / (2 * Am_LV);
 z_SEP = 3 * Cm_SEP * params.Vw_SEP / (2 * Am_SEP); 
 z_RV  = 3 * Cm_RV  * params.Vw_RV  / (2 * Am_RV);
 
-% beta1 = asin(-ym*Cm_LV);
-% beta2 = asin(ym*abs(Cm_SEP)); % if septum curves into LV, radius will be negative, which will mess up calculations
-% alpha = asin(ym*Cm_RV); 
-% r_LV = ((-Cm_LV)^(-3) - 3*params.Vw_LV / (4*pi*(1+cos(beta1))))^(1/3);
-% r_SEP = ((abs(Cm_SEP))^(-3) - 3*params.Vw_SEP / (4*pi*(1-cos(beta2))))^(1/3);
-% r_RV = ((Cm_RV)^(-3) - 3*params.Vw_RV / (4*pi*(1+cos(alpha))))^(1/3); % FIXME: make if statement for if Cm_RV^-1 > xm_RV, since integral boiunds will change
-% H_LW = ((3*params.Vw_LV) / (2*pi*(1+cos(beta1))) + r_LV^3)^(1/3) - r_LV;
-% H_SW = ((3*params.Vw_SEP) / (2*pi*(1-cos(beta2))) + r_SEP^3)^(1/3) - r_SEP;
-% H_RW = ((3*params.Vw_RV) / (2*pi*(1+cos(alpha))) + r_RV^3)^(1/3) - r_RV;
 % Wall thickness (cm)
 theta_LV = asin(-ym*Cm_LV);
 theta_SEP = asin(ym*abs(Cm_SEP)); % if septum curves into LV, radius will be negative, which will mess up calculations
@@ -125,14 +123,15 @@ sigma_pas_RV  =  params.k_pas_RV * (Ls_RV/Lsc0 - 1)^gamma;
 % sigma_pas_SEP =  params.k_pas * (Ls_SEP/Lsc0 - 1)^gamma;
 % sigma_pas_RV  =  params.k_pas * (Ls_RV/Lsc0 - 1)^gamma;
 
-% Active stress . Cell model is state variable. If geometry model
-% bigger than cell model, positive stress. 
+% Active stress . 
+% Cell model is state variable. If geometry model bigger than cell model, positive stress. 
 sigma_act_LV  = params.k_act_LV * Y  * (Lsc_LV/Lsc0  - 1) * (Ls_LV/Lsc0  - Lsc_LV/Lsc0) ;
 sigma_act_SEP = params.k_act_LV * Y  * (Lsc_SEP/Lsc0 - 1) * (Ls_SEP/Lsc0 - Lsc_SEP/Lsc0);
 sigma_act_RV  = params.k_act_RV * Y  * (Lsc_RV/Lsc0  - 1) * (Ls_RV/Lsc0  - Lsc_RV/Lsc0);
 % sigma_act_LV  = params.k_act * Y  * (Lsc_LV/Lsc0  - 1) * (Ls_LV/Lsc0  - Lsc_LV/Lsc0) ;
 % sigma_act_SEP = params.k_act * Y  * (Lsc_SEP/Lsc0 - 1) * (Ls_SEP/Lsc0 - Lsc_SEP/Lsc0);
 % sigma_act_RV  = params.k_act * Y  * (Lsc_RV/Lsc0  - 1) * (Ls_RV/Lsc0  - Lsc_RV/Lsc0);
+
 % Total stress 
 sigma_LV  = sigma_act_LV  + sigma_pas_LV; 
 sigma_SEP = sigma_act_SEP + sigma_pas_SEP; 
@@ -159,13 +158,7 @@ Peri = exp(params.K_P*((V_RA+V_LA+V_LV+V_RV+params.Vw_LV+params.Vw_SEP+params.Vw
 % Ventricular pressure 
 P_LV = -2 * Tx_LV / ym + Peri; 
 P_RV = 2 * Tx_RV / ym+ Peri; 
-% if abs(P_LV-P_RV) < 1e-1
-%     if Tx_SEP < 0
-%         P_LV = P_RV+1e-1;
-%     else
-%         P_RV = P_LV+1e-1;
-%     end
-% end
+
 % Atria
 LAV0u = params.LAV0u; % mL. Unstressed volume in atria
 RAV0u = params.RAV0u; % mL. Unstressed volume in atria
@@ -185,16 +178,10 @@ act = exp( -(tc_a/sigma_a)^2 );
 P_LA  = 2.0*(LEp*(V_LA-LAV0u) + LEa*act*(V_LA-LAV0u) + Pc*exp((V_LA-LAV0c)/LAV1c)) + Peri ;
 P_RA  = 1.0*(REp*(V_RA-RAV0u) + REa*act*(V_RA-RAV0u) + Pc*exp((V_RA-RAV0c)/RAV1c)) + Peri; % Coefficients here?
 
-
-
 %% Lumped circulatory model 
-
 % Venous Pressure (mmHg)
 P_SV = V_SV / params.C_SV; 
 P_PV = V_PV / params.C_PV; 
-
-
-% Valve flows (mL s^(-1))
 
 % Atrial flows (mL / s)
 QIN_LA = (P_PV - P_LA)/params.R_PV;
@@ -207,6 +194,7 @@ if(P_LA >= P_LV)
 else
     QIN_LV = (P_LA - P_LV) / params.R_m_c;
 end
+
 % Tricuspid
 if(P_RA >= P_RV)
     QIN_RV = (P_RA - P_RV) / params.R_t_o;
@@ -214,13 +202,11 @@ else
     QIN_RV = (P_RA - P_RV) / params.R_t_c;
 end 
 
-% Semilunar Flows (mL / s)
-% Aortic
-
-% valve closed completely
+% Aortic valve closed completely
 QOUT_LV = 0;
 Q_SA = (V_SA - params.C_SA*P_SV)/(params.C_SA*(params.R_SA + params.R_tSA));
 P_SA = (params.R_SA*V_SA + params.C_SA*P_SV*params.R_tSA)/(params.C_SA*(params.R_SA + params.R_tSA));  % Pressure equal flow * resistence
+% Aortic valve closed with regurgitation
 if(P_LV >= P_SA) 
     % Forward Flow
     QOUT_LV = -(params.R_SA*V_SA - params.C_SA*P_LV*params.R_SA - params.C_SA*P_LV*params.R_tSA + params.C_SA*P_SV*params.R_tSA)/(params.C_SA*(params.R_SA*params.R_a_o + params.R_SA*params.R_tSA + params.R_a_o*params.R_tSA));
@@ -233,12 +219,11 @@ elseif params.R_a_c < Inf
     P_SA = (params.R_SA*params.R_a_c*V_SA + params.C_SA*P_LV*params.R_SA*params.R_tSA + params.C_SA*P_SV*params.R_a_c*params.R_tSA)/(params.C_SA*(params.R_SA*params.R_a_c + params.R_SA*params.R_tSA + params.R_a_c*params.R_tSA));
 end
 
-% Pulmonary
-% valve closed completely
+% Pulmonary valve closed completely
 QOUT_RV = 0; 
 Q_PA = (V_PA - params.C_PA*P_PV)/(params.C_PA*(params.R_PA + params.R_tPA)); 
 P_PA = (params.R_PA*V_PA + params.C_PA*P_PV*params.R_tPA)/(params.C_PA*(params.R_PA + params.R_tPA)); 
-
+% Pulmonary valve closed with regurgitation
 if (P_RV >= P_PA)
     % Forward Flow
     QOUT_RV = -(params.R_PA*V_PA - params.C_PA*P_RV*params.R_PA + params.C_PA*P_PV*params.R_tPA - params.C_PA*P_RV*params.R_tPA)/(params.C_PA*(params.R_PA*params.R_p_o + params.R_PA*params.R_tPA + params.R_p_o*params.R_tPA)); 
@@ -250,8 +235,6 @@ elseif params.R_p_c < Inf
     Q_PA = (params.R_p_c*V_PA - params.C_PA*P_PV*params.R_p_c - params.C_PA*P_PV*params.R_tPA + params.C_PA*P_RV*params.R_tPA)/(params.C_PA*(params.R_PA*params.R_p_c + params.R_PA*params.R_tPA + params.R_p_c*params.R_tPA)); 
     P_PA = (params.R_PA*params.R_p_c*V_PA + params.C_PA*P_RV*params.R_PA*params.R_tPA + params.C_PA*P_PV*params.R_p_c*params.R_tPA)/(params.C_PA*(params.R_PA*params.R_p_c + params.R_PA*params.R_tPA + params.R_p_c*params.R_tPA));
 end 
-
-
 
 % Equations 1 - 4 (AE's)
 eq1  = -V_LV - 0.5 * params.Vw_LV - 0.5 * params.Vw_SEP + Vm_SEP - Vm_LV; 

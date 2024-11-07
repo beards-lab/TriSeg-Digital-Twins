@@ -1,26 +1,23 @@
 function f = calc_xm_ym(x,Lsref,Vw,Amref,SL,V_LV,V_RV,fix_AmrefRV,dias)
+%% Function Purpose:
+% This function computes specific geometrical initial conditions of end-diastolic and
+% end-systolic states, considering the balance of volume and sarcomere length via fsolve.
 
-    %{ 
+% Created by EB Randall, modified by Andrew Meyer, and Feng Gu
+% Last modified: 10/29/2024
 
-x,Lsref, Vw, Amref, SL_d, LVEDV, RVEDV,use_AmrefRV
+% Inputs:
+%   Lsref      - Reference sarcomere length parameter
+%   SL         - Sarcomere length
+%   Vw_i       - Wall volume parameters
+%   Amref_i    - Midwall surface area reference parameters
+%   V_LV       - Left ventricular volume
+%   V_RV       - Right ventricular volume
+%   fix_AmrefRV - Use Amref_RV as an input and not as a state
+%   dias       - 1 for diastolic state, other for systolic state
 
-
-    This function is used in the calculation of the initial estimates for
-    the xm and ym values.  
-
-    Inputs: 
-    x       - vector of states 
-    inputs - container with 
-        Lsref   - reference sarcomere length parameter 
-        SL      - sarcomere length 
-        Vw_i    - wall volume parameters 
-        Amref_i - midwall surface area reference parameters 
-        
-        V_LV    - left ventricular volume 
-        V_RV    - right ventricular volume 
-    fix_AmrefRV - Use Amref_RV as an input and not as a state
-
-    %}
+% Solutions:
+%   x          - xm, ym
 
     %% Parameters 
     % Wall volumes (mL)
@@ -32,37 +29,29 @@ x,Lsref, Vw, Amref, SL_d, LVEDV, RVEDV,use_AmrefRV
     Amref_LV  = Amref(1); 
     Amref_SEP = Amref(2); 
     
-    % use assigned Amref_RV value      
+    % Use assigned Amref_RV value      
     if fix_AmrefRV                       
         Amref_RV = Amref(3);        
     end 
         
     
     %% States
-    
-%     x = exp(x); 
-    
     % Displacements (cm) 
     xm_LV    = x(1); 
     xm_SEP   = x(2); 
     xm_RV    = x(3);
-    ym       = x(4); 
-    
+    ym       = x(4);     
     % Use Amref_RV as a state
     if ~fix_AmrefRV
         Amref_RV = x(5); 
     end 
     
-    %% Equations
-    
+    %% Equations    
     % Midwall surface volume (mL)
     Vm_LV  = (pi / 6) * xm_LV  * (xm_LV^2  + 3 * ym^2); 
     Vm_SEP = (pi / 6) * xm_SEP * (xm_SEP^2 + 3 * ym^2); 
     Vm_RV  = (pi / 6) * xm_RV  * (xm_RV^2  + 3 * ym^2); 
-
-    % NOTHING BELOW HERE EXECUTES FOR SYSTOLE, AS WE AREN'T MATCHING
-    % SARCOMERE LENGTHS
-    
+  
     % Midwall surface area (cm^2)
     Am_LV  = pi * (xm_LV^2  + ym^2);
     Am_SEP = pi * (xm_SEP^2  + ym^2);
@@ -88,7 +77,6 @@ x,Lsref, Vw, Amref, SL_d, LVEDV, RVEDV,use_AmrefRV
     Ls_SEP = Lsref * exp(eps_SEP); 
     Ls_RV  = Lsref * exp(eps_RV); 
     
-    %% Outputs    
     % Balance sarcomere lengths in end-diastole
     if dias
         residuals = [Ls_LV  - SL;  % SL and Lsref are now both 2 µm
@@ -101,7 +89,5 @@ x,Lsref, Vw, Amref, SL_d, LVEDV, RVEDV,use_AmrefRV
                       V_RV + 0.5 * Vw_RV + 0.5 * Vw_SEP + Vm_SEP - Vm_RV];
     end 
     
-    % For fmincon, we need to return a scalar value that represents the
-    % objective. A common choice is the sum of squared residuals.
     f = sum(residuals.^2); 
     end 

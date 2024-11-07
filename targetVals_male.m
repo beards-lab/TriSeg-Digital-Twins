@@ -1,9 +1,14 @@
 function [targetVals, inputVals, mods] = targetVals_male()
-% get input and target values
+%% Function Purpose:
+% Generate target and input data for a healthy 20-year-old male based on literature.
+
+% Created by Andrew Meyer
+% Last modified: 10/29/2024
+
+%% General Information
 inputVals.Sex = 1;
 inputVals.HR = 60; 
 inputVals.TBV = 5700; % 200 pounds 6 feets
-
 targetVals.SBP = 123.5;
 targetVals.DBP = 75.7;
 
@@ -37,11 +42,11 @@ targetVals.RVSP = 20.8; % sPAP. don't give sPAP target, use this ...
 targetVals.PADP = 8.8; % not sex-specific
 targetVals.PCWP = 8; % not sex-specific 
 inputVals.CVP = 4; %
-% targetVals.CO = 5.76; %
+% targetVals.CO = 5.76; 
 
 % Feng dichrotic notch relationships
-targetVals.DNA = 1.32*((targetVals.SBP-targetVals.DBP)/3+targetVals.DBP)-22.6; % Dicrotic Notch Aorta
-targetVals.DNP = 1.004*((targetVals.RVSP - targetVals.PADP) / 3 + targetVals.PADP)-0.5; % Dicrotic Notch Pulmonary
+targetVals.DNA = 1.32*((targetVals.SBP-targetVals.DBP)/3+targetVals.DBP)-22.6; % dicrotic notch aorta
+targetVals.DNP = 1.004*((targetVals.RVSP - targetVals.PADP) / 3 + targetVals.PADP)-0.5; % dicrotic notch pulmonary
 
 inputVals.AVr = 1;
 inputVals.MVmg = 1;
@@ -51,8 +56,4 @@ inputVals.TVr = 1;
 inputVals.PVr = 1;
 inputVals.Pvpg = 0.5;
 mods = {'k_pas_LV','k_pas_RV','k_act_LV','k_act_RV','C_SA','C_PA','R_SA','R_PA','R_atria','R_m_o','Vw_LV','Vw_RV','LvSepR','R_tPA','R_tSA','K_P','B_P'};
-% mods = {'k_pas','k_act_LV','k_act_RV','C_SA','C_PA','R_SA','R_PA','R_atria','R_m_o','Vw_LV','Vw_SEP','Vw_RV','V_SV_s','LvSepR','V0u_coeff','V0c_coeff_LA','V0c_coeff_RA','R_tPA','R_tSA','K_P','B_P'};
-% mods = {'k_pas','k_act','C_SA','C_PA','R_SA','R_PA','R_atria','R_m_o','Vw_LV','Vw_RV','V_SV_s','LvSepR','V0u_coeff','V0c_coeff','R_tPA','R_tSA','K_P','B_P'};
-
-% mods = {'k_pas_LV','k_pas_RV','k_act','C_SA','C_PA','R_SA','R_PA','R_atria','R_m_o','Vw_LV','Vw_SEP','Vw_RV','V_SV_s','LvSepR','V0u_coeff','V0c_coeff','R_tPA','R_tSA','K_P','B_P'};
 

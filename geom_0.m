@@ -1,15 +1,13 @@
 function [Error,Amref, Vw, dimensions] = geom_0(LVEDV, RVEDV, left, use_Vw_LV, right, use_Vw_RV, LvSepR,inputs)
-% getting a better guess for Amref_RV instead of assuming RV is a sphere,
-% which it isn't. Will replace calculation of Amref_LV and Sep and well. 
+%% Function Purpose:
+% This function calculates the initial geometry of the heart, providing a better guess for Amref_RV 
+% instead of assuming the RV is a sphere, which it isn't. This function will also replace the 
+% calculation of Amref_LV and Sep as well.
 
-% This function will calculate the initial geometry of the heart. i'm not
-% sure how this will work with calc_xm_ym, I still don't understand that
-% function
+% Created by Andrew Meyer
+% Last modified: 10/29/2024
 
-% left and right hold the information that we know about the walls of the
-% left side (lw and sw) and the right side. can be wall volume or thickness
-
-%% initial spherical calculations (need LVEDV and wall thicknesses)
+%% Initial spherical calculations (need LVEDV and wall thicknesses)
 % LV lumen radius (cm)
 r_LV_and_SEP = (LVEDV * 3 / (4* pi))^(1/3); 
 if(~use_Vw_LV)
@@ -26,6 +24,7 @@ else
     H_LW_and_SW = (r_LV_and_SEP^3 + (3/(4*pi))*Vw_LV_and_SEP)^(1/3) - r_LV_and_SEP;
 end
 r_m_LV_and_SEP = ((1/2)*((r_LV_and_SEP + H_LW_and_SW)^3 + r_LV_and_SEP^3))^(1/3); % radius dividing Vw into shells of equal volume
+
 %% Set axial and radial axes based on LvSepR
 % Find a beta such that LvSepR is satisfied. This assumes midwall surface
 % is shared between LV and SEP
@@ -36,8 +35,6 @@ xm_LV = xm_SEP - 2*r_m_LV_and_SEP; % right of radial axis is defined to be negat
 
 Vm_SEP = (pi / 6) * xm_SEP * (xm_SEP^2 + 3 * ym^2); 
 SEP_CAP = Vm_SEP + 0.5 * Vw_SEP; % Volume of spherical cap of left heart to the left of the axial axis
-
-
 
 %% Right side
 syms h
@@ -68,7 +65,6 @@ if(~use_Vw_RV) % if you are calculating RV geometry based on H_RW
         k_pas_RV_est = right(2);
         sigma_pas = 2.1585e-4;
         syms xm_RV Vw_RV
-
         eq1 = abs(k_pas_RV_est - P_RV / ((-2/3 * ((3 * ((-2 * xm_RV) / (xm_RV^2 + ym^2)) * Vw_RV) / (2 * (pi * (xm_RV^2 + ym^2)))) * (1 + ((3 * ((-2 * xm_RV) / (xm_RV^2 + ym^2)) * Vw_RV) / (2 * (pi * (xm_RV^2 + ym^2))))^2 / 3 + ((3 * ((-2 * xm_RV) / (xm_RV^2 + ym^2)) * Vw_RV) / (2 * (pi * (xm_RV^2 + ym^2))))^4 / 5)) * sigma_pas))/100000;
         eq2 = abs(RVEDV - (pi / 6) * (xm_RV)  * (xm_RV^2  + 3 * ym^2) - 0.5 * Vw_RV - SEP_CAP);
         eq1_f = matlabFunction(eq1, 'Vars', [Vw_RV, xm_RV]);
@@ -127,14 +123,6 @@ else % if you are calculating RV geometry based on Vw_RV
     xm_RV = -ym^2 / h_RV;
     Error = NaN;
 end
-
-% if(~use_Vw_RV)
-%     r_m_RV = (xm_RV - h_RV) / 2; 
-%     %^ radius of RV spherical cap is c (x-coord of center) minus h_RV (distance of right point of whole RV sphere on axial axis) 
-%     delta_rw = 0.5 * (((H_RW^6 + 16*r_m_RV^6)^(1/2) + 4*r_m_RV^3)^(1/3) - (H_RW^2 / ((H_RW^6 + 16*r_m_RV^6)^(1/2) + 4*r_m_RV^3)^(1/3)) + H_RW - 2*r_m_RV);
-%     Vw_RV = (2 * pi / 3)*((2 * h_RV^2) / (h_RV^2 + ym^2))*((r_m_RV + delta_rw)^3 - (r_m_RV + delta_rw - H_RW)^3);
-% end
-
 
 %% Outputs
 Amref_LV  = pi * (xm_LV^2  + ym^2);

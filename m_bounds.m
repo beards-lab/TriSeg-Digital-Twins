@@ -1,4 +1,9 @@
 function [ub, lb] = m_bounds(mods)
+%% Function Purpose:
+% A simple function to set up boundary conditions for the optimizer.
+
+% Created by Andrew Meyer
+% Last modified: 10/29/2024
 ub = zeros(1,length(mods));
 lb = ub;
 pairs = dictionary('C_SA', {[0.1 10]}, ...
@@ -54,5 +59,4 @@ for i = 1:length(mods)
     lb(i) = bounds_i{1}(1);
     ub(i) = bounds_i{1}(2);
 end
-
 end

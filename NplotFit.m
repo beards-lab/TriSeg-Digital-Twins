@@ -1,11 +1,18 @@
-%8-panel figure -- include left pressures, right pressures, volumes, wall
-%thicknesses, left flows, right flows, and usual text output as well as
-%target matching text output. also outputs costs in descending order
+%% Script Summary:
+% This script generates a 6-panel figure for patients, including:
+% - Left pressures
+% - Right pressures
+% - Volumes
+% - Wall thicknesses
+% - Left flows
+% - Right flows
+% It also includes usual text output as well as target matching text output, and outputs costs in
+% descending order.
 
-figure(1);clf;
+% Created by Andrew Meyer and Feng Gu
+% Last modified: 10/29/2024
+
 trng = [t(1) t(end)];
-
-% bad implementation but working with strings is annoying in matlab
 if(isfield(targets,'CO'))
     plot_CO = targets.CO;
 else
@@ -21,12 +28,11 @@ if(~exist('total_cost','var'))
     total_cost = struct_pXX.output_vals.total_cost;
 end
 
-clf;
+figure(1); clf;
 tiles = tiledlayout(2,4);
 tiles.TileSpacing = 'compact';
 tiles.Padding = 'tight';
 set(gcf,'defaultLegendAutoUpdate','off','WindowState','maximized','Position', get(0, 'Screensize'));
-
 
 fig1 = nexttile;
 xlim(fig1,trng);ylim([0 1.2*max(P_LV)]);
@@ -35,10 +41,8 @@ plot(fig1,t, P_LV,'color',[0.6350 0.0780 0.1840], 'Linewidth', 2);
 plot(fig1,t,P_RV, 'color', [0 0.4470 0.7410], 'Linewidth', 2);
 plot(fig1,t, P_SA, 'color',[0.8500 0.5250 0.0980], 'Linewidth', 2);
 plot(fig1,t, P_PA,'color',[0.3010 0.7450 0.9330], 'Linewidth', 2);
-
 lgd = legend(fig1,'P_{LV}', 'P_{RV}', 'P_{SA}', 'P_{PA}');
 lgd.FontSize = 7;
-
 axPosition = get(fig1, 'Position');
 lgdPosition = get(lgd, 'Position');
 set(gca, 'FontSize', 12);
@@ -47,7 +51,6 @@ lgdPosition(1) = axPosition(1) + axPosition(3) - lgdPosition(3) - 0.003;
 lgdPosition(2) = axPosition(2) + axPosition(4) - lgdPosition(4) - 0.033;
 set(lgd, 'Position', lgdPosition);
 xlabel(fig1,'time (s)','FontSize',12); ylabel(fig1,'BP (mmHg)','FontSize',12);
-
 plot(fig1,trng, [targets.SBP, targets.SBP],'color',[0.8500 0.5250 0.0980 0.5],'LineStyle','--','Linewidth', 2);
 plot(fig1,trng, [targets.DBP, targets.DBP],'color',[0.8500 0.5250 0.0980 0.5],'LineStyle','--','Linewidth', 2);
 if(isfield(targets,'PASP'))
@@ -60,7 +63,6 @@ end
 if(isfield(targets,'LVESP'))
     plot(fig1,trng, [targets.LVESP, targets.LVESP],'color',[0.6350 0.0780 0.1840 0.5],'LineStyle','--', 'Linewidth', 2);
 end
-
 if isfield(targets, 'RVEDP')
     plot(fig1,trng, [targets.RVEDP, targets.RVEDP],'color', [0 0.2470 0.8410 0.5],'LineStyle','--','Linewidth', 2);
 end
@@ -94,12 +96,8 @@ end
 if(isfield(targets,'RAPmean'))
     plot(fig2,trng, [targets.RAPmean, targets.RAPmean],'color',[0.4940 0.1840 0.5560 0.5],'LineStyle','--','Linewidth', 2);
 end
-
-
 lgd = legend(fig2,'P_{SV}', 'P_{PV}', 'P_{RA}', 'P_{LA}');
-
 lgd.FontSize = 7;
-
 axPosition = get(fig2, 'Position');
 lgdPosition = get(lgd, 'Position');
 set(gca, 'FontSize', 12);
@@ -108,6 +106,7 @@ lgdPosition(1) = axPosition(1) + axPosition(3) - lgdPosition(3) - 0.016;
 lgdPosition(2) = axPosition(2) + axPosition(4) - lgdPosition(4) - 0.03;
 set(lgd, 'Position', lgdPosition);
 xlabel(fig2,'time (s)','FontSize',12); ylabel(fig2,'BP (mmHg)','FontSize',12);
+
 fig3 = nexttile;
 hold(fig3,"on");
 plot(fig3,t, V_LV, 'color', [0.6350 0.0780 0.1840],'Linewidth', 2);
@@ -115,7 +114,6 @@ plot(fig3,t, V_RV, 'color', [0 0.4470 0.7410],'Linewidth', 2);
 plot(fig3,t, V_LA, 'color', [0.8500 0.3250 0.0980],'Linewidth', 2);
 plot(fig3,t, V_RA, 'color', [0.4940 0.1840 0.5560],'Linewidth', 2);
 xlim(fig3,trng); ylim([0 1.3*max([V_LV;V_RV;V_LA;V_RA])]);
-
 if(isfield(targets,'LVEDV'))
     plot(fig3,trng, [targets.LVEDV, targets.LVEDV],'color',[0.6350 0.0780 0.1840 0.5],'LineStyle','--','Linewidth', 2);
 end
@@ -132,9 +130,7 @@ if(isfield(targets,'LAVmax'))
     plot(fig3,trng, [targets.LAVmax, targets.LAVmax],'color',[0.8500 0.3250 0.0980 0.5],'LineStyle','--','Linewidth', 2);
 end
 lgd = legend(fig3,'LV', 'RV', 'LA', 'RA');
-
 lgd.FontSize = 7;
-
 axPosition = get(fig3, 'Position');
 lgdPosition = get(lgd, 'Position');
 set(gca, 'FontSize', 12);
@@ -159,7 +155,6 @@ xlim(fig5,trng); ylim([1.02*min([Q_t*60;Q_p*60]) 1.2*max([Q_t*60;Q_p*60])])
 hold(fig5,"on");
 lgd = legend(fig5,'Tricuspid Valve', 'Pulmonary Valve');
 lgd.FontSize = 7;
-
 axPosition = get(fig5, 'Position');
 lgdPosition = get(lgd, 'Position');
 set(gca, 'FontSize', 12);
@@ -172,17 +167,14 @@ set(gca, "YTick", [-5e4 -4e4 -3e4 -2e4 -1e4 0 1e4 2e4 3e4 4e4 5e4]);
 set(gca().YAxis, 'Exponent', 4);
 set(gca, 'TickLength', [0.040 0.040])
 box off
+
 fig6 = nexttile(6);
 plot(fig6,t, Q_m*60, t, Q_a*60, 'Linewidth', 2);  xlim(fig6,trng);ylim([1.02*min([Q_m*60;Q_a*60]) 1.2*max([Q_m*60;Q_a*60])]);
 EAr_text = "E/A: " + num2str(round(E_A_ratio,2)) + " (" + targets.EAr+")";
 EAr_text_position = [0.296, 0.27, 0.4, 0.195];
-
 annotation('textbox', EAr_text_position, 'String', EAr_text, 'FitBoxToText', 'on','FontWeight','bold','FontSize',10,'BackgroundColor',"w");
-
 lgd = legend(fig6,'Mitral Valve', 'Aortic Valve');
-
 lgd.FontSize = 7;
-
 axPosition = get(fig6, 'Position');
 lgdPosition = get(lgd, 'Position');
 set(gca, 'FontSize', 12);
@@ -202,10 +194,6 @@ plot(fig7,t, d_LW,'color', [0.6350 0.0780 0.1840],'LineWidth',2);
 plot(fig7,t, d_SW, 'color', [0.4660 0.6740 0.1880],'LineWidth',2);
 plot(fig7,t, d_RW, 'color', [0 0.4470 0.7410],'LineWidth',2);
 xlim(fig7,trng); ylim([0 1.2*max([d_SW;d_LW;d_RW;targets.Hed_LW;targets.Hed_SW])])
-
-
-
-
 if(isfield(targets,'Hed_LW'))
     plot(fig7,trng, [targets.Hed_LW, targets.Hed_LW],'color',[0.6350 0.0780 0.1840 0.5],'LineStyle','--','LineWidth',2);
     plot(fig7,trng, [o_vals.Hed_LW, o_vals.Hed_LW],'color',[0.6350 0.0780 0.1840 0.5],'LineStyle','-','LineWidth',2);
@@ -220,7 +208,6 @@ if(isfield(targets,'Hed_RW'))
 end
 lgd = legend(fig7,'LV', 'Septum', 'RV');
 lgd.FontSize = 7;
-
 axPosition = get(fig7, 'Position');
 lgdPosition = get(lgd, 'Position');
 set(gca, 'FontSize', 12);
@@ -230,29 +217,19 @@ lgdPosition(2) = axPosition(2) + axPosition(4) - lgdPosition(4) - 0.020;
 set(lgd, 'Position', lgdPosition);
 xlabel(fig7,'time (s)','FontSize',12); ylabel(fig7,'Thickness (cm)','FontSize',12);
 
-
 figtext = nexttile(4, [2 1]);
-
-% targetsfn = fieldnames(targets);
-% inputsfn = fieldnames(inputs);
-% cost = zeros(1, length(targetsfn));
 text_position = [-0.2 0.95];
 text(figtext,0.1,text_position(2),string(sprintf('PATIENT %i  WINDOW%i',PatID,ModelWin)) + newline,"FontWeight","bold","FontSize",12);
 text_spacing = -0.033;
-% age = floor(years(mean([patients(PatID).snapshots(ModelWin).MRIDate patients(PatID).snapshots(ModelWin).TTEDate...
-%     patients(PatID).snapshots(ModelWin).RHCDate])-patients(PatID).snapshots(ModelWin).Birthday));
-% H = patients(PatID).snapshots(ModelWin).Height;
-% WT = patients(PatID).snapshots(ModelWin).Weight;
+
 if Print_cost == 1
     text_position(2) = text_position(2) + text_spacing;
     text(figtext, 0.1, text_position(2),string(sprintf('\t\t\t\tTOTAL COST: ¥%1.2f',total_cost)) + newline,"FontWeight","bold","FontSize",12);
-    % sort costed targets highest to lowest, then output as such
+    % Sort costed targets highest to lowest, then output as such
     itemized_costs = zeros(1,length(targetsfn));
     for i = 1:length(itemized_costs)
         itemized_costs(i) = (o_vals.(targetsfn{i}) - targets.(targetsfn{i}))^2 /c.(targetsfn{i})^2 *w.(targetsfn{i})*EX;
-        % itemized_costs(i)  = (o_vals.(targetsfn{i}) - targets.(targetsfn{i}))^2 * w.(targetsfn{i});
     end
-    % FIXME hack, super inefficient
     temp = sort(itemized_costs,'descend');
     i_decreasing_costs = zeros(1,length(temp));
     for i = 1:length(temp)
@@ -540,33 +517,5 @@ if isfield(targets,"TVmg")
     text_valves = string(sprintf('TVmg = %1.2f mmHg (%1.2f mmHg)',o_vals.TVmg,targets.TVmg));
     text(figtext, text_position(1), text_position(2) + text_spacing, text_valves, "FontWeight","bold",'FontSize', 12);
 end
-
-% text_targets = string(sprintf('         TOTAL COST: $%1.2f',total_cost)) + newline;
-%% this part is good but probably doesn't mean anything except for ourselves show preconditioning instead
-% sort costed targets highest to lowest, then output as such
-% itemized_costs = zeros(1,length(targetsfn));
-% for i = 1:length(itemized_costs)
-%     itemized_costs(i) = (o_vals.(targetsfn{i}) - targets.(targetsfn{i}))^2 /c.(targetsfn{i})^2 *w.(targetsfn{i})*EX;
-%     % itemized_costs(i)  = (o_vals.(targetsfn{i}) - targets.(targetsfn{i}))^2 * w.(targetsfn{i});
-% end
-% % FIXME hack, super inefficient
-% temp = sort(itemized_costs,'descend');
-% i_decreasing_costs = zeros(1,length(temp));
-% for i = 1:length(temp)
-%     i_decreasing_costs(i) = find(itemized_costs == temp(i));
-% end
-%
-% for i = 1:length(i_decreasing_costs)
-%     i_itemized_costs = i_decreasing_costs(i);
-%     text_position(2) = text_position(2) + text_spacing;
-%     text(figtext,text_position(1),text_position(2), ...
-%         string(sprintf('%i) %s: %1.2f (%1.2f)   %1.0f%% ($%1.2f)', ...
-%         i, targetsfn{i_itemized_costs}, o_vals.(targetsfn{i_itemized_costs}), ...
-%         targets.(targetsfn{i_itemized_costs}), o_vals.(targetsfn{i_itemized_costs})/targets.(targetsfn{i_itemized_costs})*100 - 100, ...
-%         itemized_costs(i_itemized_costs))) + newline,'FontSize', 12,'Interpreter','none');
-%
-% end
-
-
 
 axis(figtext,"off");
