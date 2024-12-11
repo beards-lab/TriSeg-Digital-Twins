@@ -170,7 +170,8 @@ box off
 
 fig6 = nexttile(6);
 plot(fig6,t, Q_m*60, t, Q_a*60, 'Linewidth', 2);  xlim(fig6,trng);ylim([1.02*min([Q_m*60;Q_a*60]) 1.2*max([Q_m*60;Q_a*60])]);
-EAr_text = "E/A: " + num2str(round(E_A_ratio,2)) + " (" + targets.EAr+")";
+EAr_text = "E/A: " + num2str(round(E_A_ratio,2))...
+    % + " (" + targets.EAr+")";
 EAr_text_position = [0.296, 0.27, 0.4, 0.195];
 annotation('textbox', EAr_text_position, 'String', EAr_text, 'FitBoxToText', 'on','FontWeight','bold','FontSize',10,'BackgroundColor',"w");
 lgd = legend(fig6,'Mitral Valve', 'Aortic Valve');
@@ -219,7 +220,11 @@ xlabel(fig7,'time (s)','FontSize',12); ylabel(fig7,'Thickness (cm)','FontSize',1
 
 figtext = nexttile(4, [2 1]);
 text_position = [-0.2 0.95];
-text(figtext,0.1,text_position(2),string(sprintf('PATIENT %i  WINDOW%i',PatID,ModelWin)) + newline,"FontWeight","bold","FontSize",12);
+if exist('ModelWin', 'var')
+    text(figtext,0.1,text_position(2),string(sprintf('PATIENT %i  WINDOW%i',PatID,ModelWin)) + newline,"FontWeight","bold","FontSize",12);
+else
+    text(figtext,0.1,text_position(2),string(sprintf('PATIENT %i',PatID)) + newline,"FontWeight","bold","FontSize",12);
+end
 text_spacing = -0.033;
 
 if Print_cost == 1
@@ -457,7 +462,7 @@ else
     text(figtext,text_position(1),text_position(2),string(Pre.Notes{PatID}) ,"FontWeight","bold","FontSize",12);
 end
 
-if isfield(targets,"MVr")
+if isfield(targets,"MVr") && exist('patients','var')
     text_position(2) = text_position(2) + text_spacing;
     if length(patients(PatID).snapshots(ModelWin).MVr_str) >30
         description = patients(PatID).snapshots(ModelWin).MVr_str(1:7);
@@ -467,7 +472,7 @@ if isfield(targets,"MVr")
     text_valves = string(sprintf('RF of MV = %1.2f%% (',o_vals.RF_m))+description+")";
     text(figtext, text_position(1), text_position(2) + text_spacing, text_valves, "FontWeight","bold",'FontSize', 12);
 end
-if isfield(targets,"AVr")
+if isfield(targets,"AVr") && exist('patients','var')
     text_position(2) = text_position(2) + text_spacing;
     if length(patients(PatID).snapshots(ModelWin).AVr_str) >30
         description = patients(PatID).snapshots(ModelWin).AVr_str(1:7);
@@ -477,7 +482,7 @@ if isfield(targets,"AVr")
     text_valves = string(sprintf('RF of AV = %1.2f%% (',o_vals.RF_a))+description+")";
     text(figtext, text_position(1), text_position(2) + text_spacing, text_valves, "FontWeight","bold",'FontSize', 12);
 end
-if isfield(targets,"TVr")
+if isfield(targets,"TVr") && exist('patients','var')
     text_position(2) = text_position(2) + text_spacing;
     if length(patients(PatID).snapshots(ModelWin).TVr_str) >30
         description = patients(PatID).snapshots(ModelWin).TVr_str(1:7);
@@ -487,7 +492,7 @@ if isfield(targets,"TVr")
     text_valves = string(sprintf('RF of TV = %1.2f%% (',o_vals.RF_t))+description+")";
     text(figtext, text_position(1), text_position(2) + text_spacing, text_valves, "FontWeight","bold",'FontSize', 12);
 end
-if isfield(targets,"PVr")
+if isfield(targets,"PVr") && exist('patients','var')
     text_position(2) = text_position(2) + text_spacing;
     if length(patients(PatID).snapshots(ModelWin).PVr_str) >30
         description = patients(PatID).snapshots(ModelWin).PVr_str(1:7);
@@ -497,22 +502,22 @@ if isfield(targets,"PVr")
     text_valves = string(sprintf('RF of PV = %1.2f%% (',o_vals.RF_p))+description+")";
     text(figtext, text_position(1), text_position(2) + text_spacing, text_valves, "FontWeight","bold",'FontSize', 12);
 end
-if isfield(targets,"AVpg")
+if isfield(targets,"AVpg") && exist('patients','var')
     text_position(2) = text_position(2) + text_spacing;
     text_valves = string(sprintf('AVpg = %1.2f mmHg (%1.2f mmHg)',o_vals.AVpg,targets.AVpg));
     text(figtext, text_position(1), text_position(2) + text_spacing, text_valves, "FontWeight","bold",'FontSize', 12);
 end
-if isfield(targets,"PVpg")
+if isfield(targets,"PVpg") && exist('patients','var')
     text_position(2) = text_position(2) + text_spacing;
     text_valves = string(sprintf('PVpg = %1.2f mmHg (%1.2f mmHg)',o_vals.PVpg,targets.PVpg));
     text(figtext, text_position(1), text_position(2) + text_spacing, text_valves, "FontWeight","bold",'FontSize', 12);
 end
-if isfield(targets,"MVmg")
+if isfield(targets,"MVmg") && exist('patients','var')
     text_position(2) = text_position(2) + text_spacing;
     text_valves = string(sprintf('MVmg = %1.2f mmHg (%1.2f mmHg)',o_vals.MVmg,targets.MVmg));
     text(figtext, text_position(1), text_position(2) + text_spacing, text_valves, "FontWeight","bold",'FontSize', 12);
 end
-if isfield(targets,"TVmg")
+if isfield(targets,"TVmg") && exist('patients','var')
     text_position(2) = text_position(2) + text_spacing;
     text_valves = string(sprintf('TVmg = %1.2f mmHg (%1.2f mmHg)',o_vals.TVmg,targets.TVmg));
     text(figtext, text_position(1), text_position(2) + text_spacing, text_valves, "FontWeight","bold",'FontSize', 12);

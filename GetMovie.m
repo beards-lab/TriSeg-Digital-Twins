@@ -77,8 +77,10 @@ if exist("GENDER",'var')
     else
         v = VideoWriter('TriSegMovingFemale.mp4', 'MPEG-4');
     end
-else
+elseif exist("ModelWin",'var')
     v = VideoWriter(sprintf('Movies/P_NO%dWindow%d',PatID,ModelWin), 'MPEG-4');
+else
+    v = VideoWriter(sprintf('UWMovies/P_NO%d',PatID), 'MPEG-4');
 end
 v.FrameRate = 40; % per second
 open(v);

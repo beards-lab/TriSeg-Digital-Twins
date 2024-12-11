@@ -1,0 +1,77 @@
+
+                            < M A T L A B (R) >
+                  Copyright 1984-2023 The MathWorks, Inc.
+                  R2023b (23.2.0.2365128) 64-bit (glnxa64)
+                              August 23, 2023
+
+ 
+To get started, type doc.
+For product information, visit www.mathworks.com.
+ 
+open sesame
+
+PATIENT_NO =
+
+    12
+
+
+JSL =
+
+    '/home/fenggu/matlabdata/17656203'
+
+
+myCluster = 
+
+ Local Cluster
+
+    Properties: 
+
+                   Profile: Processes
+                  Modified: false
+                      Host: gl3049
+                NumWorkers: 10
+                NumThreads: 1
+
+        JobStorageLocation: /home/fenggu/matlabdata/local_cluster_jobs/R2023b
+   RequiresOnlineLicensing: false
+   PreferredPoolNumWorkers: Inf
+
+    Associated Jobs: 
+
+            Number Pending: 0
+             Number Queued: 0
+            Number Running: 0
+           Number Finished: 0
+
+
+myCluster = 
+
+ Local Cluster
+
+    Properties: 
+
+                   Profile: Processes
+                  Modified: true
+                      Host: gl3049
+                NumWorkers: 10
+                NumThreads: 1
+
+        JobStorageLocation: /home/fenggu/matlabdata/17656203
+   RequiresOnlineLicensing: false
+   PreferredPoolNumWorkers: Inf
+
+    Associated Jobs: 
+
+            Number Pending: 0
+             Number Queued: 0
+            Number Running: 0
+           Number Finished: 0
+
+Starting parallel pool (parpool) using the 'Processes' profile ...
+Connected to parallel pool with 10 workers.
+{Unrecognized function or variable 'targetVals_UW'.
+
+Error in GL_Optim (line 55)
+[~,~,mods] = targetVals_UW(UWpatients,PATIENT_NO); % Get WINDOW
+} 
+Parallel pool using the 'Processes' profile is shutting down.

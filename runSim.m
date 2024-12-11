@@ -136,8 +136,8 @@ end_beat_i = find(t >= 1.02*T, 1) - 1; % index for end of one complete cardiac c
 if(length(Qm_maxima) == 2)
     if(Qm_maxima(1) < 0 || Qm_maxima(2) < 0)
         E_A_ratio = -100;
-    %elseif(find(Qm_wid .* Qm_prom < 100,1))
-     %   E_A_ratio = -100;
+        %elseif(find(Qm_wid .* Qm_prom < 100,1))
+        %   E_A_ratio = -100;
     else
         E_A_ratio = Qm_maxima(1) / Qm_maxima(2);
     end
@@ -148,8 +148,18 @@ elseif(length(Qm_maxima) > 2)
     assert(length(Qm_maxima) == 2, 'EAr bug 1 runSim');
     E_A_ratio = Qm_maxima(1) / Qm_maxima(2);
 else
-    E_A_ratio = -100; 
-    error('EAr bug 2 runSim');
+    dQm = gradient(Q_m, t);
+    [~,locsNeg] = findpeaks(-dQm,'MinPeakHeight',500);
+    [~,locsPos] = findpeaks(dQm);
+    [~,NegPeaklocs] = sort(-dQm(locsNeg),1,"descend");
+    [~,PosPeaklocs] = sort(dQm(locsPos),1,"descend");
+    if abs(sum(t(locsNeg(NegPeaklocs(1:2)))-t(locsPos(PosPeaklocs(1:2))))) > 0.4
+        NegPeaklocs = NegPeaklocs(1:2);
+    else
+        NegPeaklocs = NegPeaklocs(3:4);
+    end
+    lastIdx = find(t(locsPos)-max(t(locsNeg(NegPeaklocs)))<0,1,"last");
+    E_A_ratio = Qm_maxima(1)/Q_m(locsPos(lastIdx));
 end
 
 
@@ -474,18 +484,56 @@ g = [1, 2, 3, 4]; % grades: none, mild, moderate, severe.
 
 % Mitral
 gmt_MR = [0, 20, 40, 60];
+gmt_MS = [2.5, 3.75, 7.5, 12]; 
 % Aortic
 gmt_AR = [0, 20, 40, 60];
+gmt_AS = [2.25, 10, 30, 50];
 % Tricuspid
 gmt_TR = [0, 17.5, 35, 52.5];
 % Pulmonary
 gmt_PR = [0, 15, 30 ,45];
+gmt_PS = [0.67, 22, 50, 78]; % Peak pressure gradient
 
 % Interpret RF into grades
 o_vals.MVr = interp1(gmt_MR, g, RF_m, 'linear', 'extrap');
+o_vals.MS = interp1(gmt_MS, g, MPG_m, 'linear', 'extrap');
 o_vals.AVr = interp1(gmt_AR, g, RF_a, 'linear', 'extrap');
-o_vals.TVr = interp1(gmt_TR, g, RF_t, 'linear', 'extrap');
+o_vals.AS = interp1(gmt_AS, g, MPG_a, 'linear', 'extrap');
+o_vals.TVr = interp1(gmt_TR, g, RF_t, 'linear', 'extrap'); 
 o_vals.PVr = interp1(gmt_PR, g, RF_p, 'linear', 'extrap');
+o_vals.PS = interp1(gmt_PS, g, Peak_AG_p, 'linear', 'extrap');
+
+outputno = struct2array(o_vals);
+if any(~isreal(outputno))
+    error('bad guessing')
+end
+%% Implent
+[~,locsTSA] = max(P_SA);
+[~,locsTPA] = max(P_PA);
+if t(locsTSA) < T
+    T2maxPSA = t(locsTSA);
+else
+    T2maxPSA = t(locsTSA)-T;
+end
+% if T2maxPSA < 0.25*T||T2maxPSA > 0.5*T
+%     error('unreal uncondition')
+% end
+if t(locsTPA) < T
+    o_vals.T2maxPPA = t(locsTPA);
+else
+    o_vals.T2maxPPA = t(locsTPA)-T;
+end
+PAPm = trapz(t,P_PA)/(t(end)-t(1));
+
+if PAPm >=50
+    targets.T2maxPPA = 1.05*T2maxPSA;
+elseif PAPm >=35
+    targets.T2maxPPA = T2maxPSA;
+elseif PAPm >=20
+    targets.T2maxPPA = 0.95*T2maxPSA;
+else
+    targets.T2maxPPA = 0.9*T2maxPSA;
+end
 
 % Calibration and weighting
 % Since different targets have different ranges and units, which may unequally contribute to the
@@ -587,6 +635,7 @@ elseif inputs.Sex == 2
     c.tPLVmin = 0.55;
     c.RVEF = 60;
 end
+c.T2maxPPA = 0.25;
 
 % Weighting
 w = struct();
@@ -616,7 +665,7 @@ w.PCWP = wf2*0.3;
 w.PCWPmax = wf2*0.3;
 w.PCWPmin = wf2*0.3;
 wf3 = 250;% weights for 3rd sub figure
-w.LVEDV = wf3; w.LVESV = wf3*0.3;
+w.LVEDV = wf3/3; w.LVESV = wf3*0.3/3;
 w.LAVmax = wf3*0.1; w.LAVmin = wf3*0.1;
 w.RAVmax = wf3*0.1; w.RAVmin = wf3*0.1;
 w.RVEDV = wf3; w.RVESV = wf3*0.3;
@@ -624,14 +673,14 @@ w.RVEDV = wf3; w.RVESV = wf3*0.3;
 % Targets not plotted as waveformw
 w.EF = 6;
 w.RVEF = 6;
-w.CO = 88; % give CO a lucky number
+w.CO = 888; % give CO a lucky number
 if(isfield(targets,'EAr'))
     w.EAr = 88;
 end
 wt = 1.5; % use to adjust thickness and length
-w.Hed_LW = wt*25*0.3;
-w.Hed_SW = wt*25*0.3;
-w.Hed_RW = wt*25*0.3;
+w.Hed_LW = wt*25;
+w.Hed_SW = wt*25;
+w.Hed_RW = wt*25/10;
 w.LVIDd = wt*3;
 w.LVIDs = wt*3;
 w.RVIDd = wt*3;
@@ -642,6 +691,9 @@ w.MVmg = wg/5;
 w.AVpg = wg/25;
 w.TVmg = wg/5;
 w.PVpg = wg/25;
+w.MS = wg*25;
+w.AS = wg*25;
+w.PS = wg*25;
 
 % The following loop attempts to build a cost function for valve regurgitation. If the difference in
 % regurgitation grade is within one grade (e.g., 2.1 vs 2), it will have a small cost. However, if
@@ -783,6 +835,8 @@ if(isfield(targets,'RV_m'))
     w.RV_m = 100;
 end
 
+w.T2maxPPA = 2*wf3;
+
 % The following part calculates extra costs, referred to as "tax."
 % This ensures that simulation outputs remain within realistic bounds using a quartic function or
 % close to a constant. If the outputs exceed these bounds or off target, a high number is added to
@@ -814,7 +868,7 @@ if(cost_RV_m < 0)
     cost_RV_m = 0;
 end
 
-% Cost function
+%% Cost function
 cost = zeros(1, N);
 if ~exist('print_sim','var')
     print_sim = false;
@@ -837,93 +891,14 @@ else
 end
 total_cost = sum(cost) + tax;
 
-%% Eliminate out-of-bound parameters and save optimization results
-load AllPatients.mat
-% This part is used for kill out of bound params during optimazation
-if ~exist('GENDER', 'var')
-    height = patients(PatID).snapshots(ModelWin).Height;
-    weight = patients(PatID).snapshots(ModelWin).Weight;
-    BSA = sqrt((height * weight) / 3600);
-    NParams.C_SA = params.C_SA/BSA;
-    NParams.C_SV = params.C_SV/BSA;
-    NParams.C_PA = params.C_PA/BSA;
-    NParams.C_PV = params.C_PV/BSA;
-    % NParams.G_SA = 1/(params.R_SA*BSA);
-    % NParams.G_PA = 1/(params.R_PA*BSA);
-    % NParams.G_tSA = 1/(params.R_tSA*BSA);
-    % NParams.G_tPA = 1/(params.R_tPA*BSA);
-    NParams.k_act_LV = params.k_act_LV;
-    NParams.k_act_RV = params.k_act_RV;
-    NParams.k_pas_LV = params.k_pas_LV;
-    NParams.k_pas_RV = params.k_pas_RV;
-    NParams.Vw_LV = params.Vw_LV/BSA;
-    NParams.Vw_RV = params.Vw_RV/BSA;
-    NParams.Vw_SEP = params.Vw_SEP/BSA;
-    % NParams.RAV0u = params.RAV0u/BSA; NParams.LAV0u = params.RAV0u/BSA;
-    % NParams.RAV0c = params.RAV0c/BSA; NParams.LAV0c = params.RAV0c/BSA;
-    % NParams.G_SV = 1/(params.R_SV*BSA);
-    % NParams.G_PV = 1/(params.R_PV*BSA);
-    NParams.Vh0 = params.Vh0/BSA;NParams.K_P = params.K_P;NParams.B_P = params.B_P;
-    % NParams.G_t_o = 1/(params.R_t_o*BSA);
-    % NParams.G_t_c = 1/(params.R_t_c/BSA);
-    % NParams.G_p_o = 1/(params.R_p_o/BSA);
-    % NParams.G_p_c = 1/(params.R_p_c/BSA);
-    % NParams.G_m_o = 1/(params.R_m_o/BSA);
-    % NParams.G_m_c = 1/(params.R_m_c/BSA);
-    % NParams.G_a_o = 1/(params.R_a_o/BSA);
-    % NParams.G_a_c = 1/(params.R_a_c/BSA);
-    % NParams.V_SV_s = init.V_SV_s/BSA; NParams.V_SA_s = init.V_SA_s/BSA;
-    % NParams.V_PV_s = init.V_PV_s/BSA; NParams.V_PA_s = init.V_PA_s/BSA;
-    paramsname = fieldnames(NParams);
-    for j = 1:length(paramsname)
-        p = NParams.(paramsname{j});
-        load("standardnormalization.mat");
-        if inputs.Sex == 1
-            p = p/standardparamstable.(paramsname{j})(1);
-        elseif inputs.Sex ==2
-            p = p/standardparamstable.(paramsname{j})(2);
-        end
-        RNParams.(paramsname{j}) = p;
+paramsname = fieldnames(params);
+for j = 1:length(paramsname)
+    p = params.(paramsname{j});
+    if p <= 0 || ~isreal(p)
+        total_cost = inf;
     end
-
-    if ~isfield(targets,'LVEDP')
-        if  RNParams.k_pas_LV < 0.5
-            total_cost = 50000;
-        end
-    end
-    if ~isfield(targets,'RVEDP')
-        if  RNParams.k_pas_RV < 0.5
-            total_cost = 50000;
-        end
-    end
-    
-    % This part is mainly used for saving manually fitted results
-    output.mods = mods;
-    output.modifiers = modifiers;
-    output.params = params;
-    output.init = init;
-    output.targets = targets;
-    output.inputs = inputs;
-    save(sprintf('Sims/P_NO%dWindow%d.mat',PatID,ModelWin),"output");
-
-    FID = fopen(sprintf('Sims/P_NO%dWindow%d.txt',PatID,ModelWin), 'w');
-    for i = 1:length(targetsfn)
-        fprintf(FID,'%i) %s: %1.2f (%1.2f)\t %1.0f%% ($%1.2f)\n', i, targetsfn{i}, o_vals.(targetsfn{i}), targets.(targetsfn{i}), o_vals.(targetsfn{i})/(targets.(targetsfn{i})+0.00000001)*100 - 100, cost(i));
-    end
-    if(exist('cost_EA','var'))
-        tax = cost_Lsc + cost_EA; % add any extra costs that are independent of targets (i.e. constraints or something)
-        fprintf(FID,strcat("\nTax Lsc: $",num2str(cost_Lsc),"\nTax E/A Ratio: $",num2str(cost_EA),"\n"));
-    else
-        tax = cost_Lsc;
-        fprintf(FID,strcat("\nTax Lsc: $",num2str(cost_Lsc),"\n"));
-    end
-    fprintf(FID,'Total cost: $%1.2f \n\n', total_cost);
-    fclose(FID);
 end
 
-if print_sim
-    fprintf('Total cost: %1.2f \n\n', total_cost);
-end
 
 %% Function to kill inf loop of ode15s
 

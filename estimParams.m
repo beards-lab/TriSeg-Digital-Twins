@@ -48,8 +48,16 @@ PP_sys = P_SAs - P_SAd;
 CVP = inputData.CVP;
 
 % End-diastolic and end-systolic and volumes (mL) 
-LVESV = inputData.LVESV;                              
-LVEDV = inputData.LVEDV;   RVEDV = inputData.RVEDV;
+
+if(isfield(inputData,'LVEDV'))
+    LVEDV = inputData.LVEDV;
+end
+
+if(isfield(inputData,'LVESV'))
+    LVESV = inputData.LVESV;
+end
+     
+RVEDV = inputData.RVEDV;
 
 RAVmin = inputData.RAVmin;
 if(isfield(inputData,'RAVmax'))
@@ -62,7 +70,7 @@ end
 
 % Cardiac output (mL s^(-1))
 if(isfield(inputData, 'CO'))
-    CO    = 1000 * inputData.CO / 60;
+    CO = 1000 * inputData.CO / 60;
     SV = 60 * CO / HR; 
 else % this branch should only be executed for canonical male/female
     SV = LVEDV - LVESV; 
@@ -225,7 +233,7 @@ x0_d = [xm_LV_d_0;
 % If RVEDV is a target, we will use Amref_RV as an input to calc_xm_ym, and not let it be adjusted
 % by fsolve
 if(isfield(targets, 'RVEDV')) 
-    assert(~any(ismember(mods,{'Amref_RV'})));
+    % assert(~any(ismember(mods,{'Amref_RV'})));
     fix_AmrefRV = 1; % use as an input
 else
     fix_AmrefRV = 0; % use as a state
@@ -281,7 +289,6 @@ Gamma_LV_d = -(2 / 3) * z_LV_d * (1 + (1 / 3) * z_LV_d^2 + (1 / 5) * z_LV_d^4);
 Gamma_RV_d = -(2 / 3) * z_RV_d * (1 + (1 / 3) * z_RV_d^2 + (1 / 5) * z_RV_d^4);
 
 % Passive stress scaling parameters
-% k_pas = inputData.PCWP / (Gamma_LV_d * sigma_pas_LV_d); 
 k_pas_LV = inputData.PCWP / (Gamma_LV_d * sigma_pas_LV_d); 
 if(isfield(inputData,'RVEDP'))&&(~(inputData.RVEDP == 0))
     k_pas_RV = inputData.RVEDP / (Gamma_RV_d * sigma_pas_RV_d);
@@ -289,6 +296,7 @@ else % should only execute for canonical male/female
     assert(isfield(inputData,'CVP'))
     k_pas_RV = CVP / (Gamma_RV_d * sigma_pas_RV_d);
 end
+k_pas = mean([k_pas_LV k_pas_RV]); 
 
 %% Approximations for initial displacements and Amref_rv in end-systole 
 % Apply the same calc_xm_ym.m function but in end-systole state
@@ -417,16 +425,21 @@ else
     R_a_c = 8e-2; % 4+ -> severe. 60% RF
 end
 
-if(~isfield(inputData, 'AVpg') || inputData.AVpg <= 4.5)
-    R_a_o = 7.3e-3; % 1 -> no stenosis. 2.25 mmHg
-elseif(inputData.AVpg < 20)
-    R_a_o = 3.4e-2; % 2 -> mild. 10 mmHg
-elseif(inputData.AVpg <= 40)
-    R_a_o = 1.15e-1; % 3 -> moderate. 30 mmHg
+if ~isfield(inputData, 'AVpg') && ~isfield(inputData, 'AS')
+    R_a_o = 7.3e-3; % No AVpg or AS information available
+elseif isfield(inputData, 'AVpg') && inputData.AVpg <= 4.5
+    R_a_o = 7.3e-3; % No stenosis based on AVpg <= 4.5
+elseif (isfield(inputData, 'AVpg') && inputData.AVpg < 20) || (isfield(inputData, 'AS') && inputData.AS <= 2)
+    R_a_o = 3.4e-2; % Mild stenosis
+elseif (isfield(inputData, 'AVpg') && inputData.AVpg <= 40) || (isfield(inputData, 'AS') && inputData.AS <= 3)
+    R_a_o = 1.15e-1; % Moderate stenosis
+elseif (isfield(inputData, 'AVpg') && inputData.AVpg > 40) || (isfield(inputData, 'AS') && inputData.AS <= 4)
+    R_a_o = 2.25e-1; % Severe stenosis
 else
-    % assert(inputData.AVpg <= 60 && inputData.AVpg > 40, 'Invalid AS Grade Input');
-    R_a_o = 2.25e-1; % 4+ -> severe. 50 mmHg
+    error('Invalid AS Grade Input'); % Unhandled condition
 end
+
+
 
 if(~isfield(inputData, 'MVr') || inputData.MVr < 1.5) % FIXME: should we have finite backflow resistance for grade 1.5?
     R_m_c = 65535; % 1 -> no regurgitation. 0% RF
@@ -442,16 +455,24 @@ else
     R_m_c = (1/0.60)*(R_SA + R_a_o);
 end
 
-if(~isfield(inputData, 'MVmg') || inputData.MVmg <= 2.5)
-    R_m_o = 1.6e-2; % 1 -> no stenosis. 2.5 mmHg.
-elseif(inputData.MVmg < 5)
-    R_m_o = 2.3e-2; % 2 -> mild. 3.75 mmHg
-elseif(inputData.MVmg <= 10)
-    R_m_o = 5.1e-2; % 3 -> moderate. 7.5 mmHg
+if ~isfield(inputData, 'MVmg') && ~isfield(inputData, 'MS')
+    R_m_o = 1.6e-2; % No MVmg or MS information available
+elseif isfield(inputData, 'MVmg') && inputData.MVmg <= 2.5
+    R_m_o = 1.6e-2; % No stenosis based on MVmg <= 2.5
+elseif (isfield(inputData, 'MVmg') && inputData.MVmg < 5) || (isfield(inputData, 'MS') && inputData.MS <= 2)
+    R_m_o = 2.3e-2; % Mild stenosis
+elseif (isfield(inputData, 'MVmg') && inputData.MVmg <= 10) || (isfield(inputData, 'MS') && inputData.MS <= 3)
+    R_m_o = 5.1e-2; % Moderate stenosis
+elseif (isfield(inputData, 'MVmg') && inputData.MVmg > 10) || (isfield(inputData, 'MS') && inputData.MS <= 4)
+    % Additional condition to validate MVmg range
+    if isfield(inputData, 'MVmg')
+        assert(inputData.MVmg <= 25 && inputData.MVmg > 10, 'Invalid MS Grade Input');
+    end
+    R_m_o = 9.4e-2; % Severe stenosis
 else
-    assert(inputData.MVmg <= 25 && inputData.MVmg > 10, 'Invalid MS Grade Input');
-    R_m_o = 9.4e-2; % 4+ -> severe. 12 mmHg
+    error('Unhandled MS Grade Input'); % Unhandled condition
 end
+
 
 if(~isfield(inputData, 'PVr') || inputData.PVr < 1.5)
     R_p_c = 5000; % 1 -> no regurgitation. 1% RF
@@ -464,16 +485,24 @@ else
     R_p_c = 5e-2; % 4+ -> severe. 45% RF
 end
 
-if(~isfield(inputData, 'PVpg') || inputData.PVpg <= 5)
-    R_p_o = 1.3e-3; % 1 -> no stenosis. 0.67 mmHg
-elseif(inputData.PVpg < 36)
-    R_p_o = 5.85e-2; % 2 -> mild. 22 mmHg
-elseif(inputData.PVpg <= 64)
-    R_p_o = 1.7e-1; % 3 -> moderate. 50 mmHg
+if ~isfield(inputData, 'PVpg') && ~isfield(inputData, 'PS')
+    R_p_o = 1.3e-3; % No PVpg or PS information available
+elseif isfield(inputData, 'PVpg') && inputData.PVpg <= 5
+    R_p_o = 1.3e-3; % No stenosis based on PVpg <= 5
+elseif (isfield(inputData, 'PVpg') && inputData.PVpg < 36) || (isfield(inputData, 'PS') && inputData.PS <= 2)
+    R_p_o = 5.85e-2; % Mild stenosis
+elseif (isfield(inputData, 'PVpg') && inputData.PVpg <= 64) || (isfield(inputData, 'PS') && inputData.PS <= 3)
+    R_p_o = 1.7e-1; % Moderate stenosis
+elseif (isfield(inputData, 'PVpg') && inputData.PVpg > 64) || (isfield(inputData, 'PS') && inputData.PS <= 4)
+    % Additional condition to validate PVpg range
+    if isfield(inputData, 'PVpg')
+        assert(inputData.PVpg <= 85 && inputData.PVpg > 64, 'Invalid PS Grade Input');
+    end
+    R_p_o = 3.82e-1; % Severe stenosis
 else
-    assert(inputData.PVpg <= 85 && inputData.PVpg > 64, 'Invalid PS Grade Input');
-    R_p_o = 3.82e-1; % 4+ -> severe. 78 mmHg
+    error('Unhandled PS Grade Input'); % Unhandled condition
 end
+
 
 if(~isfield(inputData, 'TVr') || inputData.TVr < 1.5)
     R_t_c = 65535; % 1 -> no regurgitation. 0% RF
@@ -530,7 +559,16 @@ params.C_PA = C_PA; params.C_PV = C_PV;
 params.R_SA  = R_SA; 
 params.R_tSA = 0.08; 
 params.R_PA  = R_PA; 
-params.R_tPA = 0.01; 
+if inputData.Hed_RW >= 0.8
+    params.R_tPA = 0.12; 
+elseif inputData.Hed_RW >= 0.6
+    params.R_tPA = 0.08; 
+elseif inputData.Hed_RW >= 0.4
+    params.R_tPA = 0.04; 
+else
+    params.R_tPA = 0.01; 
+end
+
 params.R_Veins = 0.040; 
 params.R_SV = params.R_Veins; 
 params.R_PV = params.R_Veins; 
@@ -545,9 +583,9 @@ params.R_a_o = R_a_o;
 params.R_a_c = R_a_c;
     
 % Force scaling factors (unitless) 
-% params.k_pas = k_pas; 
-params.k_pas_LV = k_pas_LV;
-params.k_pas_RV = k_pas_RV;
+params.k_pas = k_pas; 
+% params.k_pas_LV = k_pas_LV;
+% params.k_pas_RV = k_pas_RV;
 % params.k_act = k_act;  
 params.k_act_LV = k_act_LV; 
 params.k_act_RV = k_act_RV; 

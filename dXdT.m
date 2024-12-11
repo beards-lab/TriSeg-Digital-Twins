@@ -116,12 +116,12 @@ Ls_SEP = Lsref * exp(eps_SEP);
 Ls_RV  = Lsref * exp(eps_RV); 
 
 % Passive stress  
-sigma_pas_LV  =  params.k_pas_LV * (Ls_LV/Lsc0 - 1)^gamma;
-sigma_pas_SEP =  params.k_pas_LV * (Ls_SEP/Lsc0 - 1)^gamma;
-sigma_pas_RV  =  params.k_pas_RV * (Ls_RV/Lsc0 - 1)^gamma;
-% sigma_pas_LV  =  params.k_pas * (Ls_LV/Lsc0 - 1)^gamma;
-% sigma_pas_SEP =  params.k_pas * (Ls_SEP/Lsc0 - 1)^gamma;
-% sigma_pas_RV  =  params.k_pas * (Ls_RV/Lsc0 - 1)^gamma;
+% sigma_pas_LV  =  params.k_pas_LV * (Ls_LV/Lsc0 - 1)^gamma;
+% sigma_pas_SEP =  params.k_pas_LV * (Ls_SEP/Lsc0 - 1)^gamma;
+% sigma_pas_RV  =  params.k_pas_RV * (Ls_RV/Lsc0 - 1)^gamma;
+sigma_pas_LV  =  params.k_pas * (Ls_LV/Lsc0 - 1)^gamma;
+sigma_pas_SEP =  params.k_pas * (Ls_SEP/Lsc0 - 1)^gamma;
+sigma_pas_RV  =  params.k_pas * (Ls_RV/Lsc0 - 1)^gamma;
 
 % Active stress . 
 % Cell model is state variable. If geometry model bigger than cell model, positive stress. 
