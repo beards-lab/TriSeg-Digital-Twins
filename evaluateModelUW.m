@@ -1,4 +1,4 @@
-function total_cost = evaluateModelUW(modifiers,data,PatID)
+function total_cost = evaluateModelUW(modifiers,data,PATIENT_NO,Geo_Opt)
 %% Function Purpose:
 % This function is used to compute a cost function in runSim.m with new modifiers for patients
 % during optimization.
@@ -10,7 +10,8 @@ try
     % Evaluates the model during optimalization
     % print_sim = true;
     MRI_flag = 0;
-    [targets, inputs, mods] = targetVals_UW(data,PatID,MRI_flag);
+    Geo_Opt = Geo_Opt;
+    [targets, inputs, mods] = targetVals_UW(data,PATIENT_NO,MRI_flag);
     [INIparams, INIinit] = estiminiParams(targets,inputs);
     [params, init] = optParams(INIparams, INIinit, mods,modifiers,targets);
     params_no = struct2array(params);

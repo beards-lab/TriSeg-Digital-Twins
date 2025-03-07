@@ -522,7 +522,7 @@ o_vals.CVP = trapz(t,P_SV)/(t(end)-t(1));
 o_vals.CO = CO_RV;% CO from RHC report is RV
 o_vals.Hed_LW = d_LW(LVED_i);
 o_vals.Hed_SW = d_SW(LVED_i);
-if d_RW(RVED_i) > 0.9 && MRI_flag == 0
+if d_RW(RVED_i) > 0.95 && MRI_flag == 0
     error('unreal RV thickness')
 else
     o_vals.Hed_RW = d_RW(RVED_i);
@@ -1066,10 +1066,17 @@ if ~MRI_flag == 1
     [~, CI1] = predict(mdl0, max(P_PA), 'Prediction', 'observation', 'Alpha', 0.01);
     [~, CI2] = predict(mdl0, max(P_PA), 'Alpha', 5e-11);
     alpha = 1;
-cost_RVEF = 1e-2*((EF_RV*100 - CI2(1)).^4 .* (1 ./ (1 + exp(-alpha*2 * (EF_RV - CI2(1)/100)))) ...
+    if Geo_Opt == 1
+        cost_RVEF = 1e-2*((EF_RV*100 - CI2(1)).^4 .* (1 ./ (1 + exp(-alpha*2 * (EF_RV - CI2(1)/100)))) ...
         + 1 * (EF_RV*100 - CI2(1)).^4 .* (1 ./ (1 + exp(-alpha*2 * (EF_RV - CI1(1)/100)))) ...
         + 1 * (abs(EF_RV*100 - CI2(2))).^3.8 .* (1 ./ (1 + exp(-alpha * (CI2(2)/100 - EF_RV)))) ...
         + (abs(EF_RV*100 - CI2(2))).^3.8 .* (1 ./ (1 + exp(-alpha * (CI1(2)/100 - EF_RV)))));
+    else
+    cost_RVEF = 3e-5*((EF_RV*100 - CI2(1)).^4 .* (1 ./ (1 + exp(-alpha*2 * (EF_RV - CI2(1)/100)))) ...
+        + 1e-4 * (EF_RV*100 - CI2(1)).^4 .* (1 ./ (1 + exp(-alpha*2 * (EF_RV - CI1(1)/100)))) ...
+        + 1e-4 * (abs(EF_RV*100 - CI2(2))).^3.8 .* (1 ./ (1 + exp(-alpha * (CI2(2)/100 - EF_RV)))) ...
+        + (abs(EF_RV*100 - CI2(2))).^3.8 .* (1 ./ (1 + exp(-alpha * (CI1(2)/100 - EF_RV)))));
+    end
 else
     cost_RVEF = 0;
 end
@@ -1115,6 +1122,8 @@ for j = 1:length(paramsname)
     end
 end
 
+fprintf('RVEDV from measurements is %.2f and from simulation is %.2f\n', UWpatients.RVEDV(PATIENT_NO), o_vals.RVEDV);
+fprintf('TRW from measurements is %.2f and from simulation is %.2f\n',UWpatients.Hed_RW(PATIENT_NO),o_vals.Hed_RW);
 
 %% Function to kill inf loop of ode15s
 
