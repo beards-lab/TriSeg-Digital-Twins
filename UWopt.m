@@ -280,19 +280,20 @@ options_PS = optimoptions('patternsearch',...
     'MaxIterations', 5,...
     'UseCompletePoll', true,...
     'UseParallel', true);
-options_Fmin = optimset('Display','iter','TolFun', 1e-4, 'TolX', 1e-3, 'MaxIter',98); % reduce maxiter if you think it's getting stuck
+options_Fmin = optimset('Display','iter','TolFun', 1e-4, 'TolX', 1e-3, 'MaxIter',5); % reduce maxiter if you think it's getting stuck
 while true
 [m, ~, ~, ~] = patternsearch(@(m)evaluateModelUW(m,UWpatients,PATIENT_NO,Geo_Opt), m, [], [], [], [],lb, ub, [], options_PS);
-offsets = [-0.3 -0.2, -0.1, 0, 0.1, 0.2,0.3];
-PotentialFmincosts = zeros(length(offsets), 1);
-optimized_m = zeros(2, length(offsets));
-parfor i = 1:length(offsets)
+offsetsPercentage = [-0.3 -0.2, -0.1, 0, 0.1, 0.2,0.3];
+PotentialFmincosts = zeros(length(offsetsPercentage), 1);
+optimized_m = zeros(2, length(offsetsPercentage));
+parfor CoreNo = 1:length(offsetsPercentage)
     UWpatients_local = UWpatients_const.Value;
     m_fmin_initial = m(idx);
-    m_fmin_initial(2) = m_fmin_initial(2)+offsets(i)
+    offsetsValue = fminsearch(@(offsetsValue)evaluateModelVwRV(offsetsValue,m,UWpatients_local,PATIENT_NO,Geo_Opt,offsetsPercentage(CoreNo)), offsetsPercentage(CoreNo), options_Fmin);
+    m_fmin_initial(2) = m_fmin_initial(2)+offsetsValue
     m_fmin = fminsearch(@(m_fmin)evaluateModelSubset(m_fmin,m,idx,UWpatients_local,PATIENT_NO,Geo_Opt), m_fmin_initial, options_Fmin);
-    optimized_m(:, i) = m_fmin;
-    PotentialFmincosts(i) = evaluateModelSubset(m_fmin,m,idx,UWpatients_local,PATIENT_NO,Geo_Opt);
+    optimized_m(:, CoreNo) = m_fmin;
+    PotentialFmincosts(CoreNo) = evaluateModelSubset(m_fmin,m,idx,UWpatients_local,PATIENT_NO,Geo_Opt);
 end
 [~, bestIdx] = min(PotentialFmincosts);
 best_m = optimized_m(:, bestIdx);
@@ -379,13 +380,13 @@ Geo_Opt = 0;
 CurrentBestCost  = evaluateModelUW(m,UWpatients,PATIENT_NO,Geo_Opt);
 while true
 [m, fval, exitflag, output] = patternsearch(@(m)evaluateModelUW(m,UWpatients,PATIENT_NO,Geo_Opt), m, [], [], [], [],lb, ub, [], options_PS);
-offsets = [-0.3 -0.2, -0.1, 0, 0.1, 0.2,0.3];
-PotentialFmincosts = zeros(length(offsets), 1);
-optimized_m = zeros(length(mods), length(offsets));
-parfor i = 1:length(offsets)
+offsetsPercentage = [-0.3 -0.2, -0.1, 0, 0.1, 0.2,0.3];
+PotentialFmincosts = zeros(length(offsetsPercentage), 1);
+optimized_m = zeros(length(mods), length(offsetsPercentage));
+parfor i = 1:length(offsetsPercentage)
     UWpatients_local = UWpatients_const.Value;
     m_fmin_initial = m;
-    m_fmin_initial(idx(2)) = m_fmin_initial(idx(2))+offsets(i)
+    m_fmin_initial(idx(2)) = m_fmin_initial(idx(2))+offsetsPercentage(i)
     m_fmin = fminsearch(@(m_fmin)evaluateModelUW(m_fmin,UWpatients_local,PATIENT_NO,Geo_Opt), m_fmin_initial, options_Fmin);
     optimized_m(:, i) = m_fmin;
     PotentialFmincosts(i) = evaluateModelUW(m_fmin,UWpatients_local,PATIENT_NO,Geo_Opt);
