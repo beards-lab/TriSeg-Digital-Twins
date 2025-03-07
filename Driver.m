@@ -38,15 +38,15 @@ clear
 load AllPatients.mat
 secondslot = [17 79 206 256 288 325 352 355 360 361]; % patients with 2 3-month windows
 % Shuntlist = [34 41 54 61 83 116 183 231 268 278 312]; % patients with shunt
-for PatID = 35 % any number between 1 and 370, example patient in paper is 192
+for PATIENT_NO = 35 % any number between 1 and 370, example patient in paper is 192
     for ModelWin =  1
-        [Windowdate,targets, inputs, mods] = targetVals_HF(patients,PatID,ModelWin);
+        [Windowdate,targets, inputs, mods] = targetVals_HF(patients,PATIENT_NO,ModelWin);
         RUNOPT = 0; % 0 for simulation and 1 for optimazation
         if RUNOPT ==1
             HFopt; % optimize modifiers of HF patients
         end
         if RUNOPT == 0
-            load(sprintf('Sims/P_NO%dWindow%d.mat',PatID,ModelWin)); % load results from great lake clusters
+            load(sprintf('Sims/P_NO%dWindow%d.mat',PATIENT_NO,ModelWin)); % load results from great lake clusters
             modifiers = output.modifiers;
             [Error, params, init] = estimParams(targets,inputs,mods, modifiers);
             runSim;
@@ -86,10 +86,10 @@ predictedTLW = NaN(64,1);
 predictedTSW = NaN(64,1);
 %%
 tic
-for PatID =4
+for PATIENT_NO =4
     % try
         MRI_flag = 0;
-        [targets, inputs, mods] = targetVals_UW(UWpatients, PatID, MRI_flag);
+        [targets, inputs, mods] = targetVals_UW(UWpatients, PATIENT_NO, MRI_flag);
         [INIparams, INIinit] = estiminiParams(targets,inputs);
         RUNOPT = 1; % 0 for simulation and 1 for optimazation
         if RUNOPT ==1
@@ -97,11 +97,12 @@ for PatID =4
         end
         if RUNOPT == 0
             if MRI_flag == 1
-            load(sprintf('SimsUWwithCMRLVFromTTE/P_NO%d.mat',PatID)); % load results from great lake clusters
+            load(sprintf('SimsUWwithCMRLVFromTTE/P_NO%d.mat',PATIENT_NO)); % load results from great lake clusters
             else
-            load(sprintf('SimsUWwithoutCMR0/P_NO%d.mat',PatID)); % load results from great lake clusters
+            load(sprintf('SimsUWwithoutCMR0/P_NO%d.mat',PATIENT_NO)); % load results from great lake clusters
             end
             modifiers = output.m;
+            Geo_Opt = 0;
             % modifiers  = modifiers(1:end-1); 
             % modifiers(1) = 1.1418;
             % modifiers(2) = 1;
@@ -140,29 +141,29 @@ for PatID =4
             % GetMovie;
             % See_TriSeg;
             % pause(3);
-            KactRatio(PatID) = params.k_act_LV/params.k_act_RV;
-            KpasRatio(PatID) = params.k_pas_LV/params.k_pas_RV;
-            VwLV(PatID)  = params.Vw_LV;
-            VwRV(PatID)  = params.Vw_RV;
-            VwSEP(PatID)  = params.Vw_SEP;
-            MAP(PatID) = targets.SBP;
-            mPAP(PatID) = targets.PASP;
-            RAPmax(PatID) = targets.RAPmax;
-            PCWP(PatID) = targets.PCWP;
-            StressLV(PatID) = max(sigma_LV);
-            StressSEP(PatID) =max(sigma_SEP);
-            StressRV(PatID) = max(sigma_RV);
-            StressactLV(PatID) = max(sigma_act_LV);
-            StressactSEP(PatID) =max(sigma_act_SEP);
-            StressactRV(PatID) = max(sigma_act_RV);
-            StresspasLV(PatID) = sigma_pas_LV(1);
-            StresspasSEP(PatID) =sigma_pas_SEP(1);
-            StresspasRV(PatID) = sigma_pas_RV(1);
-            predictedRVEDV(PatID) = o_vals.RVEDV;
-            predictedRVESV(PatID) = o_vals.RVESV;
-            predictedTRW(PatID) = o_vals.Hed_RW;
-            predictedTLW(PatID) = o_vals.Hed_LW;
-            predictedTSW(PatID) = o_vals.Hed_SW;
+            KactRatio(PATIENT_NO) = params.k_act_LV/params.k_act_RV;
+            KpasRatio(PATIENT_NO) = params.k_pas_LV/params.k_pas_RV;
+            VwLV(PATIENT_NO)  = params.Vw_LV;
+            VwRV(PATIENT_NO)  = params.Vw_RV;
+            VwSEP(PATIENT_NO)  = params.Vw_SEP;
+            MAP(PATIENT_NO) = targets.SBP;
+            mPAP(PATIENT_NO) = targets.PASP;
+            RAPmax(PATIENT_NO) = targets.RAPmax;
+            PCWP(PATIENT_NO) = targets.PCWP;
+            StressLV(PATIENT_NO) = max(sigma_LV);
+            StressSEP(PATIENT_NO) =max(sigma_SEP);
+            StressRV(PATIENT_NO) = max(sigma_RV);
+            StressactLV(PATIENT_NO) = max(sigma_act_LV);
+            StressactSEP(PATIENT_NO) =max(sigma_act_SEP);
+            StressactRV(PATIENT_NO) = max(sigma_act_RV);
+            StresspasLV(PATIENT_NO) = sigma_pas_LV(1);
+            StresspasSEP(PATIENT_NO) =sigma_pas_SEP(1);
+            StresspasRV(PATIENT_NO) = sigma_pas_RV(1);
+            predictedRVEDV(PATIENT_NO) = o_vals.RVEDV;
+            predictedRVESV(PATIENT_NO) = o_vals.RVESV;
+            predictedTRW(PATIENT_NO) = o_vals.Hed_RW;
+            predictedTLW(PATIENT_NO) = o_vals.Hed_LW;
+            predictedTSW(PATIENT_NO) = o_vals.Hed_SW;
 
         end
     % catch ME
@@ -321,13 +322,13 @@ hold off;
 % save Kconstrain.mat X2_filtered X1_filtered Y1_filtered Y2_filtered X3_filtered Y3_filtered
 %% extract modifiers from cluster
 % clear
-for PatID = 1:64
-    if PatID < 10
-        matFilesDir = sprintf('Runs/p00%d/02-11/',PatID);
-    elseif PatID < 100
-        matFilesDir = sprintf('Runs/p0%d/02-11/',PatID);
+for PATIENT_NO = 1:64
+    if PATIENT_NO < 10
+        matFilesDir = sprintf('Runs/p00%d/02-11/',PATIENT_NO);
+    elseif PATIENT_NO < 100
+        matFilesDir = sprintf('Runs/p0%d/02-11/',PATIENT_NO);
     else
-        matFilesDir = sprintf('Runs/p%d/02-11/',PatID);
+        matFilesDir = sprintf('Runs/p%d/02-11/',PATIENT_NO);
     end
     matFiles = dir(fullfile(matFilesDir, '*.mat'));
     if ~isempty(matFiles)
@@ -336,7 +337,7 @@ for PatID = 1:64
         GAresult = load(matFilePath);
         output.modifiers = GAresult.output.m;
         output.mods = GAresult.output.mods;
-        save(sprintf('Sims_GA/P_NO%d.mat',PatID),"output");
+        save(sprintf('Sims_GA/P_NO%d.mat',PATIENT_NO),"output");
     end
 end
 %%
