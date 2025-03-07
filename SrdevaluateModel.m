@@ -7,14 +7,15 @@ function total_cost = SrdevaluateModel(modifiers,GENDER)
 
 try
     % Evaluates the model during optimalization
-    print_sim = true;
+    print_sim = false;
     if GENDER ==1
         [targets, inputs, mods] = targetVals_male();
     else
         [targets, inputs, mods] = targetVals_female();
     end
-    [~ ,params, init] = estimParams(targets,inputs,mods,modifiers);
-    runSim;
+        [INIparams, INIinit] = estiminiParams(targets,inputs);
+        [params, init] = optParams(INIparams, INIinit, mods,modifiers);
+        runSim;
     if total_cost<0
         total_cost = inf;
     end

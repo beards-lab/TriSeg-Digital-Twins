@@ -88,8 +88,8 @@ Lse_iso = 0.04;
 gamma = 7.5; % optimized from ex vivo model 
 
 % Percentage of cardiac cycle, this is coming from Guyton physiology textbook
-k_TS = 0.35; % Beginning of cardiac cycle to maximal systole  
-k_TR = 0.15; % Relaxation time fraction 
+k_TS = 0.275; % Beginning of cardiac cycle to maximal systole  
+k_TR = 0.125; % Relaxation time fraction 
 
 %% Calculate patient-specific TriSeg heart geometrical parameters
 
@@ -244,7 +244,8 @@ Amref = [Amref_LV,Amref_SEP];
 if fix_AmrefRV
     Amref = [Amref, Amref_RV];
 end
-
+% Amref = Amref.*1.5;
+% LVEDV = LVEDV*1.5;
 % Assume end-diastolic sarcomere length 
 SL_d    = 2; % µm 
 opts = optimoptions('fsolve','Display','none',...
@@ -296,7 +297,7 @@ else % should only execute for canonical male/female
     assert(isfield(inputData,'CVP'))
     k_pas_RV = CVP / (Gamma_RV_d * sigma_pas_RV_d);
 end
-k_pas = mean([k_pas_LV k_pas_RV]); 
+% k_pas = mean([k_pas_LV k_pas_RV]); 
 
 %% Approximations for initial displacements and Amref_rv in end-systole 
 % Apply the same calc_xm_ym.m function but in end-systole state
@@ -374,8 +375,8 @@ Vtot  = inputData.TBV;
 
 % Snapped at end diastole - maximal ventricles, minimal atria
 % Blood volume distribution values; sum total = 1.0 
-d_SA = .15;              d_PA = .05; 
-d_SV = .6;              d_PV = .2;
+d_SA = .15;              d_PA = .10; 
+d_SV = .65;              d_PV = .10;
 Vd = Vtot - LVEDV - RVEDV - RAVmin - LAVmin; % distributed volume (available for other compartments)
 
 % Total compartment volumes 
@@ -583,9 +584,9 @@ params.R_a_o = R_a_o;
 params.R_a_c = R_a_c;
     
 % Force scaling factors (unitless) 
-params.k_pas = k_pas; 
-% params.k_pas_LV = k_pas_LV;
-% params.k_pas_RV = k_pas_RV;
+% params.k_pas = k_pas; 
+params.k_pas_LV = k_pas_LV;
+params.k_pas_RV = k_pas_RV;
 % params.k_act = k_act;  
 params.k_act_LV = k_act_LV; 
 params.k_act_RV = k_act_RV; 
@@ -619,11 +620,6 @@ params.RAV1c = 5;
 params.LEp = 0.050;
 params.REp = params.LEp;
 params.Pc = 10;
-
-% Pericardium parameters
-params.Vh0 = LVEDV + RVEDV + LAVmin + RAVmin + Vw_LV + Vw_RV + Vw_SEP; % (mL)
-params.K_P = 1;
-params.B_P = 1;
 
 %% Parameter adjustment
 geom_pars = {'LvSepR'}; % LvSepR has already been adjusted before

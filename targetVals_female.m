@@ -22,17 +22,17 @@ inputVals.Hed_RW = 0.35; % just used to get inital guessing of parameters
 targetVals.LVEDV = 112; % b-SFFP, papillary muscles included in left ventricular volume
 targetVals.LVESV = 39; % b-SFFP, papillary muscles included in left ventricular volume
 % inputVals.LVESV = 39; % b-SFFP, exclude papillary muscles
-% targetVals.RVEDV = 122; % b-SFFP, papillary muscles included in right ventricular volume
-% targetVals.RVESV = 50; % b-SFFP, papillary muscles included in right ventricular volume
-inputVals.RVEDV = 150; % just used to get inital guessing of parameters
-inputVals.RVESV = 60; % just used to get inital guessing of parameters
+targetVals.RVEDV = 122; % b-SFFP, papillary muscles included in right ventricular volume
+targetVals.RVESV = 50; % b-SFFP, papillary muscles included in right ventricular volume
+% inputVals.RVEDV = 150; % just used to get inital guessing of parameters
+% inputVals.RVESV = 60; % just used to get inital guessing of parameters
 % inputVals.RVESV = 50; % b-SFFP, papillary muscles included in right ventricular volume
 targetVals.LAVmax = 64; % SFFP, Simpson6s method; LA appendage excluded
 targetVals.LAVmin = 22; % SFFP, Simpsonis method; LA appendage excluded
 targetVals.RAVmax = 53; % SFFP, Simpson's method; RA appendage excluded
 targetVals.RAVmin = 23; % SFFP, Simpson's method; RA appendage excluded 
-% targetVals.LV_m = 83; % b-SFFP, include papillary muscles. We should constrain septal:left thickness ratio so that it matches the ratio from echo
-% targetVals.RV_m = 48; % b-SFFP, include papillary muscles
+targetVals.LV_m = 83; % b-SFFP, include papillary muscles. We should constrain septal:left thickness ratio so that it matches the ratio from echo
+targetVals.RV_m = 48; % b-SFFP, include papillary muscles
 
 %% RHC measurements
 targetVals.RAPmax = 6; % not sex-specific 
@@ -57,5 +57,8 @@ inputVals.PVr = 1;
 inputVals.Pvpg = 0.5;
 
 % mods = {'k_pas_LV','k_pas_RV','k_act_LV','k_act_RV','C_SA','C_PA','R_SA','R_PA','R_atria','R_m_o','Vw_LV','Vw_RV','LvSepR','R_tPA','R_tSA','K_P','B_P'};
-mods = {'k_pas','k_act_LV','k_act_RV','C_SA','C_PA','R_SA','R_PA','R_atria','R_m_o','Vw_LV','Vw_RV','Amref_RV','LvSepR','R_tPA','R_tSA','K_P','B_P'};
-
+mods = {'k_pas','k_act',...
+    'C_SA','C_PA','R_SA','R_PA','R_veins','R_m_o',...
+    'Vw_LV','LvSepR','Vw_RV',... % LV Septum ratio provides information on both LV and RV, so it replaces Vw_SEP
+    'Amref_LV','Amref_RV',...
+    'R_tPA','R_tSA'};

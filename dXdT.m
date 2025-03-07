@@ -116,12 +116,12 @@ Ls_SEP = Lsref * exp(eps_SEP);
 Ls_RV  = Lsref * exp(eps_RV); 
 
 % Passive stress  
-% sigma_pas_LV  =  params.k_pas_LV * (Ls_LV/Lsc0 - 1)^gamma;
-% sigma_pas_SEP =  params.k_pas_LV * (Ls_SEP/Lsc0 - 1)^gamma;
-% sigma_pas_RV  =  params.k_pas_RV * (Ls_RV/Lsc0 - 1)^gamma;
-sigma_pas_LV  =  params.k_pas * (Ls_LV/Lsc0 - 1)^gamma;
-sigma_pas_SEP =  params.k_pas * (Ls_SEP/Lsc0 - 1)^gamma;
-sigma_pas_RV  =  params.k_pas * (Ls_RV/Lsc0 - 1)^gamma;
+sigma_pas_LV  =  params.k_pas_LV * (Ls_LV/Lsc0 - 1)^gamma;
+sigma_pas_SEP =  params.k_pas_LV * (Ls_SEP/Lsc0 - 1)^gamma;
+sigma_pas_RV  =  params.k_pas_RV * (Ls_RV/Lsc0 - 1)^gamma;
+% sigma_pas_LV  =  params.k_pas * (Ls_LV/Lsc0 - 1)^gamma;
+% sigma_pas_SEP =  params.k_pas * (Ls_SEP/Lsc0 - 1)^gamma;
+% sigma_pas_RV  =  params.k_pas * (Ls_RV/Lsc0 - 1)^gamma;
 
 % Active stress . 
 % Cell model is state variable. If geometry model bigger than cell model, positive stress. 
@@ -152,12 +152,11 @@ Ty_LV  = Tm_LV  * (xm_LV^2  - ym^2) / (xm_LV^2  + ym^2);
 Ty_SEP = Tm_SEP * (xm_SEP^2 - ym^2) / (xm_SEP^2 + ym^2); 
 Ty_RV  = Tm_RV  * (xm_RV^2  - ym^2) / (xm_RV^2  + ym^2);
 
-% pericardiac constrain
-Peri = exp(params.K_P*((V_RA+V_LA+V_LV+V_RV+params.Vw_LV+params.Vw_SEP+params.Vw_RV)/params.Vh0))+params.B_P;
+P_Peri = params.K1 * exp(0.4*((V_LV+V_RV+V_LA+V_RA)/params.Vh0-1));
 
 % Ventricular pressure 
-P_LV = -2 * Tx_LV / ym + Peri; 
-P_RV = 2 * Tx_RV / ym+ Peri; 
+P_LV = -2 * Tx_LV / ym + P_Peri; 
+P_RV = 2 * Tx_RV / ym + P_Peri; 
 
 % Atria
 LAV0u = params.LAV0u; % mL. Unstressed volume in atria
@@ -166,17 +165,27 @@ LAV0c = params.LAV0c; % ml. Threshold for exponential PV relation. put a modifie
 RAV0c = params.RAV0c;
 LAV1c = params.LAV1c; % mL. Volume constant dictating behavior of exponential. mkae dif
 RAV1c = params.RAV1c;
-Tact = +0.08; %.1
+Tact = -0.15; %.1
 tc_a = tc_v - Tact - 1*((tc_v-Tact)>(0.5));
 LEp = params.LEp ; % 0.050  passive <try this instead. make dif
 REp = params.REp;
 LEa = params.LEa; %active. 
 REa = params.REa;
 Pc = params.Pc; % 10 mmHg. Collagen
-sigma_a = .0975; %1.5 * 0.065. How wide gaussian is
-act = exp( -(tc_a/sigma_a)^2 );
-P_LA  = 2.0*(LEp*(V_LA-LAV0u) + LEa*act*(V_LA-LAV0u) + Pc*exp((V_LA-LAV0c)/LAV1c)) + Peri ;
-P_RA  = 1.0*(REp*(V_RA-RAV0u) + REa*act*(V_RA-RAV0u) + Pc*exp((V_RA-RAV0c)/RAV1c)) + Peri; % Coefficients here?
+% sigma_a = .0975; %1.5 * 0.065. How wide gaussian is
+if tc_a >= 0 && tc_a < 0.15 
+  act = 0.5*(1 - cos(pi*tc_a/0.15)); 
+elseif tc_a >= 0.15 && tc_a < 0.2 
+  act = 0.5*(1 + cos(pi*(tc_a - 0.15)/0.05)); 
+else
+  act = 0; 
+end
+% Pc = params.Pc; % 10 mmHg. Collagen
+% sigma_a = .0975; %1.5 * 0.065. How wide gaussian is
+% act = exp( -(tc_a/sigma_a)^2 );
+% act = exp( -(tc_a/sigma_a)^2 );
+P_LA  = 2.0*(LEp*(V_LA-LAV0u) + LEa*act*(V_LA-LAV0u) + Pc*exp((V_LA-LAV0c)/LAV1c)) + P_Peri;
+P_RA  = 1.0*(REp*(V_RA-RAV0u) + REa*act*(V_RA-RAV0u) + Pc*exp((V_RA-RAV0c)/RAV1c)) + P_Peri; 
 
 %% Lumped circulatory model 
 % Venous Pressure (mmHg)
@@ -269,10 +278,10 @@ outputs = [P_LV; P_SA; P_SV; P_RV; P_PA; P_PV;          % 1-6
         sigma_LV; sigma_SEP; sigma_RV;                  % 25-27
         QIN_LV; QOUT_LV; QIN_RV; QOUT_RV;               % 28-31
         Q_SA; Q_PA;                                     % 32-33
-        Tx_LV; Tx_SEP; Tx_RV;                           % 34-36
+        Tm_LV; Tm_SEP; Tm_RV;                           % 34-36
         Y;                                             % 37
         V_RA; V_LA; P_RA; P_LA; QIN_RA;                 % 38-42                                           
         H_LW; H_SW; H_RW;act;                           % 43-46
-        r_LV;r_SEP;r_RV;Peri];                            %47-50            
+        r_LV;r_SEP;r_RV];                            %47-49            
             
 end 

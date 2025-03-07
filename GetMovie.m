@@ -68,6 +68,7 @@ colorIndex_LV = min(colorIndex_LV, 256);
 colorIndex_SEP = min(colorIndex_SEP, 256);
 colorIndex_RV = min(colorIndex_RV, 256);
 colors_LV = cmap(colorIndex_LV, :);
+colorIndex_SEP(colorIndex_SEP <=0) = 1;
 colors_SEP = cmap(colorIndex_SEP, :);
 colors_RV = cmap(colorIndex_RV, :);
 % Set up a new video

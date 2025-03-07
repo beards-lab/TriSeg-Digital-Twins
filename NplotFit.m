@@ -32,7 +32,7 @@ figure(1); clf;
 tiles = tiledlayout(2,4);
 tiles.TileSpacing = 'compact';
 tiles.Padding = 'tight';
-set(gcf,'defaultLegendAutoUpdate','off','WindowState','maximized','Position', get(0, 'Screensize'));
+set(gcf,'defaultLegendAutoUpdate','off','Position', [150, 100, 1280, 720]);
 
 fig1 = nexttile;
 xlim(fig1,trng);ylim([0 1.2*max(P_LV)]);
@@ -139,10 +139,10 @@ lgdPosition(1) = axPosition(1) + axPosition(3) - lgdPosition(3) - 0.008;
 lgdPosition(2) = axPosition(2) + axPosition(4) - lgdPosition(4) - 0.023;
 set(lgd, 'Position', lgdPosition);
 if isfield(targets,"EF")
-    Vol_text = "CO: " + num2str(round(CO,2)) + " ("...
+    Vol_text = "CO: " + num2str(round(CO_RV,2)) + " ("...
         +targets.CO +") L/min"+ newline + "EF: " + num2str(round(EF_LV * 100)+2) + "% (" + targets.EF +"%)";
 elseif isfield(targets,"CO")
-    Vol_text = "CO: " + num2str(round(CO,2)) + " ("...
+    Vol_text = "CO: " + num2str(round(CO_RV,2)) + " ("...
         +targets.CO +") L/min"+ newline + "EF: " + num2str(round(EF_LV * 100)+2) + "% ";
 end
 Vol_text_position = [0.548, 0.78, 0.4, 0.205];
@@ -170,7 +170,7 @@ box off
 
 fig6 = nexttile(6);
 plot(fig6,t, Q_m*60, t, Q_a*60, 'Linewidth', 2);  xlim(fig6,trng);ylim([1.02*min([Q_m*60;Q_a*60]) 1.2*max([Q_m*60;Q_a*60])]);
-EAr_text = "E/A: " + num2str(round(E_A_ratio,2))...
+EAr_text = "E/A: " + num2str(round(E_A_ratio,2));...
     % + " (" + targets.EAr+")";
 EAr_text_position = [0.296, 0.27, 0.4, 0.195];
 annotation('textbox', EAr_text_position, 'String', EAr_text, 'FitBoxToText', 'on','FontWeight','bold','FontSize',10,'BackgroundColor',"w");
@@ -194,7 +194,7 @@ hold(fig7,"on");
 plot(fig7,t, d_LW,'color', [0.6350 0.0780 0.1840],'LineWidth',2);
 plot(fig7,t, d_SW, 'color', [0.4660 0.6740 0.1880],'LineWidth',2);
 plot(fig7,t, d_RW, 'color', [0 0.4470 0.7410],'LineWidth',2);
-xlim(fig7,trng); ylim([0 1.2*max([d_SW;d_LW;d_RW;targets.Hed_LW;targets.Hed_SW])])
+% xlim(fig7,trng); ylim([0 1.2*max([d_SW;d_LW;d_RW;targets.Hed_LW;targets.Hed_SW])])
 if(isfield(targets,'Hed_LW'))
     plot(fig7,trng, [targets.Hed_LW, targets.Hed_LW],'color',[0.6350 0.0780 0.1840 0.5],'LineStyle','--','LineWidth',2);
     plot(fig7,trng, [o_vals.Hed_LW, o_vals.Hed_LW],'color',[0.6350 0.0780 0.1840 0.5],'LineStyle','-','LineWidth',2);

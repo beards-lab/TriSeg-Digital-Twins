@@ -67,9 +67,45 @@ V_PA = y(:,12);
 V_PV = y(:,13);
 Vtot = sum(y(end,8:13)) ;
 
+% Clever way to aviod unreal uncondition
+Tunit = (0:0.001:t(end));
+interpLV = griddedInterpolant(t,V_LV,'pchip');
+V_LVnew = interpLV(Tunit)';
+new_min = 90;
+new_max = 150;
+currentLV_min = min(V_LVnew);
+currentLV_max = max(V_LVnew);
+V_LVnew_scaled = (V_LVnew - currentLV_min) * (new_max - new_min) / (currentLV_max - currentLV_min) + new_min;
+dVLV = diff(V_LVnew_scaled);
+LVpotentialPeriod = Tunit([false; abs(dVLV) < 0.02]);
+[~,LVjump] = maxk(diff(LVpotentialPeriod),3);
+LVjump = sort(LVjump);
+LVperiod = [LVpotentialPeriod(1) LVpotentialPeriod(LVjump(1)); LVpotentialPeriod(LVjump(1)+1) LVpotentialPeriod(LVjump(2));...
+    LVpotentialPeriod(LVjump(2)+1) LVpotentialPeriod(LVjump(3)); LVpotentialPeriod(LVjump(3)+1) LVpotentialPeriod(end)];
+TisorelaxLV = mean([LVperiod(2,2)-LVperiod(2,1) LVperiod(4,2)-LVperiod(4,1)]);
+TisocontractLV = LVperiod(3,2)-LVperiod(3,1);
+
+interpRV = griddedInterpolant(t,V_RV,'pchip');
+V_RVnew = interpRV(Tunit)';
+currentRV_min = min(V_RVnew);
+currentRV_max = max(V_RVnew);
+V_RVnew_scaled = (V_RVnew - currentRV_min) * (new_max - new_min) / (currentRV_max - currentRV_min) + new_min;
+dVRV = diff(V_RVnew_scaled);
+RVpotentialPeriod = Tunit([false; abs(dVRV) < 0.02]);
+[~,RVjump] = maxk(diff(RVpotentialPeriod),3);
+RVjump = sort(RVjump);
+RVperiod = [RVpotentialPeriod(1) RVpotentialPeriod(RVjump(1)); RVpotentialPeriod(RVjump(1)+1) RVpotentialPeriod(RVjump(2));...
+    RVpotentialPeriod(RVjump(2)+1) RVpotentialPeriod(RVjump(3)); RVpotentialPeriod(RVjump(3)+1) RVpotentialPeriod(end)];
+TisorelaxRV = mean([RVperiod(2,2)-RVperiod(2,1) RVperiod(4,2)-RVperiod(4,1)]);
+TisocontractRV = RVperiod(3,2)-RVperiod(3,1);
+
+if  TisocontractLV/T <0.025 || TisocontractRV/T <0.025
+    error("unreal condition")
+end
+
 %% Collect simulation outputs
 
-output_no = 50;
+output_no = 49;
 o = zeros(output_no,length(t)); % outputs from simulation
 for i = 1:length(t)
     [~,o(:,i)] = dXdT(t(i),y(i,:), params);
@@ -124,8 +160,42 @@ act = o(46, :)';
 r_LV = o(47, :)';
 r_SEP = o(48, :)';
 r_RV = o(49, :)';
-Pericardial = o(50, :)';
-
+%% Constrain k
+if ~MRI_flag == 1
+load UWcohort.mat
+load Kconstrain.mat
+mdl1 = fitlm(XKpasLV, YKpasRV); % passive
+new_x1 = sigma_pas_LV(1);
+new_y1 = sigma_pas_RV(1);
+if new_x1 <= 0 || new_y1 <= 0
+    error('negative passive property')
+end
+[~, pi1] = predict(mdl1, new_x1, 'Prediction', 'observation', 'Alpha', 0.05);
+[~, pi2] = predict(mdl1, new_x1, 'Alpha', 0.05);
+alpha1 = 1e10; % parameter control Smooth
+cost_pas = 1e-4*((new_y1 - pi2(1)).^4 .* (1 ./ (1 + exp(-alpha1 * (new_y1 - pi2(1))))) ...
+          + 0.5 * (new_y1 - pi2(1)).^4 .* (1 ./ (1 + exp(-alpha1 * (new_y1 - pi1(1))))) ...
+          + 0.5 * (new_y1 - pi2(2)).^4 .* (1 ./ (1 + exp(-alpha1 * (pi2(2) - new_y1)))) ...
+          + (new_y1 - pi2(2)).^4 .* (1 ./ (1 + exp(-alpha1 * (pi1(2) - new_y1)))));
+mdl2 = fitlm(XSPPASP, YKactLVRV);
+% new_x2 = targets.SBP;
+new_x3 = targets.PASP;
+% new_y2 = (max(sigma_act_LV)+max(sigma_act_SEP));
+new_y3 = max(sigma_act_RV);
+% [~, pi3] = predict(mdl2, new_x2, 'Prediction', 'observation', 'Alpha', 0.05);
+% [~, pi4] = predict(mdl2, new_x2, 'Alpha', 0.05);
+alpha2 = 1e-4; % parameter control Smooth
+% cost_act_1 = 1e-6*((new_y2 - pi4(1)).^4 .* (1 ./ (1 + exp(-alpha2 * (new_y2 - pi4(1))))) ...
+%           + 1 * (new_y2 - pi4(1)).^4 .* (1 ./ (1 + exp(-alpha2 * (new_y2 - pi3(1))))) ...
+%           + 1 * (new_y2 - pi4(2)).^4 .* (1 ./ (1 + exp(-alpha2 * (pi4(2) - new_y2)))) ...
+%           + (new_y2 - pi4(2)).^4 .* (1 ./ (1 + exp(-alpha2 * (pi3(2) - new_y2)))));
+[~, pi5] = predict(mdl2, new_x3, 'Prediction', 'observation', 'Alpha', 0.05);
+[~, pi6] = predict(mdl2, new_x3, 'Alpha', 5e-7);
+cost_act = 1e-7*((new_y3 - pi6(1)).^4 .* (1 ./ (1 + exp(-alpha2 * (new_y3 - pi6(1))))) ...
+          + 1 * (new_y3 - pi6(1)).^4 .* (1 ./ (1 + exp(-alpha2 * (new_y3 - pi5(1))))) ...
+          + 1 * (new_y3 - pi6(2)).^4 .* (1 ./ (1 + exp(-alpha2 * (pi6(2) - new_y3)))) ...
+          + (new_y3 - pi6(2)).^4 .* (1 ./ (1 + exp(-alpha2 * (pi5(2) - new_y3)))));
+end
 %% Simulation outputs requiring post-processing for cross-valve flow
 
 end_beat_i = find(t >= 1.02*T, 1) - 1; % index for end of one complete cardiac cycle, sometime flow shift and a wave is in the middle of the T
@@ -292,6 +362,7 @@ SV_RV_tot = max(V_RV) - min(V_RV);
 EF_LV = SV_LV_tot / max(V_LV); 
 EF_RV = SV_RV_tot / max(V_RV);
 
+
 CO = (SV_LV_pos-RVol_a) * HR / 1000; 
 CO_RV = (SV_RV_pos-RVol_p) * HR / 1000; 
 
@@ -430,7 +501,11 @@ o_vals.EAr = E_A_ratio;
 o_vals.LAVmax = max(V_LA);
 o_vals.LAVmin = min(V_LA);
 o_vals.SV_LA = SV_LA;
-o_vals.RVEDV = max(V_RV);
+if max(V_RV) >= 400 && MRI_flag == 0
+    error('Unreal RV Volume')
+else
+    o_vals.RVEDV = max(V_RV);
+end
 o_vals.RVESV = min(V_RV);
 o_vals.RVEF = EF_RV * 100;
 o_vals.RAVmax = max(V_RA);
@@ -447,7 +522,11 @@ o_vals.CVP = trapz(t,P_SV)/(t(end)-t(1));
 o_vals.CO = CO_RV;% CO from RHC report is RV
 o_vals.Hed_LW = d_LW(LVED_i);
 o_vals.Hed_SW = d_SW(LVED_i);
-o_vals.Hed_RW = d_RW(RVED_i); 
+if d_RW(RVED_i) > 0.9 && MRI_flag == 0
+    error('unreal RV thickness')
+else
+    o_vals.Hed_RW = d_RW(RVED_i);
+end
 o_vals.RVEDP = P_RV(RVEDP_i); % Activation function beginning coincides with start of pressure development on right side. Beginning of activation function is in the first few indices.
 o_vals.P_RV_min = min(P_RV);
 o_vals.LVEDP = P_LV(RVEDP_i);
@@ -472,6 +551,7 @@ o_vals.FakeLV_m = LV_m;
 o_vals.Vtot = Vtot;
 o_vals.DNA = DNA;
 o_vals.DNP = DNP;
+
 
 % RAP, PCWP a and v wave
 o_vals.RAP_a = RAP_a;
@@ -508,6 +588,61 @@ if any(~isreal(outputno))
     error('bad guessing')
 end
 %% Implent
+% Adding additional costs to enforce synchronization: 
+% The goal is to ensure synchronized contraction and relaxation 
+% among the left ventricle (LV), right ventricle (RV), and septum (SEP).
+% 3/3/2025 Maybe LV and RV are not synchronized in terms of contraction.
+% [~,locsMaxLsc_LV] = max(Lsc_LV);
+% [~,locsMaxLsc_RV] = max(Lsc_RV);
+% [~,locsMaxLsc_SEP] = max(Lsc_SEP);
+% if t(locsMaxLsc_LV) < T
+%     T2MaxLsc_LV = t(locsMaxLsc_LV);
+% else
+%     T2MaxLsc_LV = t(locsMaxLsc_LV)-T;
+% end
+% 
+% if t(locsMaxLsc_RV) < T
+%     T2MaxLsc_RV = t(locsMaxLsc_RV);
+% else
+%     T2MaxLsc_RV = t(locsMaxLsc_RV)-T;
+% end
+% 
+% if t(locsMaxLsc_SEP) < T
+%     T2MaxLsc_SEP = t(locsMaxLsc_SEP);
+% else
+%     T2MaxLsc_SEP = t(locsMaxLsc_SEP)-T;
+% end
+% 
+% [~,locsMinLsc_LV] = min(Lsc_LV);
+% [~,locsMinLsc_RV] = min(Lsc_RV);
+% [~,locsMinLsc_SEP] = min(Lsc_SEP);
+% 
+% if t(locsMinLsc_LV) < T
+%     T2MinLsc_LV = t(locsMinLsc_LV);
+% else
+%     T2MinLsc_LV = t(locsMinLsc_LV)-T;
+% end
+% 
+% if t(locsMinLsc_RV) < T
+%     T2MinLsc_RV = t(locsMinLsc_RV);
+% else
+%     T2MinLsc_RV = t(locsMinLsc_RV)-T;
+% end
+% 
+% if t(locsMinLsc_SEP) < T
+%     T2MinLsc_SEP = t(locsMinLsc_SEP);
+% else
+%     T2MinLsc_SEP = t(locsMinLsc_SEP)-T;
+% end
+% 
+% SCSCost = 5*(abs(T2MaxLsc_SEP - T2MaxLsc_LV) +...
+%     abs(T2MaxLsc_RV - T2MaxLsc_LV) +...
+%     abs(T2MaxLsc_SEP - T2MaxLsc_RV) +...
+%     abs(T2MinLsc_SEP - T2MinLsc_LV) +...
+%     abs(T2MinLsc_RV - T2MinLsc_LV) +...
+%     abs(T2MinLsc_SEP - T2MinLsc_RV));
+
+
 [~,locsTSA] = max(P_SA);
 [~,locsTPA] = max(P_PA);
 if t(locsTSA) < T
@@ -515,26 +650,78 @@ if t(locsTSA) < T
 else
     T2maxPSA = t(locsTSA)-T;
 end
-% if T2maxPSA < 0.25*T||T2maxPSA > 0.5*T
-%     error('unreal uncondition')
-% end
+
+if T2maxPSA/T <= 0.2
+    error('KactLV may too big')
+end
+
+
 if t(locsTPA) < T
-    o_vals.T2maxPPA = t(locsTPA);
+    T2maxPPA = t(locsTPA);
 else
-    o_vals.T2maxPPA = t(locsTPA)-T;
-end
-PAPm = trapz(t,P_PA)/(t(end)-t(1));
-
-if PAPm >=50
-    targets.T2maxPPA = 1.05*T2maxPSA;
-elseif PAPm >=35
-    targets.T2maxPPA = T2maxPSA;
-elseif PAPm >=20
-    targets.T2maxPPA = 0.95*T2maxPSA;
-else
-    targets.T2maxPPA = 0.9*T2maxPSA;
+    T2maxPPA = t(locsTPA)-T;
 end
 
+if T2maxPPA/T <= 0.2
+    error('KactRV may too big')
+end
+
+% PAPm = trapz(t,P_PA)/(t(end)-t(1));
+% 
+% if PAPm >=50
+%     targets.T2maxPPA = 1.05*T2maxPSA;
+% elseif PAPm >=35
+%     targets.T2maxPPA = T2maxPSA;
+% elseif PAPm >=20
+%     targets.T2maxPPA = 0.95*T2maxPSA;
+% else
+%     targets.T2maxPPA = 0.9*T2maxPSA;
+% end
+
+Tint = (t(1):0.001:t(end));
+NewPLV = interp1(t,P_LV,Tint);
+NewPRV = interp1(t,P_RV,Tint);
+Newd_LW = interp1(t,d_LW,Tint);
+Newd_SW = interp1(t,d_SW,Tint);
+Newd_RW = interp1(t,d_RW,Tint);
+[~, locsMinPLV] = min(NewPLV);
+if locsMinPLV >length(Tint)/2
+    locsMinPLV = round(locsMinPLV-length(Tint)/2);
+end
+[~, locsMinPRV] = min(NewPRV);
+if locsMinPRV >length(Tint)/2
+    locsMinPRV = round(locsMinPRV-length(Tint)/2);
+end
+
+Maggicpoint = round(mean([locsMinPRV; locsMinPLV]));
+diff_d_LW = diff(Newd_LW);
+diff_d_SW = diff(Newd_SW);
+diff_d_RW = diff(Newd_RW);
+
+[~,locswiredpeakLW]=findpeaks(diff_d_LW,'MinPeakHeight',max(diff_d_LW)/3);
+if ~isempty(locswiredpeakLW) 
+    if locswiredpeakLW(1) > Maggicpoint-round(length(Tint)/2*0.035) &&...
+            locswiredpeakLW(1) < Maggicpoint+round(length(Tint)/2*0.015)
+        error("Unreal LV")
+    end
+end
+
+[~,locswiredpeakSW]=findpeaks(diff_d_SW,'MinPeakHeight',max(diff_d_SW)/3);
+if ~isempty(locswiredpeakSW) 
+    if locswiredpeakSW(1) > Maggicpoint-round(length(Tint)/2*0.035) &&...
+            locswiredpeakSW(1) < Maggicpoint+round(length(Tint)/2*0.015)
+        error("Unreal SEP")
+    end
+end
+
+[~,locswiredpeakRW]=findpeaks(diff_d_RW,'MinPeakHeight',max(diff_d_RW)/3);
+if ~isempty(locswiredpeakRW) 
+    if locswiredpeakRW(1) > Maggicpoint-round(length(Tint)/2*0.035) &&...
+            locswiredpeakRW(1) < Maggicpoint+round(length(Tint)/2*0.015)
+        error("Unreal RV")
+    end
+end
+%%
 % Calibration and weighting
 % Since different targets have different ranges and units, which may unequally contribute to the
 % cost function, we calibrated them based on canonical subjects. Additionally, we have varying
@@ -635,6 +822,8 @@ elseif inputs.Sex == 2
     c.tPLVmin = 0.55;
     c.RVEF = 60;
 end
+c.T2MaxLsc_RV = 0.05;
+c.T2MinLsc_RV = 0.38;
 c.T2maxPPA = 0.25;
 
 % Weighting
@@ -657,7 +846,7 @@ if ~isfield(targets,'RAPmax') && ~isfield(targets,'RAPmin')
 else
     w.RAPmean = wf2*0.1;
 end
-w.RVEDP = wf2*0.2;
+w.RVEDP = wf2*1;
 w.LVEDP = wf2*0.2;
 w.P_RV_min = wf2*0.1;
 w.P_LV_min = wf2*0.1;
@@ -665,24 +854,24 @@ w.PCWP = wf2*0.3;
 w.PCWPmax = wf2*0.3;
 w.PCWPmin = wf2*0.3;
 wf3 = 250;% weights for 3rd sub figure
-w.LVEDV = wf3/3; w.LVESV = wf3*0.3/3;
+w.LVEDV = wf3; w.LVESV = wf3/3;
 w.LAVmax = wf3*0.1; w.LAVmin = wf3*0.1;
 w.RAVmax = wf3*0.1; w.RAVmin = wf3*0.1;
-w.RVEDV = wf3; w.RVESV = wf3*0.3;
+w.RVEDV = wf3*3; w.RVESV = wf3;
 
 % Targets not plotted as waveformw
-w.EF = 6;
-w.RVEF = 6;
+w.EF = 666;
+w.RVEF = 666;
 w.CO = 888; % give CO a lucky number
 if(isfield(targets,'EAr'))
     w.EAr = 88;
 end
 wt = 1.5; % use to adjust thickness and length
-w.Hed_LW = wt*25;
-w.Hed_SW = wt*25;
-w.Hed_RW = wt*25/10;
-w.LVIDd = wt*3;
-w.LVIDs = wt*3;
+w.Hed_LW = wt*200;
+w.Hed_SW = wt*200;
+w.Hed_RW = wt*150;
+w.LVIDd = wt*100;
+w.LVIDs = wt*100;
 w.RVIDd = wt*3;
 w.RVIDs = wt*3;
 
@@ -704,11 +893,11 @@ vlv_def = ["MVr",'AVr'];
 for i = 1:length(vlv_def)
     if isfield(targets,vlv_def(i))
         if (targets.(vlv_def(i)) > 3.5) && (o_vals.(vlv_def(i)) > targets.(vlv_def(i)))
-            w.(vlv_def(i)) = wg;
+            w.(vlv_def(i)) = 5 * wg;
         else
             if targets.(vlv_def(i)) == 1.5
                 if  o_vals.(vlv_def(i)) < targets.(vlv_def(i))
-                    w.(vlv_def(i)) = wg;
+                    w.(vlv_def(i)) =  wg;
                 else
                     w.(vlv_def(i)) = 25 * wg;
                 end
@@ -716,7 +905,7 @@ for i = 1:length(vlv_def)
                 if abs(targets.(vlv_def(i))-o_vals.(vlv_def(i))) > .5
                     w.(vlv_def(i)) = 25 * wg;
                 else
-                    w.(vlv_def(i)) = wg;
+                    w.(vlv_def(i)) = 5 * wg;
                 end
             end
         end
@@ -724,39 +913,39 @@ for i = 1:length(vlv_def)
 end
 if isfield(targets,"TVr")
     if (targets.TVr > 3.5) && (o_vals.TVr > targets.TVr)
-        w.TVr = wg;
+        w.TVr = 5 * wg;
     else
         if targets.TVr == 4
             if abs(o_vals.TVr - targets.TVr) < 0.7143
-                w.TVr = wg;
+                w.TVr = 5 * wg;
             else
                 w.TVr = 25*wg;
             end
         end
         if targets.TVr == 3.5
             if abs(o_vals.TVr - targets.TVr) < 0.5
-                w.TVr = wg;
+                w.TVr = 5 * wg;
             else
                 w.TVr = 25*wg;
             end
         end
         if targets.TVr == 3
             if abs(o_vals.TVr - targets.TVr) < 0.2857
-                w.TVr = wg;
+                w.TVr = 5 * wg;
             else
                 w.TVr = 25*wg;
             end
         end
         if targets.TVr == 2.5
             if abs(o_vals.TVr - targets.TVr) < 0.3571
-                w.TVr = wg;
+                w.TVr = 5 * wg;
             else
                 w.TVr = 25*wg;
             end
         end
         if targets.TVr == 2
             if abs(o_vals.TVr - targets.TVr) <= 0.7143
-                w.TVr = wg;
+                w.TVr = 5 * wg;
             else
                 w.TVr = 25*wg;
             end
@@ -775,39 +964,39 @@ if isfield(targets,"TVr")
 end
 if isfield(targets,"PVr")
     if (targets.PVr > 3.5) && (o_vals.PVr > targets.PVr)
-        w.PVr = wg;
+        w.PVr = 5 * wg;
     else
         if targets.PVr == 4
             if abs(o_vals.PVr - targets.PVr) < 0.3333
-                w.PVr = wg;
+                w.PVr = 5 * wg;
             else
                 w.PVr = 25*wg;
             end
         end
         if targets.PVr == 3.5
             if abs(o_vals.PVr - targets.PVr) < .5
-                w.PVr = wg;
+                w.PVr = 5 * wg;
             else
                 w.PVr = 25*wg;
             end
         end
         if targets.PVr == 3
             if abs(o_vals.PVr - targets.PVr) <= 0.6667
-                w.PVr = wg;
+                w.PVr = 5 * wg;
             else
                 w.PVr = 25*wg;
             end
         end
         if targets.PVr == 2.5
             if abs(o_vals.PVr - targets.PVr) < .5
-                w.PVr = wg;
+                w.PVr = 5 * wg;
             else
                 w.PVr = 25*wg;
             end
         end
         if targets.PVr == 2
             if abs(o_vals.PVr - targets.PVr) <= 0.3333
-                w.PVr = wg;
+                w.PVr = 5 * wg;
             else
                 w.PVr = 25*wg;
             end
@@ -835,6 +1024,9 @@ if(isfield(targets,'RV_m'))
     w.RV_m = 100;
 end
 
+w.T2MaxLsc_RV = 2*wf3;
+w.T2MinLsc_RV = 2*wf3;
+
 w.T2maxPPA = 2*wf3;
 
 % The following part calculates extra costs, referred to as "tax."
@@ -847,7 +1039,7 @@ Lsc_target = 2; % target for sarcomere length
 Lsc_ED = [max(Lsc_LV), max(Lsc_SEP), max(Lsc_RV)];
 cost_Lsc = 0;
 for i = 1:length(Lsc_ED)
-    cost_Lsc = cost_Lsc + 600*(Lsc_target - Lsc_ED(i))^4;
+    cost_Lsc = cost_Lsc + 6000*(Lsc_target - Lsc_ED(i))^2;
 end
 
 % Add costs of E/A ratio
@@ -857,15 +1049,29 @@ if(cost_EA < 0)
     cost_EA = 0;
 end
 
-% Add costs from of LV/RV mass
-cost_Mass_fn = @(M)  25*(1.81128506110855e-08*M.^4 -1.11713451327939e-05*M.^3+0.00267922216978568*M.^2 -0.297667946824409*M + 12.9346600216876); % to be included in tax
-cost_LV_m = cost_Mass_fn(o_vals.LV_m);
-if(cost_LV_m < 0)
-    cost_LV_m = 0;
-end
-cost_RV_m = cost_Mass_fn(o_vals.RV_m);
-if(cost_RV_m < 0)
-    cost_RV_m = 0;
+% % Add costs from of LV/RV mass
+% cost_Mass_fn = @(M)  25*(1.81128506110855e-08*M.^4 -1.11713451327939e-05*M.^3+0.00267922216978568*M.^2 -0.297667946824409*M + 12.9346600216876); % to be included in tax
+% cost_LV_m = cost_Mass_fn(o_vals.LV_m);
+% if(cost_LV_m < 0)
+%     cost_LV_m = 0;
+% end
+% cost_RV_m = cost_Mass_fn(o_vals.RV_m);
+% if(cost_RV_m < 0)
+%     cost_RV_m = 0;
+% end
+
+% Add RV_EF tax
+if ~MRI_flag == 1
+    mdl0 = fitlm(UWpatients.PPAm, UWpatients.EF_RV);
+    [~, CI1] = predict(mdl0, max(P_PA), 'Prediction', 'observation', 'Alpha', 0.01);
+    [~, CI2] = predict(mdl0, max(P_PA), 'Alpha', 5e-11);
+    alpha = 1;
+cost_RVEF = 1e-2*((EF_RV*100 - CI2(1)).^4 .* (1 ./ (1 + exp(-alpha*2 * (EF_RV - CI2(1)/100)))) ...
+        + 1 * (EF_RV*100 - CI2(1)).^4 .* (1 ./ (1 + exp(-alpha*2 * (EF_RV - CI1(1)/100)))) ...
+        + 1 * (abs(EF_RV*100 - CI2(2))).^3.8 .* (1 ./ (1 + exp(-alpha * (CI2(2)/100 - EF_RV)))) ...
+        + (abs(EF_RV*100 - CI2(2))).^3.8 .* (1 ./ (1 + exp(-alpha * (CI1(2)/100 - EF_RV)))));
+else
+    cost_RVEF = 0;
 end
 
 %% Cost function
@@ -884,11 +1090,21 @@ for i = 1:N
     end
 
 end
+
 if(exist('cost_EA','var'))
-    tax = cost_Lsc + cost_EA; % add any extra costs that are independent of targets (i.e. constraints or something)
+    tax = cost_RVEF + ...
+        ...SCSCost +...
+        cost_Lsc + cost_EA; % add any extra costs that are independent of targets (i.e. constraints or something)
 else
-    tax = cost_Lsc;
+    tax = cost_RVEF +...
+        ...SCSCost + ...
+        cost_Lsc;
 end
+
+if ~MRI_flag == 1
+    tax  = tax+cost_act+cost_pas;
+end
+
 total_cost = sum(cost) + tax;
 
 paramsname = fieldnames(params);
@@ -916,5 +1132,7 @@ value = elapsed < maxTime; %
 isterminal = 1; % stop
 direction = 0; % find all direction 0
 end
+
+
 
 

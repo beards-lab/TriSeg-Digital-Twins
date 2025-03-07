@@ -1,4 +1,4 @@
-function [targetVals, inputVals, mods] = targetVals_UW(data,Patient_no)
+function [targetVals, inputVals, mods] = targetVals_UW(data,Patient_no,MRI_flag)
 %% Function Purpose:
 % Retrieves data for input and target, with default modifiers assigned.
 % No processing decisions—only data collection.
@@ -33,6 +33,7 @@ else                      % Female
     inputVals.TBV = (0.3561*(inputVals.Height/100)^3 +0.03308*inputVals.Weight+0.1833)*1000; % mL (Nadler's Equation Female)
 end
 inputVals.HR = nanmean([Data.('HR') Data.('HR_Echo') Data.('heartRate')]);% calculate the average HR of echo, RHC, and initial assessment values
+% inputVals.HR = 70;% calculate the average HR of echo, RHC, and initial assessment values
 
 %% Assign target values
 % Target from RHC
@@ -90,10 +91,18 @@ end
 
 if ~isnan(Data.('Hed_LW'))
     targetVals.Hed_LW = Data.('Hed_LW');
+else
+    targetVals.LV_m = Data.('LV_m');
 end
 
 if ~isnan(Data.('Hed_SW'))
     targetVals.Hed_SW = Data.('Hed_SW');
+end
+
+if MRI_flag ==1
+    if ~isnan(Data.('Hed_RW'))
+        targetVals.Hed_RW = Data.('Hed_RW');
+    end
 end
 
 if ~isnan(Data.('EF'))
@@ -103,6 +112,23 @@ end
 if ~isnan(Data.('EAr'))
     targetVals.EAr = Data.('EAr');
 end
+
+
+% Targets from MRI
+if MRI_flag == 1
+    if ~isnan(Data.('RVEDV'))
+        targetVals.RVEDV = Data.('RVEDV');
+    end
+
+    if ~isnan(Data.('RVESV'))
+        targetVals.RVESV = Data.('RVESV');
+    end
+
+    % if ~isnan(Data.('LV_m'))
+    %     targetVals.LV_m = Data.('LV_m');
+    % end
+end
+
 
 % LAVmax can be assigned as either an input or a target
 if inputVals.Sex == 1
@@ -171,37 +197,41 @@ end
 
 % targetVals.LVEDV = 110;
 % targetVals.LVESV = 50;
+
 if (isfield(targetVals,'EF'))
-    CO = 1000 * targetVals.CO / 60;
-    SV = 60 * CO / inputVals.HR;
-    inputVals.LVEDV =   SV/ (targetVals.EF*0.01);
-    inputVals.LVESV =   inputVals.LVEDV-SV;
+        CO = 1000 * targetVals.CO / 60;
+        SV = 60 * CO / inputVals.HR;
+        inputVals.LVEDV =   SV/ (targetVals.EF*0.01);
+        inputVals.LVESV =   inputVals.LVEDV-SV;
 elseif isfield(targetVals,'LVIDd')
-    inputVals.LVEDV = targetVals.LVIDd^3*0.7851+97.32;
-    inputVals.LVESV = targetVals.LVIDs^3*0.9185+63.92;
+        inputVals.LVEDV = targetVals.LVIDd^3*0.7851+97.32;
+        inputVals.LVESV = targetVals.LVIDs^3*0.9185+63.92;
 end
 
+
 %% Right Side assumption
-inputVals.RVEDV = 150;
-inputVals.RVESV = 90;
-% targetVals.Hed_RW = 0.87;
-MPAP = targetVals.PADP+(targetVals.PASP-targetVals.PADP)/3;
-if MPAP>=50
-    inputVals.Hed_RW = 0.95;
-elseif MPAP>=35
-    inputVals.Hed_RW = 0.75;
-elseif MPAP>=20
-    inputVals.Hed_RW = 0.55;
-else
-    inputVals.Hed_RW = 0.35;
+if ~MRI_flag == 1
+    %% Right Side assumption
+    MPAP = targetVals.PADP+(targetVals.PASP-targetVals.PADP)/3;% Coming from linear estimation
+    inputVals.RVEDV = 2.1845*MPAP+90.043;
+    inputVals.Hed_RW = 0.0059772*MPAP+0.4278;
+    inputVals.RVESV  = inputVals.RVEDV-(inputVals.LVEDV -inputVals.LVESV);
+
+
+    if inputVals.RVESV <=15
+        inputVals.RVEDV = 150;
+        inputVals.RVESV = 90;
+    end
 end
+
 %% Parameters requiring modification (mods), used in the function estimParams.m
 % Default parameters should be always optimized
-mods_0 = {'k_pas','k_act_LV','k_act_RV',...
-    'C_SA','C_PA','R_SA','R_PA','R_veins','R_m_o',...
+mods_0 = {'k_pas_LV','k_pas_RV','k_act_LV','k_act_RV',...
+    'C_SA','C_PA','R_SA','R_PA','R_Veins','R_m_o',...
     'Vw_LV','LvSepR','Vw_RV',... % LV Septum ratio provides information on both LV and RV, so it replaces Vw_SEP
+    'Amref_LV','Amref_RV',...
     ... 'V_SV_s','V0u_coeff','V0c_coeff', % fixed blood volume
-    'K_P','B_P',...
+    ...'K_P','B_P',...
     'R_tPA','R_tSA'};
 
 %% Add additional mods based on the availability of the patient's data.
@@ -314,5 +344,4 @@ for i = 1:length(in_keys)
     end
 end
 end
-
 
