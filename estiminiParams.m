@@ -1,23 +1,20 @@
 function [params, init] = estiminiParams(targets, inputs)
 %% Function Purpose:
-% This function assigns and calculates the nominal values for all model parameters. 
+% This function assigns and calculates the initial guesses for all model parameters. 
 % Inputs to this function are the outputs from the targetVals.m function. 
-% Outputs of this function include a structure of parameters used in the model and initial
+% Outputs of this function include a structure of the initial guesses of parameters used in the model and initial
 % conditions for the ODE solver (dXdT.m function).
 
-% Created by EB Randall, modified by Filip Jezek, Andrew Meyer, and Feng Gu
-% Last modified: 10/29/2024
+% Created by Feng Gu
+% Last modified: 03/20/2025
 
 % Inputs: 
 % targets     - Patient measurements being fit to 
 % inputs      - Other necessary variables to build the model 
-% mods        - Cell array of names to adjust selected parameters 
-% modifiers   - Vector of floats that adjust selected parameters
 
 % Outputs: 
-% params      - Structure of parameters used in the model 
-% init        - Initial conditions for the ode15s solver (dXdT.m function) 
-% Error       - Used for debugging the TriSeg geometry
+% params      - Structure containing the initial guessed parameters for the model  
+% init        - Initial guess for the initial conditions used in the ode15s solver (dXdT.m function)  
 
 % Related functions: 
 % geom_0      - Computes the initial guess (idealized end-diastolic state) of TriSeg geometry 
@@ -528,7 +525,15 @@ params.R_SA  = R_SA;
 params.R_tSA = 0.08; 
 params.R_PA  = R_PA; 
 
-params.R_tPA = round(params.R_tSA/targets.SBP*targets.PASP,2);
+params.R_tPA = round(params.R_tSA/targets.SBP*targets.PASP,2); % All other use this condition
+% MPAP = targets.PADP+(targets.PASP-targets.PADP)/3; % only UW full model use this condition 
+% if MPAP>=50
+%     params.R_tPA = 0.04;
+% elseif MPAP>=35
+%     params.R_tPA = 0.02;
+% else
+%     params.R_tPA = 0.01;
+% end
 params.R_Veins = 0.040; 
 params.R_SV = params.R_Veins; 
 params.R_PV = params.R_Veins; 
@@ -581,7 +586,15 @@ params.REp = params.LEp;
 params.Pc = 10;
 
 % Pericardium
-params.K1 = inputData.RAPmax - 6;
+% I removed the previous pericardium model parameters since  
+% I don't think we have enough information to identify them.  
+if isfield(inputData, 'RAPmax')
+    params.K1 = inputData.RAPmax - 6;
+elseif isfield(inputData, 'RAPmean')
+     params.K1 = inputData.RAPmean - 2.5;
+else
+    params.K1 = 15.11 - 6;
+end
 if params.K1 <=1
     params.K1 =1;
 end

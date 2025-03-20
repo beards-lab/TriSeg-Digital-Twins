@@ -1,16 +1,17 @@
-function [Windowdate, targetVals, inputVals, mods] = targetVals_HF(data,Patient_no,Window_No)
+function [Windowdate, targetVals, inputVals, mods] = targetVals_HF(data,Patient_no,Window_No,MRI_flag)
 %% Function Purpose:
 % Retrieves data for input and target, with default modifiers assigned.
 % No processing decisions—only data collection.
 % Sets direct measurements from Echo, RHC, and Cardiac MRI as targets.
 
 % Created by Feng Gu
-% Last modified: 10/29/2024
+% Last modified: 3/20/2025
 
 % Inputs:
 % Data        - Structure of data extracted from the narrative
 % Patient_no  - Vector to locate the patient
 % Window_No   - Vector to locate the time point
+% MRI_flag    - 1 stands for reading info from CMR, other is not reading
 
 % Outputs:
 % targetVals  - Structure of measurements that the model tries to fit
@@ -27,6 +28,7 @@ in_0 = {'Height', 'Weight', 'Sex'};
 for i = 1:length(in_0)
     inputVals.(in_0{i}) = Data.(in_0{i});
 end
+inputVals.Age =  round(years(Windowdate-Data.Birthday));
 % Default inputs from estimation
 if(inputVals.Sex == 1) % Male
     inputVals.TBV = (0.3669*(inputVals.Height/100)^3 +0.03219*inputVals.Weight+0.6041)*1000; % mL (Nadler's Equation Male)
@@ -148,6 +150,8 @@ end
 
 if ~isnan(Data.('LVEF_tte'))
     targetVals.EF = Data.('LVEF_tte'); % this is from ECHO
+else
+     targetVals.EF = (Data.('MRI_LVEDV') - Data.('MRI_LVESV'))./Data.('MRI_LVEDV')*100; % this is from ECHO
 end
 
 if ~isnan(Data.('EA'))
@@ -155,29 +159,33 @@ if ~isnan(Data.('EA'))
 end
 
 % Targets from MRI
-if ~isnan(Data.('MRI_LVEDV'))
-    targetVals.LVEDV = Data.('MRI_LVEDV');
+if MRI_flag == 1
+    if ~isnan(Data.('MRI_LVEDV'))
+        targetVals.LVEDV = Data.('MRI_LVEDV');
+    end
+
+    if ~isnan(Data.('MRI_LVESV'))
+        targetVals.LVESV = Data.('MRI_LVESV');
+    end
+
+    if ~isnan(Data.('MRI_RVEDV'))
+        targetVals.RVEDV = Data.('MRI_RVEDV');
+    end
+
+    if ~isnan(Data.('MRI_RVESV'))
+        targetVals.RVESV = Data.('MRI_RVESV');
+    end
+
+    if ~isnan(Data.('MRI_LVMass'))
+        targetVals.LV_m = Data.('MRI_LVMass');
+    end
+
+    if ~isnan(Data.('MRI_RVMass'))
+        targetVals.RV_m = Data.('MRI_RVMass');
+    end
 end
 
-if ~isnan(Data.('MRI_LVESV'))
-    targetVals.LVESV = Data.('MRI_LVESV');
-end
 
-if ~isnan(Data.('MRI_RVEDV'))
-    targetVals.RVEDV = Data.('MRI_RVEDV');
-end
-
-if ~isnan(Data.('MRI_RVESV'))
-    targetVals.RVESV = Data.('MRI_RVESV');
-end
-
-if ~isnan(Data.('MRI_LVMass'))
-    targetVals.LV_m = Data.('MRI_LVMass');
-end
-
-if ~isnan(Data.('MRI_RVMass'))
-    targetVals.RV_m = Data.('MRI_RVMass');
-end
 
 % LAVmax can be assigned as either an input or a target
 if inputVals.Sex == 1
@@ -187,14 +195,14 @@ elseif inputVals.Sex == 2
 end
 if ~isnan(Data.('VLA'))
     targetVals.LAVmax = Data.('VLA'); % this is form ECHO Simpson
-    if targetVals.LAVmax <= 0.6*(targetVals.LVEDV-targetVals.LVESV)
+    if  targetVals.LAVmax <= 0.6*(targetVals.CO/inputVals.HR*100)
         if(inputVals.Sex == 1) % male
             inputVals.LAVmin = 25*r;
         else % female
             inputVals.LAVmin = 22*r;
         end
     else
-        inputVals.LAVmin = targetVals.LAVmax - 0.6*(targetVals.LVEDV-targetVals.LVESV);
+        inputVals.LAVmin = targetVals.LAVmax - 0.6*(targetVals.CO/inputVals.HR*100);
     end
 else % as an input
     if ~isnan(Data.('LAd'))
@@ -203,18 +211,24 @@ else % as an input
         else
             inputVals.LAVmax = 25.17*Data.('LAd')-54.92; % from . (J Am Soc Echocardiogr 2017;30:262-9.)
         end
-        if inputVals.LAVmax <= 0.6*(targetVals.LVEDV-targetVals.LVESV)
+        if inputVals.LAVmax <= 0.6*(targetVals.CO/inputVals.HR*100)
             if(inputVals.Sex == 1) % male
-                LA_LV_r = 72 / 155*0.8; % from baseline resting, Max LA: LVEDV
-                inputVals.LAVmax = targetVals.LVEDV * LA_LV_r;
+                inputVals.LAVmax = 72*r;
                 inputVals.LAVmin = 25*r;
-            else % female
-                LA_LV_r = 64 / 123*0.8; % from baseline resting, Max LA: LVEDV
-                inputVals.LAVmax = targetVals.LVEDV * LA_LV_r;
+            else % fema
+                inputVals.LAVmax = 64*r;
                 inputVals.LAVmin = 22*r;
             end
         else
-            inputVals.LAVmin = inputVals.LAVmax - 0.6*(targetVals.LVEDV-targetVals.LVESV);
+            inputVals.LAVmin = inputVals.LAVmax -  0.6*(targetVals.CO/inputVals.HR*100);
+        end
+    else
+        if(inputVals.Sex == 1) % male
+            inputVals.LAVmax = 72*r;
+            inputVals.LAVmin = 25*r;
+        else % female
+            inputVals.LAVmax = 64*r;
+            inputVals.LAVmin = 22*r;
         end
     end
 end
@@ -238,73 +252,142 @@ else
     inputVals.CVP = 4;
 end
 
+if (isfield(targetVals,'EF'))
+        CO = 1000 * targetVals.CO / 60;
+        SV = 60 * CO / inputVals.HR;
+        inputVals.LVEDV =   SV/ (targetVals.EF*0.01);
+        inputVals.LVESV =   inputVals.LVEDV-SV;
+elseif isfield(targetVals,'LVIDd')
+        inputVals.LVEDV = targetVals.LVIDd^3*0.7851+97.32;
+        inputVals.LVESV = targetVals.LVIDs^3*0.9185+63.92;
+end
+
 %% Assign synthetic target values for patients without MRILVmass
 % Uses a linear regression model from 146 patients.
 % Thickness predictions cluster into two groups based on presence of LV mass target.
 % For echo-only patients, wall thickness appears greater; this adjustment mitigates that bias.
-if isnan(Data.('MRI_LVMass'))
-    FakeHed_LW = 0.4235*targetVals.Hed_LW + 0.2021;% coming from 146 patients who have LV mass r2 = 0.50
-    FakeHed_SW = 0.6342*targetVals.Hed_SW - 0.003236;% r2 = 0.79
-    left = (FakeHed_LW + FakeHed_SW) / 2;
-    use_Vw_LV = 0;
-    LvSepR = 2/3;
-    if ~isnan(Data.('MRI_RVMass'))
-        right = targetVals.RV_m;
-        use_Vw_RV = 1;
-    elseif isfield(Data,"Hed_RV")&&~isnan(Data.('Hed_RV'))
-        right = targetVals.Hed_RV;
-        use_Vw_RV = 0;
-    else
-        use_Vw_RV = 0;
-        if ~isnan(Data.('RVd'))
-            P_RV = targetVals.RVEDP;
-        elseif ~isnan(Data.('RAm'))
-            P_RV = targetVals.RAPmean;
-        elseif isfield(targetVals,'PCWP')
-            P_RV = targetVals.PASP*targetVals.PCWP/targetVals.SBP;
-        end
-        coeff = [14853.8592619735
-            14531.7636186220
-            14769.3961036171
-            11440.8528760998
-            -21873.4802314862
-            456.030613986307
-            -4913.60117297433
-            156836.996351639
-            -155270.878092212];
-        k_RV = coeff(1)*100*(targetVals.LVEDV-targetVals.LVESV)/targetVals.LVEDV+...
-            coeff(2)*targetVals.PASP+...
-            coeff(3)*targetVals.PADP+...
-            coeff(4)*targetVals.PCWP+...
-            coeff(5)*targetVals.CO+...
-            coeff(6)*targetVals.SBP+...
-            coeff(7)*targetVals.DBP+...
-            100*coeff(8)*max([targetVals.Hed_SW targetVals.Hed_LW])+...
-            100*coeff(9)*min([targetVals.Hed_SW targetVals.Hed_LW]);
-        if inputVals.Sex == 1
-            k_RV = k_RV/7.2906; % calibrate using coefficients estimated from a canonical subject
+if MRI_flag == 1
+    if isnan(Data.('MRI_LVMass'))
+        FakeHed_LW = 0.4235*targetVals.Hed_LW + 0.2021;% coming from 146 patients who have LV mass r2 = 0.50
+        FakeHed_SW = 0.6342*targetVals.Hed_SW - 0.003236;% r2 = 0.79
+        left = (FakeHed_LW + FakeHed_SW) / 2;
+        use_Vw_LV = 0;
+        LvSepR = 2/3;
+        if ~isnan(Data.('MRI_RVMass'))
+            right = targetVals.RV_m;
+            use_Vw_RV = 1;
+        elseif isfield(Data,"Hed_RV")&&~isnan(Data.('Hed_RV'))
+            right = targetVals.Hed_RV;
+            use_Vw_RV = 0;
         else
-            k_RV = k_RV/11.2290; % calibrate using coefficients estimated from a canonical subject
+            use_Vw_RV = 0;
+            if ~isnan(Data.('RVd'))
+                P_RV = targetVals.RVEDP;
+            elseif ~isnan(Data.('RAm'))
+                P_RV = targetVals.RAPmean;
+            elseif isfield(targetVals,'PCWP')
+                P_RV = targetVals.PASP*targetVals.PCWP/targetVals.SBP;
+            end
+            coeff = [14853.8592619735
+                14531.7636186220
+                14769.3961036171
+                11440.8528760998
+                -21873.4802314862
+                456.030613986307
+                -4913.60117297433
+                156836.996351639
+                -155270.878092212];
+            k_RV = coeff(1)*100*(targetVals.LVEDV-targetVals.LVESV)/targetVals.LVEDV+...
+                coeff(2)*targetVals.PASP+...
+                coeff(3)*targetVals.PADP+...
+                coeff(4)*targetVals.PCWP+...
+                coeff(5)*targetVals.CO+...
+                coeff(6)*targetVals.SBP+...
+                coeff(7)*targetVals.DBP+...
+                100*coeff(8)*max([targetVals.Hed_SW targetVals.Hed_LW])+...
+                100*coeff(9)*min([targetVals.Hed_SW targetVals.Hed_LW]);
+            if inputVals.Sex == 1
+                k_RV = k_RV/7.2906; % calibrate using coefficients estimated from a canonical subject
+            else
+                k_RV = k_RV/11.2290; % calibrate using coefficients estimated from a canonical subject
+            end
+            right = [P_RV k_RV];
         end
-         right = [P_RV k_RV];
+        [~,~, Vw0, ~] = geom_0(targetVals.LVEDV, targetVals.RVEDV, left, use_Vw_LV, right, use_Vw_RV, LvSepR,inputVals);
+        Vw_LV = Vw0(1);
+        Vw_SEP = Vw0(2);
+        targetVals.FakeLV_m = (Vw_LV + Vw_SEP) * 1.055;
     end
-    [~,~, Vw0, ~] = geom_0(targetVals.LVEDV, targetVals.RVEDV, left, use_Vw_LV, right, use_Vw_RV, LvSepR,inputVals);
-    Vw_LV = Vw0(1);
-    Vw_SEP = Vw0(2);
-    targetVals.FakeLV_m = (Vw_LV + Vw_SEP) * 1.055;
+end
+
+%% Right Side assumption
+if ~MRI_flag == 1
+    load LassoRV.mat
+    Raw_Lasso_RVEDV = inputVals.Sex*k_RVEDV(1) + inputVals.Age*k_RVEDV(2) +...
+        inputVals.Height*k_RVEDV(3) + inputVals.Height*inputVals.Weight*k_RVEDV(4) +...
+        inputVals.HR*k_RVEDV(5) + targetVals.SBP*k_RVEDV(6) +...
+        targetVals.PASP*k_RVEDV(7) + targetVals.PADP*k_RVEDV(8) +...
+        targetVals.CO*k_RVEDV(9) + Data.('AVr') * k_RVEDV(10) + ...
+        Data.('TVr') * k_RVEDV(11) + Data.('PVr') * k_RVEDV(12) + ...
+        b_RVEDV;
+    C_Lasso_RVEDV = Raw_Lasso_RVEDV*ck_RVEDV+cb_RVEDV;
+    if  C_Lasso_RVEDV > 600
+        C_Lasso_RVEDV = 600;
+    end
+    if  C_Lasso_RVEDV <50 
+        C_Lasso_RVEDV = 50;
+    end
+    targetVals.RVEDV = C_Lasso_RVEDV;
+    Raw_Lasso_RVEF = inputVals.Sex * k_RVEF(1) + inputVals.Age * k_RVEF(2) + ...
+        targetVals.SBP * k_RVEF(3) + targetVals.PADP * k_RVEF(4) + ...
+        targetVals.CO * k_RVEF(5) + targetVals.EF * k_RVEF(6) + ...
+        Data.('TVr') * k_RVEF(7) + Data.('PVr') * k_RVEF(8) + ...
+        b_RVEF;
+    C_Lasso_RVEF = Raw_Lasso_RVEF * ck_RVEF + cb_RVEF;
+    if  C_Lasso_RVEF > 75
+        C_Lasso_RVEF = 75;
+    end
+    if  C_Lasso_RVEF < 10
+        C_Lasso_RVEF = 10;
+    end
+    targetVals.RVEF = C_Lasso_RVEF;
+    inputVals.RVESV = targetVals.RVEDV * (100-targetVals.RVEF) * 0.01;
+
+    if  (~isnan(Data.('RAa'))) || (~isnan(Data.('RAv')))
+        coeff3= targetVals.RAPmax;
+    elseif ~isnan(Data.('RAm'))
+        coeff3 = targetVals.RAPmean+3.5;
+    else
+        coeff3 = 15.11;
+    end
+
+
+    if  ~isnan(Data.('RVs'))
+        coeff4 = targetVals.RVSP;
+
+    else
+        coeff4 = targetVals.PASP;
+    end
+
+    Raw_Lasso_TRW = inputVals.Height * k_TRW(1) + targetVals.SBP * k_TRW(2) + ...
+        coeff3* k_TRW(3) + coeff4 * k_TRW(4) + ...
+        targetVals.PADP * k_TRW(5) + Data.('TVr') * k_TRW(6) + ...
+        b_TRW;
+    C_Lasso_TRW = Raw_Lasso_TRW * ck_TRW + cb_TRW;
+    if  C_Lasso_TRW > 1
+        C_Lasso_TRW = 1;
+    end
+    targetVals.Hed_RW = C_Lasso_TRW;
 end
 
 %% Parameters requiring modification (mods), used in the function estimParams.m
 % Default parameters should be always optimized
 mods_0 = {'k_pas_LV','k_pas_RV','k_act_LV','k_act_RV',...
-    ... A minor naming issue: initially, I mistakenly labeled R_Veins as R_atria and sent it to the
-    ... cluster for computation. Later, I realized R_Veins was a more accurate name, but the cluster
-    ... results still use R_atria. To keep consistent with the cluster outputs, I’ll keep R_atria for
-    ... now and change it to R_Veins after applying the function unique.
-    'C_SA','C_PA','R_SA','R_PA','R_atria','R_m_o',...
-    'Vw_LV','LvSepR',... % LV Septum ratio provides information on both LV and RV, so it replaces Vw_SEP
-    ... 'V_SV_s','V0u_coeff','V0c_coeff', % fixed blood volume 
-    'K_P','B_P',...
+    'C_SA','C_PA','R_SA','R_PA','R_Veins','R_m_o',...
+    'Vw_LV','LvSepR','Vw_RV',... % LV Septum ratio provides information on both LV and RV, so it replaces Vw_SEP
+    'Amref_LV','Amref_RV',...
+    ... 'V_SV_s','V0u_coeff','V0c_coeff', % fixed blood volume
+    ...'K_P','B_P',...
     'R_tPA','R_tSA'};
 
 %% Add additional mods based on the availability of the patient's data.
@@ -316,9 +399,8 @@ if ~isnan(Data.('RVs'))
         mods_pN{end + 1} = 'R_p_o';
     end
 end
-if ~isnan(Data.('MRI_RVMass'))
-        mods_pN{end + 1} = 'Vw_RV'; % only opt when having targets
-end
+
+
 if ~isnan(Data.('LVs'))
     if(targetVals.SBP <= 0.925 * targetVals.LVESP) % if SBP is 7.5% less than LVESP
         mods_pN{end + 1} = 'R_a_o';
@@ -342,7 +424,6 @@ end
 mods = [mods_0 mods_pN];
 mods = unique(mods);
 
-mods{strcmp(mods,'R_atria')} = 'R_Veins'; 
 for i = 1:length(tg_pN)
     targetVals.(tg_pN{i}) = Data.(tg_pN{i});
 end
@@ -370,11 +451,15 @@ tg_bounds = dictionary('SBP',{[50 300]}, ...
     'PCWP',{[3 50]}, ...
     'CO',{[1 15]}, ...
     'EF',{[5 85]}, ...
+    'RVEF',{[5 85]}, ...
     'Hed_LW',{[0.2 3]}, ...
     'Hed_SW',{[0.2 3]}, ...
     'Hed_RW',{[0.2 3]}, ...
     'EAr',{[0.2 8]}, ...
     'LAVmax',{[15 400]}, ... % 263 has LAVmax 377
+    'MS',{[1 4]}, ...
+    'AS',{[1 4]}, ...
+    'PS',{[1 4]}, ...
     'MVr',{[1 4]}, ...
     'MVmg',{[0 100]}, ...
     'AVr',{[1 4]}, ...
@@ -405,9 +490,10 @@ in_bounds = dictionary('Height',{[90 230]}, ...
     'HR',{[30 200]}, ...
     'Hed_RW',{[0.2 1.5]}, ...
     'LAVmax',{[5 250]},...
-    'LVEDV',{[25 250]}, ...
-    'LVESV',{[10 200]}, ...
-    'RVEDV',{[75 325]}, ...
+    'LVEDV',{[10 1050]}, ...
+    'LVESV',{[10 800]}, ...
+    'RVEDV',{[10 700]}, ...
+    'RVESV',{[10 650]}, ...
     'CVP',{[2 20]}); % TBV, LAVmin, RAVmin, are all derived.
 
 in_fn = fieldnames(inputVals);
@@ -420,5 +506,4 @@ for i = 1:length(in_keys)
             && inputVals.(in_fn{i}) <= bounds_i(2),sprintf(in_fn{i}));
     end
 end
-
-
+end

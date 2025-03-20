@@ -5,12 +5,12 @@ function [targetVals, inputVals, mods] = targetVals_UW(data,Patient_no,MRI_flag)
 % Sets direct measurements from Echo and RHC as targets.
 
 % Created by Feng Gu
-% Last modified: 11/28/2024
+% Last modified: 03/20/2025
 
 % Inputs:
 % Data        - Table of data extracted from the narrative
 % Patient_no  - Vector to locate the patient
-% Window_No   - Vector to locate the time point
+% MRI_flag    - 1 stands for reading info from CMR, other is not reading
 
 % Outputs:
 % targetVals  - Structure of measurements that the model tries to fit
@@ -21,7 +21,7 @@ function [targetVals, inputVals, mods] = targetVals_UW(data,Patient_no,MRI_flag)
 Data = data(Patient_no,:);
 %% Assign input values
 % Default inputs from data
-in_0 = {'Height', 'Weight', 'Sex'};
+in_0 = {'Height', 'Weight', 'Sex','Age'};
 for i = 1:length(in_0)
     inputVals.(in_0{i}) = Data.(in_0{i});
 end
@@ -34,7 +34,6 @@ else                      % Female
 end
 inputVals.HR = nanmean([Data.('HR') Data.('HR_Echo') Data.('heartRate')]);% calculate the average HR of echo, RHC, and initial assessment values
 % inputVals.HR = 70;% calculate the average HR of echo, RHC, and initial assessment values
-
 %% Assign target values
 % Target from RHC
 if ~isnan(Data.('SBP'))
@@ -107,6 +106,8 @@ end
 
 if ~isnan(Data.('EF'))
     targetVals.EF = Data.('EF'); % this is from ECHO
+else
+     targetVals.EF = Data.('EF_LV'); % this is from ECHO
 end
 
 if ~isnan(Data.('EAr'))
@@ -115,6 +116,11 @@ end
 
 
 % Targets from MRI
+% There is a strange aspect here: I am not using LV information from CMR,  
+% regardless of the MRI_flag, since the goal is to accommodate the condition  
+% when CMR is not available. Instead, I use LV information from echo to identify  
+% the relationship between LV and RV, with RV data coming from CMR.  
+
 if MRI_flag == 1
     if ~isnan(Data.('RVEDV'))
         targetVals.RVEDV = Data.('RVEDV');
@@ -124,9 +130,6 @@ if MRI_flag == 1
         targetVals.RVESV = Data.('RVESV');
     end
 
-    % if ~isnan(Data.('LV_m'))
-    %     targetVals.LV_m = Data.('LV_m');
-    % end
 end
 
 
@@ -191,12 +194,6 @@ else
     inputVals.CVP = 4;
 end
 
-% Add assumpted LVEDV and lVESV
-% targetVals.LVEDV = targetVals.LVIDd^3*0.7851+97.32;
-% targetVals.LVESV = targetVals.LVIDs^3*0.9185+63.92;
-
-% targetVals.LVEDV = 110;
-% targetVals.LVESV = 50;
 
 if (isfield(targetVals,'EF'))
         CO = 1000 * targetVals.CO / 60;
@@ -209,19 +206,38 @@ elseif isfield(targetVals,'LVIDd')
 end
 
 
-%% Right Side assumption
+%% Right side assumptions based on Lasso regression trained on the UW cohort  
 if ~MRI_flag == 1
-    %% Right Side assumption
-    MPAP = targetVals.PADP+(targetVals.PASP-targetVals.PADP)/3;% Coming from linear estimation
-    inputVals.RVEDV = 2.1845*MPAP+90.043;
-    inputVals.Hed_RW = 0.0059772*MPAP+0.4278;
-    inputVals.RVESV  = inputVals.RVEDV-(inputVals.LVEDV -inputVals.LVESV);
-
-
-    if inputVals.RVESV <=15
-        inputVals.RVEDV = 150;
-        inputVals.RVESV = 90;
+    load LassoRV.mat
+    Raw_Lasso_RVEDV = inputVals.Sex*k_RVEDV(1) + inputVals.Age*k_RVEDV(2) +...
+        inputVals.Height*k_RVEDV(3) + inputVals.Height*inputVals.Weight*k_RVEDV(4) +...
+        inputVals.HR*k_RVEDV(5) + targetVals.SBP*k_RVEDV(6) +...
+        targetVals.PASP*k_RVEDV(7) + targetVals.PADP*k_RVEDV(8) +...
+        targetVals.CO*k_RVEDV(9) + Data.('AVr') * k_RVEDV(10) + ...
+        Data.('TVr') * k_RVEDV(11) + Data.('PVr') * k_RVEDV(12) + ...
+        b_RVEDV;
+    C_Lasso_RVEDV = Raw_Lasso_RVEDV*ck_RVEDV+cb_RVEDV;
+    if  C_Lasso_RVEDV > 400
+        C_Lasso_RVEDV = 400;
     end
+    targetVals.RVEDV = C_Lasso_RVEDV;
+    Raw_Lasso_RVEF = inputVals.Sex * k_RVEF(1) + inputVals.Age * k_RVEF(2) + ...
+        targetVals.SBP * k_RVEF(3) + targetVals.PADP * k_RVEF(4) + ...
+        targetVals.CO * k_RVEF(5) + targetVals.EF * k_RVEF(6) + ...
+        Data.('TVr') * k_RVEF(7) + Data.('PVr') * k_RVEF(8) + ...
+        b_RVEF;
+    C_Lasso_RVEF = Raw_Lasso_RVEF * ck_RVEF + cb_RVEF;
+    targetVals.RVEF = C_Lasso_RVEF;
+    inputVals.RVESV = targetVals.RVEDV * (100-targetVals.RVEF) * 0.01;
+    Raw_Lasso_TRW = inputVals.Height * k_TRW(1) + targetVals.SBP * k_TRW(2) + ...
+        targetVals.RAPmax * k_TRW(3) + targetVals.RVSP * k_TRW(4) + ...
+        targetVals.PADP * k_TRW(5) + Data.('TVr') * k_TRW(6) + ...
+        b_TRW;
+    C_Lasso_TRW = Raw_Lasso_TRW * ck_TRW + cb_TRW;
+    if  C_Lasso_TRW > 0.95
+        C_Lasso_TRW = 0.95;
+    end
+    inputVals.Hed_RW = C_Lasso_TRW;
 end
 
 %% Parameters requiring modification (mods), used in the function estimParams.m
@@ -289,6 +305,7 @@ tg_bounds = dictionary('SBP',{[50 300]}, ...
     'PCWP',{[3 50]}, ...
     'CO',{[1 15]}, ...
     'EF',{[5 85]}, ...
+    'RVEF',{[5 85]}, ...
     'Hed_LW',{[0.2 3]}, ...
     'Hed_SW',{[0.2 3]}, ...
     'Hed_RW',{[0.2 3]}, ...

@@ -3,7 +3,14 @@ function [dxdt, outputs] = dXdT(t,x, params)
 % This function contains the differential equations that the ODE solver calls.
 
 % Created by EB Randall, modified by Filip Jezek, Andrew Meyer, and Feng Gu
-% Last modified: 10/29/2024
+% Last modified: 03/20/2025
+
+% 03/20: The biggest difference between the current model and the previous one is that I  
+% changed the atrial model and pericardium model. The change to the pericardium model  
+% is because I don't think we have enough information to identify it. The change to  
+% the atrial model is because I don't think the previous version accurately reflected  
+% atrial contraction.  
+
 
 % Inputs: 
 % t       - Time vector for simulation
@@ -152,7 +159,7 @@ Ty_LV  = Tm_LV  * (xm_LV^2  - ym^2) / (xm_LV^2  + ym^2);
 Ty_SEP = Tm_SEP * (xm_SEP^2 - ym^2) / (xm_SEP^2 + ym^2); 
 Ty_RV  = Tm_RV  * (xm_RV^2  - ym^2) / (xm_RV^2  + ym^2);
 
-P_Peri = params.K1 * exp(0.4*((V_LV+V_RV+V_LA+V_RA)/params.Vh0-1));
+P_Peri = params.K1 * exp(0.4*((V_LV+V_RV+V_LA+V_RA)/params.Vh0-1));% 0.4 is coming from an experiment fit but just 1 single point
 
 % Ventricular pressure 
 P_LV = -2 * Tx_LV / ym + P_Peri; 
@@ -172,7 +179,6 @@ REp = params.REp;
 LEa = params.LEa; %active. 
 REa = params.REa;
 Pc = params.Pc; % 10 mmHg. Collagen
-% sigma_a = .0975; %1.5 * 0.065. How wide gaussian is
 if tc_a >= 0 && tc_a < 0.15 
   act = 0.5*(1 - cos(pi*tc_a/0.15)); 
 elseif tc_a >= 0.15 && tc_a < 0.2 
@@ -180,10 +186,6 @@ elseif tc_a >= 0.15 && tc_a < 0.2
 else
   act = 0; 
 end
-% Pc = params.Pc; % 10 mmHg. Collagen
-% sigma_a = .0975; %1.5 * 0.065. How wide gaussian is
-% act = exp( -(tc_a/sigma_a)^2 );
-% act = exp( -(tc_a/sigma_a)^2 );
 P_LA  = 2.0*(LEp*(V_LA-LAV0u) + LEa*act*(V_LA-LAV0u) + Pc*exp((V_LA-LAV0c)/LAV1c)) + P_Peri;
 P_RA  = 1.0*(REp*(V_RA-RAV0u) + REa*act*(V_RA-RAV0u) + Pc*exp((V_RA-RAV0c)/RAV1c)) + P_Peri; 
 

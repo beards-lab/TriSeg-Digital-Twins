@@ -1,4 +1,30 @@
-function [params, init] = optParams(params, init, mods,modifiers,targets)
+function [params, init] = optParams(params, init, mods,modifiers)
+%% Function Purpose:
+% This function is desiged to optimze the paramters based on initial guesses for all model parameters. 
+% Inputs to this function are the outputs from the estiminiParams.m function. 
+% Outputs of this function include a structure of parameters used in the model and initial
+% conditions for the ODE solver (dXdT.m function).
+
+% Created by Feng Gu
+% Last modified: 03/20/2025
+
+% Inputs: 
+% params      - Structure containing the initial guessed parameters for the model  
+% init        - Initial guess for the initial conditions used in the ode15s solver (dXdT.m function)  
+% mods        - Cell array of names to adjust selected parameters 
+% modifiers   - Vector of floats that adjust selected parameters
+
+% Outputs: 
+% params      - Structure of parameters used in the model 
+% init        - Initial conditions for the ode15s solver (dXdT.m function) 
+
+% Related functions: 
+% estiminiParams.m - Serve as the input of current function
+% geom_0      - Computes the initial guess (idealized end-diastolic state) of TriSeg geometry 
+% calc_xm_ym  - Computes specific geometrical initial conditions of end-diastolic and end-systolic
+%               states, considering the balance of volume and sarcomere length
+
+%% Optimize geometrical parameters first  
 
 optVw_LV = params.Vw_LV*modifiers(contains(mods,'Vw_LV'));
 optVw_RV = params.Vw_RV*modifiers(contains(mods,'Vw_RV'));
@@ -63,11 +89,6 @@ init.xm_SEP_d = d0(2);
 init.xm_RV_d = d0(3);
 init.ym_d = d0(4) ;
 init.LVEDV = optLVEDV;
-
-% if optRVEDV >= 2*init.RVEDV 
-%     error('bad RV lumen volume')
-% end
-
 init.RVEDV = optRVEDV;
 
 
@@ -80,6 +101,7 @@ params.Vw_LV = optVw_LV;
 params.Vw_SEP = optVw_SEP;
 params.Vw_RV = optVw_RV;
 params.LvSepR = optLvSepR;
+%% Optimize the remaining parameters  
 
 geom_pars = {'Vw_LV','Vw_RV','Amref_LV','Amref_RV','LvSepR'};
 geom_pars_i = find(contains(mods,geom_pars));
@@ -109,6 +131,5 @@ for i = 1:length(mods)
         init.(mods{i}) = init.(mods{i})*modifiers(i);
     end
 end
-% params.k_act_LV = params.k_act;
-% params.k_act_RV = params.k_act/((targets.DBP+(targets.SBP-targets.DBP)./3)*0.10411 - 0.11669*(targets.PADP+(targets.PASP-targets.PADP)./3)-1.4238);
+
 end
