@@ -4,3 +4,5 @@
 *.png
 *.csv
 *.mp4
+RVLasso.m
+UmichValidation.m
