@@ -11,7 +11,7 @@ try
     MRI_flag = MRI_flag; % use this to cohort if using CMR info or not
     [~,targets, inputs, mods] = targetVals_HF(data,PATIENT_NO,ModelWin,MRI_flag);
     [INIparams, INIinit] = estiminiParams(targets,inputs);
-    [params, init] = optParams(INIparams, INIinit, mods,modifiers,targets);
+    [params, init] = optParams(INIparams, INIinit, mods,modifiers);
     params_no = struct2array(params);
     init_no = struct2array(init);
     if any(params_no <= 0)||any(init_no(2:end) <= 0)

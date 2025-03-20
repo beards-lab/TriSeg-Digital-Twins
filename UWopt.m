@@ -85,20 +85,21 @@ maxIter = 9;
 iter = 0;
 while iter < maxIter
     iter = iter + 1;
-    [m, ~, ~, ~] = patternsearch(@(m)evaluateModelUW(m,UWpatients,PATIENT_NO), m, [], [], [], [],lb, ub, [], options_PS_following);
-    m = fminsearch(@(m)evaluateModelUW(m,UWpatients,PATIENT_NO), m, options_Fmin);
-    costnew = evaluateModelUW(m,UWpatients,PATIENT_NO,Geo_Opt);
-    if abs(CurrentBestCost - costnew) <= 10
+    [mPS, ~, ~, ~] = patternsearch(@(m)evaluateModelUW(m,UWpatients,PATIENT_NO), m, [], [], [], [],lb, ub, [], options_PS_following);
+    mFmin = fminsearch(@(m)evaluateModelUW(m,UWpatients,PATIENT_NO), mPS, options_Fmin);
+    costnew = evaluateModelUW(mFmin,UWpatients,PATIENT_NO,Geo_Opt);
+    if abs(CurrentBestCost - costnew) <= 10 || isinf(costnew)
         break;
     else
         CurrentBestCost = costnew;
+        m = mFmin;
     end
 end
 
 % Save the output structure
 [targets, inputs, mods] = targetVals_UW(UWpatients,PATIENT_NO,MRI_flag);
 [INIparams, INIinit] = estiminiParams(targets,inputs);
-[params, init] = optParams(INIparams, INIinit, mods,m,targets);
+[params, init] = optParams(INIparams, INIinit, mods,m);
 try
     runSim
     output.mods = mods;

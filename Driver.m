@@ -28,7 +28,7 @@ for PATIENT_NO = 1:370 % any number between 1 and 370, example patient in paper 
             if RUNOPT == 0
                 load(sprintf('UmichSimsWithoutCMR/P_NO%dWindow%d.mat',PATIENT_NO,ModelWin)); % load results from great lake clusters
                 modifiers = output.modifiers;
-                [params, init] = optParams(INIparams, INIinit, mods,modifiers,targets);
+                [params, init] = optParams(INIparams, INIinit, mods,modifiers);
                 runSim;
                 Print_cost = 1;% 1 for performance, other for patient's pre-condition (PHI sensitive)
                 NplotFit; % 6-panel figure for HF patients
@@ -62,7 +62,7 @@ for PATIENT_NO =1
             load(sprintf('SimsUWwithoutCMR0/P_NO%d.mat',PATIENT_NO)); % load results from great lake clusters
             end
             modifiers = output.m;
-            [params, init] = optParams(INIparams, INIinit, mods,modifiers,targets);
+            [params, init] = optParams(INIparams, INIinit, mods,modifiers);
             runSim;
             Print_cost = 1;% 1 for performance, other for patient's pre-condition (PHI sensitive)
             NplotFit; % 6-panel figure for HF patientsP
@@ -138,7 +138,6 @@ for PATIENT_NO = 1
             else
                  PKUFengRVValidationOpt; % optimize modifiers of HF patients without CMR info
             end
-
         end
         if RUNOPT == 0
             if MRI_flag == 1
@@ -148,13 +147,13 @@ for PATIENT_NO = 1
             end
             modifiers = output.modifiers;
             Geo_Opt = 1;
-            [params, init] = optParams(INIparams, INIinit, mods,modifiers,targets);
+            [params, init] = optParams(INIparams, INIinit, mods,modifiers);
             runSim;
             Print_cost = 1;% 1 for performance, other for patient's pre-condition (PHI sensitive)
             NplotFit; % 6-panel figure for HF patientsP
-            % GetMovie;
-            % See_TriSeg;
-            % pause(3);
+            GetMovie;
+            See_TriSeg;
+            pause(3);
         end
     catch ME
         disp(['Error: ', ME.message, 'PatID',num2str(PATIENT_NO)])

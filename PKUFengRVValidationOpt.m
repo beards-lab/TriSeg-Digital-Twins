@@ -88,20 +88,18 @@ iter = 0;
 
 % Perform additional optimization until convergence or the maximum number of iterations is reached
 while iter < maxIter
-    iter = iter + 1;
-    
+    iter = iter + 1;  
     % Optimize using patternsearch and fminsearch
-    [m, ~, ~, ~] = patternsearch(@(m)evaluateModelPKU(m, MRI_flag), m, [], [], [], [], lb, ub, [], options_PS_following); 
-    m = fminsearch(@(m)evaluateModelPKU(m, MRI_flag), m, options_Fmin);
-    
+    [mPS, ~, ~, ~] = patternsearch(@(m)evaluateModelPKU(m, MRI_flag), m, [], [], [], [], lb, ub, [], options_PS_following); 
+    mFmin = fminsearch(@(m)evaluateModelPKU(m, MRI_flag), mPS, options_Fmin);   
     % Evaluate the new cost
-    costnew = evaluateModelPKU(m, MRI_flag);
-    
+    costnew = evaluateModelPKU(mFmin, MRI_flag);
     % Check for convergence
-    if abs(CurrentBestCost - costnew) <= 10 
+    if abs(CurrentBestCost - costnew) <= 10 || isinf(costnew)
         break;
     else
         CurrentBestCost = costnew;
+        m = mFmin;
     end
 end
 

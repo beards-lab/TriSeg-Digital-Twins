@@ -12,7 +12,7 @@ try
     MRI_flag = 0;
     [targets, inputs, mods] = targetVals_UW(data,PATIENT_NO,MRI_flag);
     [INIparams, INIinit] = estiminiParams(targets,inputs);
-    [params, init] = optParams(INIparams, INIinit, mods,modifiers,targets);
+    [params, init] = optParams(INIparams, INIinit, mods,modifiers);
     params_no = struct2array(params);
     init_no = struct2array(init);
     if any(params_no <= 0)||any(init_no(2:end) <= 0)
