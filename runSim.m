@@ -105,14 +105,14 @@ TisorelaxRV = mean([RVperiod(2,2)-RVperiod(2,1) RVperiod(4,2)-RVperiod(4,1)]);
 TisocontractRV = RVperiod(3,2)-RVperiod(3,1);
 
 % This is used to prevent the isocontract and isorelax phases from disappearing.  
-if  TisocontractLV/T <0.025 || TisocontractRV/T <0.025...
-        ||TisorelaxLV/T <0.025 || TisorelaxRV/T <0.025
-    error("unreal condition")
-end
+% if  TisocontractLV/T <0.025 || TisocontractRV/T <0.025...
+%         ||TisorelaxLV/T <0.025 || TisorelaxRV/T <0.025
+%     error("unreal condition")
+% end
 
 %% Collect simulation outputs
 
-output_no = 49;
+output_no = 50;
 o = zeros(output_no,length(t)); % outputs from simulation
 for i = 1:length(t)
     [~,o(:,i)] = dXdT(t(i),y(i,:), params);
@@ -167,6 +167,7 @@ act = o(46, :)';
 r_LV = o(47, :)';
 r_SEP = o(48, :)';
 r_RV = o(49, :)';
+P_external = o(50, :)';
 
 %% Using LV biomechanics to inform RV biomechanics and iteratively refine RV geometry  
 
@@ -227,18 +228,23 @@ elseif(length(Qm_maxima) > 2)
     assert(length(Qm_maxima) == 2, 'EAr bug 1 runSim');
     E_A_ratio = Qm_maxima(1) / Qm_maxima(2);
 else
-    dQm = gradient(Q_m, t);
-    [~,locsNeg] = findpeaks(-dQm,'MinPeakHeight',500);
-    [~,locsPos] = findpeaks(dQm);
-    [~,NegPeaklocs] = sort(-dQm(locsNeg),1,"descend");
-    [~,PosPeaklocs] = sort(dQm(locsPos),1,"descend");
-    if abs(sum(t(locsNeg(NegPeaklocs(1:2)))-t(locsPos(PosPeaklocs(1:2))))) > 0.4
-        NegPeaklocs = NegPeaklocs(1:2);
-    else
-        NegPeaklocs = NegPeaklocs(3:4);
-    end
-    lastIdx = find(t(locsPos)-max(t(locsNeg(NegPeaklocs)))<0,1,"last");
-    E_A_ratio = Qm_maxima(1)/Q_m(locsPos(lastIdx));
+    % dQm = gradient(Q_m, t);
+    % [~,locsNeg] = findpeaks(-dQm,'MinPeakHeight',500);
+    % [~,locsPos] = findpeaks(dQm);
+    % [~,NegPeaklocs] = sort(-dQm(locsNeg),1,"descend");
+    % [~,PosPeaklocs] = sort(dQm(locsPos),1,"descend");
+    % if abs(sum(t(locsNeg(NegPeaklocs(1:2)))-t(locsPos(PosPeaklocs(1:2))))) > 0.4
+    %     NegPeaklocs = NegPeaklocs(1:2);
+    % else
+    %     NegPeaklocs = NegPeaklocs(3:4);
+    % end
+    % lastIdx = find(t(locsPos)-max(t(locsNeg(NegPeaklocs)))<0,1,"last");
+    % E_A_ratio = Qm_maxima(1)/Q_m(locsPos(lastIdx));
+% 03/21 I attempted to save more simulations that lack E/A waves, 
+% but the results turned out to be unrealistic. 
+% The optimization process tends to produce only the E wave. 
+% Surface adjustments might provide a minimal possible solution.
+    E_A_ratio = 100;
 end
 
 

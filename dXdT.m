@@ -284,6 +284,7 @@ outputs = [P_LV; P_SA; P_SV; P_RV; P_PA; P_PV;          % 1-6
         Y;                                             % 37
         V_RA; V_LA; P_RA; P_LA; QIN_RA;                 % 38-42                                           
         H_LW; H_SW; H_RW;act;                           % 43-46
-        r_LV;r_SEP;r_RV];                            %47-49            
+        r_LV;r_SEP;r_RV;                                 %47-49  
+        P_Peri];                                     
             
 end 
