@@ -1,4 +1,4 @@
-function [params, init] = estiminiParams(targets, inputs)
+function params = estiminiParams(targets, inputs)
 %% Function Purpose:
 % This function assigns and calculates the initial guesses for all model parameters. 
 % Inputs to this function are the outputs from the targetVals.m function. 
@@ -489,24 +489,7 @@ else
     R_t_o = 6e-2; % 2+ -> stenosis. 6 mmHg
 end
 
-%% Output initial conditions of the ODE solver (init) and the initial guessed functional parameters (params)
-
-% Initial conditions (end-diastole) for ode15s in runSim
-init.xm_LV_d = xm_LV_d;
-init.xm_SEP_d = xm_SEP_d;
-init.xm_RV_d = xm_RV_d;
-init.ym_d = ym_d;
-init.Lsc_LV_0 = Lsc_LV_0;
-init.Lsc_SEP_0 = Lsc_SEP_0;
-init.Lsc_RV_0 = Lsc_RV_0;
-init.LVEDV = LVEDV;
-init.RVEDV = RVEDV;
-init.V_SA_s = V_SA_s;
-init.V_SV_s = V_SV_s;
-init.V_PA_s = V_PA_s;
-init.V_PV_s = V_PV_s;
-init.LAVmin = LAVmin;
-init.RAVmin = RAVmin;
+%% Output initial guessed functional parameters (params)
 
 % Percentage of cardiac cycle 
 params.tau_TS = k_TS; % unitless time to maximal systole.
@@ -525,15 +508,15 @@ params.R_SA  = R_SA;
 params.R_tSA = 0.08; 
 params.R_PA  = R_PA; 
 
-params.R_tPA = round(params.R_tSA/targets.SBP*targets.PASP,2); % All other use this condition
-% MPAP = targets.PADP+(targets.PASP-targets.PADP)/3; % only UW full model use this condition 
-% if MPAP>=50
-%     params.R_tPA = 0.04;
-% elseif MPAP>=35
-%     params.R_tPA = 0.02;
-% else
-%     params.R_tPA = 0.01;
-% end
+% params.R_tPA = round(params.R_tSA/targets.SBP*targets.PASP,2); % All other use this condition
+MPAP = targets.PADP+(targets.PASP-targets.PADP)/3; % only UW full model use this condition 
+if MPAP>=50
+    params.R_tPA = 0.04;
+elseif MPAP>=35
+    params.R_tPA = 0.02;
+else
+    params.R_tPA = 0.01;
+end
 params.R_Veins = 0.040; 
 params.R_SV = params.R_Veins; 
 params.R_PV = params.R_Veins; 
