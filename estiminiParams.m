@@ -585,9 +585,9 @@ params.LEp = 0.050;
 params.REp = params.LEp;
 params.Pc = 10;
 
-% Pericardium
-% I removed the previous pericardium model parameters since  
-% I don't think we have enough information to identify them.  
+% Pericardium 
+% 03/24 I refine Pericardium  model based on the observation from Umich
+% cohort
 if isfield(inputData, 'RAPmax')
     params.K1 = inputData.RAPmax - 6;
 elseif isfield(inputData, 'RAPmean')
@@ -598,5 +598,6 @@ end
 if params.K1 <=1
     params.K1 =1;
 end
+params.expPeri = 0.4;
 params.Vh0 = inputData.LVEDV + inputData.RVEDV + RAVmin + LAVmin;
 end

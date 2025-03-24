@@ -400,6 +400,14 @@ if ~isnan(Data.('RVs'))
     end
 end
 
+if ~isnan(Data.('PCW')) && ~isnan(Data.('RAm'))
+    if abs(Data.('PCW') - Data.('RAm')) <= 5
+        mods_pN{end + 1} = 'expPeri';
+    else
+        mods_pN{end + 1} = 'K1';
+    end
+end
+
 
 if ~isnan(Data.('LVs'))
     if(targetVals.SBP <= 0.925 * targetVals.LVESP) % if SBP is 7.5% less than LVESP

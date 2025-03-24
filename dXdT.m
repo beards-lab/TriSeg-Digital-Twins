@@ -159,7 +159,7 @@ Ty_LV  = Tm_LV  * (xm_LV^2  - ym^2) / (xm_LV^2  + ym^2);
 Ty_SEP = Tm_SEP * (xm_SEP^2 - ym^2) / (xm_SEP^2 + ym^2); 
 Ty_RV  = Tm_RV  * (xm_RV^2  - ym^2) / (xm_RV^2  + ym^2);
 
-P_Peri = params.K1 * exp(0.4*((V_LV+V_RV+V_LA+V_RA)/params.Vh0-1));% 0.4 is coming from an experiment fit but just 1 single point
+P_Peri = params.K1 * exp(params.expPeri*((V_LV+V_RV+V_LA+V_RA)/params.Vh0-1));% 0.4 is coming from an experiment fit but just 1 single point
 
 % Ventricular pressure 
 P_LV = -2 * Tx_LV / ym + P_Peri; 
