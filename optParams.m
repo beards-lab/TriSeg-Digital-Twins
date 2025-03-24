@@ -1,4 +1,4 @@
-function [params, init] = optParams(params,mods,modifiers)
+function [params, init] = optParams(params, init, mods,modifiers)
 %% Function Purpose:
 % This function is desiged to optimze the paramters based on initial guesses for all model parameters. 
 % Inputs to this function are the outputs from the estiminiParams.m function. 
@@ -91,6 +91,8 @@ init.ym_d = d0(4) ;
 init.LVEDV = optLVEDV;
 init.RVEDV = optRVEDV;
 
+
+
 params.Amref_LV = optAmref_LV;
 params.Amref_SEP = optAmref_SEP;
 params.Amref_RV = optAmref_RV;
@@ -124,6 +126,9 @@ for i = 1:length(mods)
         else
             params.(mods{i}) = params.(mods{i})*modifiers(i);
         end
+    elseif isfield(init, mods{i})
+        assert(isfield(init, mods{i})); 
+        init.(mods{i}) = init.(mods{i})*modifiers(i);
     end
 end
 
