@@ -109,11 +109,11 @@ TisorelaxRV = mean([RVperiod(2,2)-RVperiod(2,1) RVperiod(4,2)-RVperiod(4,1)]);
 TisocontractRV = RVperiod(3,2)-RVperiod(3,1);
 
 % This is used to prevent the isocontract and isorelax phases from disappearing.
-if ~ismember('R_t_c',mods) && ~ismember('R_p_c',mods)
+if params.R_t_c > 1e4 && params.R_p_c > 5e2
     if  TisocontractRV/T <0.025 || TisorelaxRV/T <0.025
         error("unreal condition")
     end
-elseif ~ismember('R_m_c',mods) && ~ismember('R_a_c',mods)
+elseif params.R_m_c > 1e4 && params.R_a_c > 1e4
     if  TisocontractLV/T <0.025 ||TisorelaxLV/T <0.025
         error("unreal condition")
     end
@@ -616,9 +616,9 @@ else
     T2maxPSA = t(locsTSA)-T;
 end
 
-if T2maxPSA/T <= 0.2
-    error('KactLV may too big')
-end
+% if T2maxPSA/T <= 0.2
+%     error('KactLV may too big')
+% end
 
 
 if t(locsTPA) < T
@@ -627,9 +627,9 @@ else
     T2maxPPA = t(locsTPA)-T;
 end
 
-if T2maxPPA/T <= 0.2
-    error('KactRV may too big')
-end
+% if T2maxPPA/T <= 0.2
+%     error('KactRV may too big')
+% end
 
 
 Tint = (t(1):0.001:t(end));
@@ -818,6 +818,7 @@ wt = 1.5; % use to adjust thickness and length
 if MRI_flag == 1
     w.RVEDV = wf3; w.RVESV = wf3*0.3;
     w.Hed_RW = wt*25;
+    w.RVEF = 6;
 else
     w.RVEDV = wf3/3; w.RVESV = wf3*0.1;
     w.RVEF = 66;
