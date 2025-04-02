@@ -7,3 +7,5 @@
 RVLasso.m
 UmichValidation.m
 Corr.xlsx
+*.xlsx
+*.zip
