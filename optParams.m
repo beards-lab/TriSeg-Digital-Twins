@@ -28,8 +28,18 @@ function [params, init] = optParams(params, init, mods,modifiers)
 
 optVw_LV = params.Vw_LV*modifiers(contains(mods,'Vw_LV'));
 optVw_RV = params.Vw_RV*modifiers(contains(mods,'Vw_RV'));
-optAmref_LV = params.Amref_LV*modifiers(contains(mods,'Amref_LV'));
-optAmref_RV = params.Amref_RV*modifiers(contains(mods,'Amref_RV'));
+if ismember(mods,'Amref_LV')
+    optAmref_LV = params.Amref_LV*modifiers(contains(mods,'Amref_LV'));
+else
+    optAmref_LV = params.Amref_LV;
+end
+
+if ismember(mods,'Amref_RV')
+    optAmref_RV = params.Amref_RV*modifiers(contains(mods,'Amref_RV'));
+else
+    optAmref_RV = params.Amref_RV;
+end
+
 optLvSepR = params.LvSepR*modifiers(contains(mods,'LvSepR'));
 
 % Transfer LvSepR
@@ -101,6 +111,7 @@ params.Vw_LV = optVw_LV;
 params.Vw_SEP = optVw_SEP;
 params.Vw_RV = optVw_RV;
 params.LvSepR = optLvSepR;
+params.Vh0 = optLVEDV + optRVEDV + optVw_LV + optVw_SEP + optVw_RV + (params.RAV0u + params.LAV0u)/0.9;
 %% Optimize the remaining parameters  
 
 geom_pars = {'Vw_LV','Vw_RV','Amref_LV','Amref_RV','LvSepR'};

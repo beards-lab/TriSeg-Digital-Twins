@@ -91,7 +91,7 @@ else
         inputVals.LVESV = targetVals.LVIDs^3*0.9185+63.92;
     end
     inputVals.LAVmax = 25.17*((4.82+6.02)/2)-54.92; % from . (J Am Soc Echocardiogr 2017;30:262-9.)
-    if inputVals.LAVmax <= 0.6*(targetVals.CO/inputVals.HR*100)
+    if inputVals.LAVmax <= 0.6*(targetVals.CO/inputVals.HR*1e3)
         if(inputVals.Sex == 1) % male
             inputVals.LAVmax = 72*r;
             inputVals.LAVmin = 25*r;
@@ -100,7 +100,7 @@ else
             inputVals.LAVmin = 22*r;
         end
     else
-        inputVals.LAVmin = inputVals.LAVmax - 0.6*(targetVals.CO/inputVals.HR*100);
+        inputVals.LAVmin = inputVals.LAVmax - 0.6*(targetVals.CO/inputVals.HR*1e3);
     end
     if(inputVals.Sex == 1) % male
         inputVals.RAVmin = 32/25*inputVals.LAVmin; % from Baseline_resting numbers. need these for diastolic displacement for model intial conditions

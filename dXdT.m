@@ -179,13 +179,17 @@ REp = params.REp;
 LEa = params.LEa; %active. 
 REa = params.REa;
 Pc = params.Pc; % 10 mmHg. Collagen
+% 03/31 I don't know why the current Atria model doesn't work. I will just back
+% to Dan's version
 if tc_a >= 0 && tc_a < 0.15 
   act = 0.5*(1 - cos(pi*tc_a/0.15)); 
-elseif tc_a >= 0.15 && tc_a < 0.2 
-  act = 0.5*(1 + cos(pi*(tc_a - 0.15)/0.05)); 
+elseif tc_a >= 0.15 && tc_a < 0.3 
+  act = 0.5*(1 + cos(pi*(tc_a - 0.15)/0.15)); 
 else
   act = 0; 
 end
+% sigma_a = .0975; %1.5 * 0.065. How wide gaussian is
+% act = exp(-(tc_a./sigma_a).^2 );
 P_LA  = 2.0*(LEp*(V_LA-LAV0u) + LEa*act*(V_LA-LAV0u) + Pc*exp((V_LA-LAV0c)/LAV1c)) + P_Peri;
 P_RA  = 1.0*(REp*(V_RA-RAV0u) + REa*act*(V_RA-RAV0u) + Pc*exp((V_RA-RAV0c)/RAV1c)) + P_Peri; 
 

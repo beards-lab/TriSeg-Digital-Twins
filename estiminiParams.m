@@ -85,8 +85,8 @@ Lse_iso = 0.04;
 gamma = 7.5; % optimized from ex vivo model 
 
 % Percentage of cardiac cycle, this is coming from Guyton physiology textbook
-k_TS = 0.275; % Beginning of cardiac cycle to maximal systole  
-k_TR = 0.125; % Relaxation time fraction 
+k_TS = 0.3; % Beginning of cardiac cycle to maximal systole  
+k_TR = 0.15; % Relaxation time fraction 
 
 %% Calculate patient-specific TriSeg heart geometrical parameters
 
@@ -599,5 +599,5 @@ if params.K1 <=1
     params.K1 =1;
 end
 params.expPeri = 0.4;
-params.Vh0 = inputData.LVEDV + inputData.RVEDV + RAVmin + LAVmin;
+params.Vh0 = inputData.LVEDV + inputData.RVEDV + RAVmin + LAVmin + Vw_LV + Vw_SEP + Vw_RV;
 end

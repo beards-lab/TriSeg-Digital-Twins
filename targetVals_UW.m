@@ -141,19 +141,19 @@ elseif inputVals.Sex == 2
 end
 if ~isnan(Data.('LAVmax'))
     targetVals.LAVmax = Data.('LAVmax'); % this is form ECHO Simpson
-    if targetVals.LAVmax <= 0.6*(targetVals.CO/inputVals.HR*100)
+    if targetVals.LAVmax <= 0.6*(targetVals.CO/inputVals.HR*1e3)
         if(inputVals.Sex == 1) % male
             inputVals.LAVmin = 25*r;
         else % female
             inputVals.LAVmin = 22*r;
         end
     else
-        inputVals.LAVmin = targetVals.LAVmax - 0.6*(targetVals.CO/inputVals.HR*100);
+        inputVals.LAVmin = targetVals.LAVmax - 0.6*(targetVals.CO/inputVals.HR*1e3);
     end
 else % as an input
     if ~isnan(Data.('LADiacm'))
         inputVals.LAVmax = 25.17*Data.('LADiacm')-54.92; % from . (J Am Soc Echocardiogr 2017;30:262-9.)
-        if inputVals.LAVmax <= 0.6*(targetVals.CO/inputVals.HR*100)
+        if inputVals.LAVmax <= 0.6*(targetVals.CO/inputVals.HR*1e3)
             if(inputVals.Sex == 1) % male
                 inputVals.LAVmax = 72*r;
                 inputVals.LAVmin = 25*r;
@@ -162,7 +162,7 @@ else % as an input
                 inputVals.LAVmin = 22*r;
             end
         else
-            inputVals.LAVmin = inputVals.LAVmax - 0.6*(targetVals.CO/inputVals.HR*100);
+            inputVals.LAVmin = inputVals.LAVmax - 0.6*(targetVals.CO/inputVals.HR*1e3);
         end
     else
         if(inputVals.Sex == 1) % male
@@ -237,7 +237,7 @@ if ~MRI_flag == 1
     if  C_Lasso_TRW > 0.95
         C_Lasso_TRW = 0.95;
     end
-    inputVals.Hed_RW = C_Lasso_TRW;
+    targetVals.Hed_RW = C_Lasso_TRW;
 end
 
 %% Parameters requiring modification (mods), used in the function estimParams.m
@@ -247,7 +247,7 @@ mods_0 = {'k_pas_LV','k_pas_RV','k_act_LV','k_act_RV',...
     'Vw_LV','LvSepR','Vw_RV',... % LV Septum ratio provides information on both LV and RV, so it replaces Vw_SEP
     'Amref_LV','Amref_RV',...
     ... 'V_SV_s','V0u_coeff','V0c_coeff', % fixed blood volume
-    ...'K_P','B_P',...
+    'K1','expPeri',...
     'R_tPA','R_tSA'};
 
 %% Add additional mods based on the availability of the patient's data.

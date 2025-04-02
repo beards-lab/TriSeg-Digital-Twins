@@ -6,10 +6,15 @@
 % Created by Andrew Meyer and Feng Gu
 % Last modified: 10/29/2024
 
-load(sprintf('Sims/P_NO%dWindow%d.mat',PatID,ModelWin)); % if it does exist
-m = output.modifiers;
+% load(sprintf('Sims/P_NO%dWindow%d.mat',PATIENT_NO,ModelWin)); % if it does exist
+% m = output.modifiers;
 % m = 1*ones(1,length(mods)); % if the predefined modifiers do not exist
-cost = evaluateModel(m,patients,PatID,ModelWin); % call cost function in runSim.m
+load P_NO1.mat
+m = output.modifiers;
+% m = [modifiers(1:4) 0.25 modifiers(5:end)];
+m(2) = 0.9;
+m(5) = 0.25;
+cost = evaluateModelUmich(m,patients,PATIENT_NO,ModelWin,MRI_flag); % call cost function in runSim.m
 
 % %% GA
 % [ub, lb] = m_bounds(mods); % use a simple function to set up boundary conditions for all modifiers
@@ -19,7 +24,7 @@ cost = evaluateModel(m,patients,PatID,ModelWin); % call cost function in runSim.
 % maxGen = Inf;
 % popSize = 100;
 % options = optimoptions("ga",'Display','iter', 'MaxStallGenerations', maxStallGen, 'UseParallel',true,'MaxGenerations',maxGen,'PopulationSize',popSize,'InitialPopulationRange',[lb_0; ub_0]);
-% [m,fcost,~,ga_out,fpop,fscores] = ga(@(m)evaluateModel(m,patients,PatID,ModelWin), length(m),[],[],[],[],lb, ub,[], options);
+% [m,fcost,~,ga_out,fpop,fscores] = ga(@(m)evaluateModel(m,patients,PATIENT_NO,ModelWin), length(m),[],[],[],[],lb, ub,[], options);
 % 
 % %% patternsearch
 % % Set up options for patternsearch
@@ -31,13 +36,13 @@ cost = evaluateModel(m,patients,PatID,ModelWin); % call cost function in runSim.
 %     'MaxIterations', 648,...
 %     'UseCompletePoll', true,...
 %     'UseParallel', true);
-% [m, fval, exitflag, output] = patternsearch(@(m)evaluateModel(m,patients,PatID,ModelWin), m, [], [], [], [], [], [], [], options);
+% [m, fval, exitflag, output] = patternsearch(@(m)evaluateModel(m,patients,PATIENT_NO,ModelWin), m, [], [], [], [], [], [], [], options);
 
 %% Fminsearch
 while true
     options = optimset('Display','iter','PlotFcns',@optimplotfval, 'TolFun', 1e-4, 'TolX', 1e-3, 'MaxIter',100); % reduce maxiter if you think it's getting stuck
-    m = fminsearch(@(m)evaluateModel(m,patients,PatID,ModelWin), m, options);
-    costnew = evaluateModel(m,patients,PatID,ModelWin);
+    m = fminsearch(@(m)evaluateModelUmich(m,patients,PATIENT_NO,ModelWin,MRI_flag), m, options);
+    costnew = evaluateModelUmich(m,patients,PATIENT_NO,ModelWin,MRI_flag);
     if  cost - costnew <=1
         break;
     else
@@ -48,4 +53,5 @@ end
 %% Save the output structure
 output.mods = mods;
 output.modifiers = m;
-save(sprintf('Sims/P_NO%dWindow%d.mat',PatID,ModelWin), "output");
+save P_NO1.mat output
+% save(sprintf('Sims/P_NO%dWindow%d.mat',PATIENT_NO,ModelWin), "output");

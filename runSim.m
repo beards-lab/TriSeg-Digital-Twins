@@ -3,10 +3,10 @@
 % ode15s, and to collect the corresponding simulation output.
 % A cost function is embedded in the last several sections of the script
 
-% 03/20: The biggest difference between this version and the previous one  
-% is that the current version incorporates several empirical correlations  
-% identified from the UW cohort to constrain RV mechanical and geometrical  
-% properties, helping to eliminate unrealistic conditions during optimization.  
+% 03/20: The biggest difference between this version and the previous one
+% is that the current version incorporates several empirical correlations
+% identified from the UW cohort to constrain RV mechanical and geometrical
+% properties, helping to eliminate unrealistic conditions during optimization.
 
 % Created by Andrew Meyer and Feng Gu
 % Last modified: 03/20/2024
@@ -14,6 +14,10 @@
 %% Solve the differential equations using the ODE solver
 T = params.T;
 HR = params.HR;
+if init.LAVmin >= 150||init.RAVmin>=100
+    init.LAVmin = init.LAVmin/3;
+    init.RAVmin = init.RAVmin/3;
+end
 init_vec = cell2mat(struct2cell(init))';
 M = eye(length(init_vec));
 M(1,1) = 0;
@@ -104,11 +108,17 @@ RVperiod = [RVpotentialPeriod(1) RVpotentialPeriod(RVjump(1)); RVpotentialPeriod
 TisorelaxRV = mean([RVperiod(2,2)-RVperiod(2,1) RVperiod(4,2)-RVperiod(4,1)]);
 TisocontractRV = RVperiod(3,2)-RVperiod(3,1);
 
-% This is used to prevent the isocontract and isorelax phases from disappearing.  
-% if  TisocontractLV/T <0.025 || TisocontractRV/T <0.025...
-%         ||TisorelaxLV/T <0.025 || TisorelaxRV/T <0.025
-%     error("unreal condition")
-% end
+% This is used to prevent the isocontract and isorelax phases from disappearing.
+if ~ismember('R_t_c',mods) && ~ismember('R_p_c',mods)
+    if  TisocontractRV/T <0.025 || TisorelaxRV/T <0.025
+        error("unreal condition")
+    end
+elseif ~ismember('R_m_c',mods) && ~ismember('R_a_c',mods)
+    if  TisocontractLV/T <0.025 ||TisorelaxLV/T <0.025
+        error("unreal condition")
+    end
+end
+
 
 %% Collect simulation outputs
 
@@ -169,10 +179,10 @@ r_SEP = o(48, :)';
 r_RV = o(49, :)';
 P_external = o(50, :)';
 
-%% Using LV biomechanics to inform RV biomechanics and iteratively refine RV geometry  
+%% Using LV biomechanics to inform RV biomechanics and iteratively refine RV geometry
 
 if ~MRI_flag == 1
-    load UWcohort.mat
+    % load UWcohort.mat
     load Kconstrain.mat
     mdl1 = fitlm(XKpasLV, YKpasRV); % passive
     new_x1 = sigma_pas_LV(1);
@@ -209,8 +219,8 @@ end
 %% Simulation outputs requiring post-processing for cross-valve flow
 
 end_beat_i = find(t >= 1.02*T, 1) - 1; % index for end of one complete cardiac cycle, sometime flow shift and a wave is in the middle of the T
-[Qm_maxima, Qm_maxima_i,Qm_wid,Qm_prom] = findpeaks(Q_m(1:end_beat_i));
-[Qt_maxima, Qt_maxima_i] = findpeaks(Q_t(1:end_beat_i));
+[Qm_maxima, Qm_maxima_i,Qm_wid,Qm_prom] = findpeaks(Q_m(1:end_beat_i),'MinPeakHeight',max(Q_m)/5);
+[Qt_maxima, Qt_maxima_i] = findpeaks(Q_t(1:end_beat_i),'MinPeakHeight',max(Q_m)/5);
 
 % E/A ratio
 if(length(Qm_maxima) == 2)
@@ -240,10 +250,10 @@ else
     % end
     % lastIdx = find(t(locsPos)-max(t(locsNeg(NegPeaklocs)))<0,1,"last");
     % E_A_ratio = Qm_maxima(1)/Q_m(locsPos(lastIdx));
-% 03/21 I attempted to save more simulations that lack E/A waves, 
-% but the results turned out to be unrealistic. 
-% The optimization process tends to produce only the E wave. 
-% Surface adjustments might provide a minimal possible solution.
+    % 03/21 I attempted to save more simulations that lack E/A waves,
+    % but the results turned out to be unrealistic.
+    % The optimization process tends to produce only the E wave.
+    % Surface adjustments might provide a minimal possible solution.
     E_A_ratio = 100;
 end
 
@@ -265,8 +275,8 @@ else
     Qm_sign = Qm_sign(Qm_maxima_i(end) - Qm_neg_start + 1:end);
     Qm_pos_end = find(Qm_sign ~= 1, 1) + Qm_maxima_i(end) - 2;
 end
-Qm_pos = [Qm_pos_start: Qm_pos_end]; % indices for positive mitral flow
-Qm_neg = [Qm_neg_start: Qm_neg_end]; % indices for negative mitral flow
+Qm_pos = Qm_pos_start: Qm_pos_end; % indices for positive mitral flow
+Qm_neg = Qm_neg_start: Qm_neg_end; % indices for negative mitral flow
 
 % Aortic valve
 Qa_sign = sign(Q_a);
@@ -285,8 +295,8 @@ else
     Qa_sign = Qa_sign(Qa_pos_start - Qa_neg_start + 1: end);
     Qa_pos_end = find(Qa_sign ~= 1, 1) + Qa_pos_start - 2;
 end
-Qa_pos = [Qa_pos_start: Qa_pos_end]; % indices for positive aortic flow
-Qa_neg = [Qa_neg_start: Qa_neg_end]; % indices for negative aortic flow
+Qa_pos = Qa_pos_start: Qa_pos_end; % indices for positive aortic flow
+Qa_neg = Qa_neg_start: Qa_neg_end; % indices for negative aortic flow
 DNA = (P_SA(Qa_pos_end)+P_LV(Qa_pos_end))/2;% dicrotic notch for systemic artery
 
 % Tricuspid valve
@@ -307,8 +317,8 @@ else
     Qt_pos_end = find(Qt_sign ~= 1, 1) + Qt_maxima_i(end) - 2;
 
 end
-Qt_pos = [Qt_pos_start: Qt_pos_end]; % indices for positive tricuspid flow
-Qt_neg = [Qt_neg_start: Qt_neg_end]; % indices for negative tricuspid flow
+Qt_pos = Qt_pos_start: Qt_pos_end; % indices for positive tricuspid flow
+Qt_neg = Qt_neg_start: Qt_neg_end; % indices for negative tricuspid flow
 
 % Pulmonary Valve
 Qp_sign = sign(Q_p);
@@ -327,8 +337,8 @@ else
     Qp_sign = Qp_sign(Qp_pos_start - Qp_neg_start + 1: end);
     Qp_pos_end = find(Qp_sign ~= 1, 1) + Qp_pos_start - 2;
 end
-Qp_pos = [Qp_pos_start: Qp_pos_end]; % indices for positive pulmonary flow
-Qp_neg = [Qp_neg_start: Qp_neg_end]; % indices for negative pulmonary flow
+Qp_pos = Qp_pos_start: Qp_pos_end; % indices for positive pulmonary flow
+Qp_neg = Qp_neg_start: Qp_neg_end; % indices for negative pulmonary flow
 DNP = (P_PA(Qp_pos_end)+P_RV(Qp_pos_end))/2;% Dicrotic notch for pulmonary artery
 
 % Quantify valve stenosis
@@ -513,11 +523,7 @@ o_vals.EAr = E_A_ratio;
 o_vals.LAVmax = max(V_LA);
 o_vals.LAVmin = min(V_LA);
 o_vals.SV_LA = SV_LA;
-if max(V_RV) >= 600 && MRI_flag == 0
-    error('Unreal RV Volume')
-else
-    o_vals.RVEDV = max(V_RV);
-end
+o_vals.RVEDV = max(V_RV);
 o_vals.RVESV = min(V_RV);
 o_vals.RVEF = EF_RV * 100;
 o_vals.RAVmax = max(V_RA);
@@ -536,11 +542,7 @@ o_vals.CVPmin = min(P_SV);
 o_vals.CO = CO_RV;% CO from RHC report is RV
 o_vals.Hed_LW = d_LW(LVED_i);
 o_vals.Hed_SW = d_SW(LVED_i);
-if d_RW(RVED_i) > 1 && MRI_flag == 0
-    error('unreal RV thickness')
-else
-    o_vals.Hed_RW = d_RW(RVED_i);
-end
+o_vals.Hed_RW = d_RW(RVED_i);
 o_vals.RVEDP = P_RV(RVEDP_i); % Activation function beginning coincides with start of pressure development on right side. Beginning of activation function is in the first few indices.
 o_vals.P_RV_min = min(P_RV);
 o_vals.LVEDP = P_LV(RVEDP_i);
@@ -801,7 +803,7 @@ if ~isfield(targets,'RAPmax') && ~isfield(targets,'RAPmin')
 else
     w.RAPmean = wf2*0.1;
 end
-w.RVEDP = wf2*1;
+w.RVEDP = wf2*0.2;
 w.LVEDP = wf2*0.2;
 w.P_RV_min = wf2*0.1;
 w.P_LV_min = wf2*0.1;
@@ -809,31 +811,30 @@ w.PCWP = wf2*0.3;
 w.PCWPmax = wf2*0.3;
 w.PCWPmin = wf2*0.3;
 wf3 = 250;% weights for 3rd sub figure
-w.LVEDV = wf3; w.LVESV = wf3/3;
+w.LVEDV = wf3; w.LVESV = wf3*0.3;
 w.LAVmax = wf3*0.1; w.LAVmin = wf3*0.1;
 w.RAVmax = wf3*0.1; w.RAVmin = wf3*0.1;
 wt = 1.5; % use to adjust thickness and length
 if MRI_flag == 1
-    w.RVEDV = wf3; w.RVESV = wf3/3;
-    w.RVEF = 666;
-    w.Hed_RW = wt*150;
+    w.RVEDV = wf3; w.RVESV = wf3*0.3;
+    w.Hed_RW = wt*25;
 else
-    w.RVEDV = wf3/3; w.RVESV = wf3/9;
-    w.RVEF = 222;
-    w.Hed_RW = wt*50;
+    w.RVEDV = wf3/3; w.RVESV = wf3*0.1;
+    w.RVEF = 66;
+    w.Hed_RW = wt*25/3;
 end
 % Targets not plotted as waveformw
-w.EF = 666;
+w.EF = 66;
 
-w.CO = 888; % give CO a lucky number
+w.CO = 88; % give CO a lucky number
 if(isfield(targets,'EAr'))
     w.EAr = 88;
 end
 
-w.Hed_LW = wt*200;
-w.Hed_SW = wt*200;
-w.LVIDd = wt*100;
-w.LVIDs = wt*100;
+w.Hed_LW = wt*25;
+w.Hed_SW = wt*25;
+w.LVIDd = wt*10;
+w.LVIDs = wt*10;
 w.RVIDd = wt*3;
 w.RVIDs = wt*3;
 
@@ -986,11 +987,6 @@ if(isfield(targets,'RV_m'))
     w.RV_m = 100;
 end
 
-w.T2MaxLsc_RV = 2*wf3;
-w.T2MinLsc_RV = 2*wf3;
-
-w.T2maxPPA = 2*wf3;
-
 % The following part calculates extra costs, referred to as "tax."
 % This ensures that simulation outputs remain within realistic bounds using a quartic function or
 % close to a constant. If the outputs exceed these bounds or off target, a high number is added to
@@ -1005,10 +1001,12 @@ for i = 1:length(Lsc_ED)
 end
 
 % Add costs of E/A ratio
-cost_EA_fn = @(EA)  25*(0.167066669245687*EA.^4 -1.81349025058486*EA.^3 + 7.21416047093197*EA.^2 -11.6408665836098*EA + 5.50562700516957); % to be included in tax
-cost_EA = cost_EA_fn(o_vals.EAr);
-if(cost_EA < 0)
-    cost_EA = 0;
+if ~isfield(targets,'EAr')
+    cost_EA_fn = @(EA)  25*(0.167066669245687*EA.^4 -1.81349025058486*EA.^3 + 7.21416047093197*EA.^2 -11.6408665836098*EA + 5.50562700516957); % to be included in tax
+    cost_EA = cost_EA_fn(o_vals.EAr);
+    if(cost_EA < 0)
+        cost_EA = 0;
+    end
 end
 
 
