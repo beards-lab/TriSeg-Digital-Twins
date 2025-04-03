@@ -17,7 +17,7 @@ load AllPatients.mat
 PredictedRVEDV = NaN(370,1);
 PredictedRVEF = NaN(370,1);
 secondslot = [17 79 206 256 288 325 352 355 360 361]; % patients with 2 3-month windows
-for PATIENT_NO = 2 % any number between 1 and 370, example patient in paper is 192
+for PATIENT_NO = 1 % any number between 1 and 370, example patient in paper is 192
     try
         for ModelWin =  1
             MRI_flag = 0;
@@ -29,8 +29,8 @@ for PATIENT_NO = 2 % any number between 1 and 370, example patient in paper is 1
             end
             if RUNOPT == 0
                 % load(sprintf('UmichSimsWithoutCMR/P_NO%dWindow%d.mat',PATIENT_NO,ModelWin)); % load results from great lake clusters
-                load 'P_NO2.mat'
-                % load(sprintf('Sims0320/P_NO%d.mat',PATIENT_NO)); % load results from great lake clusters
+                % load 'P_NO1 (1).mat'
+                load(sprintf('Sims0401/P_NO%d.mat',PATIENT_NO)); % load results from great lake clusters
                 modifiers = output.m;
                 % modifiers = ones(1,length(mods));
                 % modifiers(15) = 0.5;
@@ -74,8 +74,8 @@ for PATIENT_NO = 2 % any number between 1 and 370, example patient in paper is 1
                 runSim;
                 PredictedRVEDV(PATIENT_NO) = o_vals.RVEDV;
                 PredictedRVEF(PATIENT_NO) = EF_RV;
-                Print_cost = 1;% 1 for performance, other for patient's pre-condition (PHI sensitive)
-                NplotFit; % 6-panel figure for HF patients
+                % Print_cost = 1;% 1 for performance, other for patient's pre-condition (PHI sensitive)
+                % NplotFit; % 6-panel figure for HF patients
                 % GetMovie;
                 % See_TriSeg;
             end
@@ -263,14 +263,14 @@ for i = 1:length(patients)
 end
 
 %% Run Haolin's Virtual paients
+clear
 T = readtable("generated_fake_data.csv");
 MRI_flag = 1;
-for PATIENT_NO = 1
-    FakeParamsT = T(1,:);
+for PATIENT_NO = 7
+    FakeParamsT = T(PATIENT_NO,:);
     FakeParamsT.RAV0u = FakeParamsT.LAV0u*1.1;
     FakeParamsT.expPeri = 0.4;
     [params, init] = ProcessParamsFromVAE(FakeParamsT);
-    runSim;
-    Print_cost = 1;
-    NplotFit; 
+    runSimonFakeDT;
+    PlotFakeDTSim; 
 end

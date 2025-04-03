@@ -133,8 +133,8 @@ params.Vw_RV = optVw_RV;
 params.LvSepR = optLvSepR;
 params.Vh0 = optLVEDV + optRVEDV + optVw_LV + optVw_SEP + optVw_RV + LAVmin + RAVmin;
 
-params.tau_TR = 0.3;
-params.tau_TS = 0.15;
+params.tau_TR = 0.15;
+params.tau_TS = 0.3;
 params.HR = ParamsFormVAE.HR;
 params.T = 60/ParamsFormVAE.HR;
 params.C_PA = ParamsFormVAE.C_PA;
