@@ -11,6 +11,33 @@
 % example.
 % Last modified: 03/20/2025
 
+%% Simulation for Canonical Subjects
+clear
+for GENDER  = 2 % 1 for male and other for female
+    if GENDER == 1
+        [targets, inputs, mods] = targetVals_male();
+        modifiers = readmatrix('modifiers_male.csv','range','2:2');
+        modifiers = ones(1,length(mods));
+    else
+        [targets, inputs, mods] = targetVals_female();
+        modifiers = readmatrix('modifiers_female.csv','range','2:2');
+        modifiers = ones(1,length(mods));
+    end
+    Sim = 1; % 1 for simulation and other for optimazation
+    if Sim ==1
+        [INIparams, INIinit] = estiminiParams(targets,inputs);
+        % params.HR = 180;
+        % params.T = 60/params.HR;
+        [params, init] = optParams(INIparams, INIinit, mods,modifiers);
+        runSim;
+        NplotSrd; % 4-panel figure just for canonical subjects
+        % GetMovie; % TriSeg model: displacement and stress as functions of time
+        % See_TriSeg; % slices of GetMoive.m
+    else
+        Srdopt; % optimize modifiers of canonical subjects
+    end
+end
+
 %% Simulation for heart failure patients from Umich cohort without CMR info
 clear
 load AllPatients.mat
@@ -20,7 +47,7 @@ secondslot = [17 79 206 256 288 325 352 355 360 361]; % patients with 2 3-month 
 for PATIENT_NO = 1 % any number between 1 and 370, example patient in paper is 192
     try
         for ModelWin =  1
-            MRI_flag = 0;
+            MRI_flag = 1;
             [Windowdate,targets, inputs, mods] = targetVals_HF(patients,PATIENT_NO,ModelWin,MRI_flag);
             [INIparams, INIinit] = estiminiParams(targets,inputs);
             RUNOPT = 0; % 0 for simulation and 1 for optimazation
@@ -30,9 +57,9 @@ for PATIENT_NO = 1 % any number between 1 and 370, example patient in paper is 1
             if RUNOPT == 0
                 % load(sprintf('UmichSimsWithoutCMR/P_NO%dWindow%d.mat',PATIENT_NO,ModelWin)); % load results from great lake clusters
                 % load 'P_NO1 (1).mat'
-                load(sprintf('Sims0401/P_NO%d.mat',PATIENT_NO)); % load results from great lake clusters
-                modifiers = output.m;
-                % modifiers = ones(1,length(mods));
+                % load(sprintf('Sims0401/P_NO%d.mat',PATIENT_NO)); % load results from great lake clusters
+                % modifiers = output.m;
+                modifiers = ones(1,length(mods));
                 % modifiers(15) = 0.5;
                 % modifiers(16) = 0.5;
                 % modifiers = [modifiers(1:4) 1 modifiers(5:end)];

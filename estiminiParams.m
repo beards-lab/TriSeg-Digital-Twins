@@ -103,45 +103,46 @@ if(~isfield(inputData, 'RV_m'))
         right = H_RW;
         use_Vw_RV = 0;
     else
-        use_Vw_RV = 0;
-        coeff = [14853.8592619735
-            14531.7636186220
-            14769.3961036171
-            11440.8528760998
-            -21873.4802314862
-            456.030613986307
-            -4913.60117297433
-            156836.996351639
-            -155270.878092212];
-        k_RV = coeff(1)*100*(inputData.LVEDV-inputData.LVESV)/inputData.LVEDV+...
-            coeff(2)*inputData.PASP+...
-            coeff(3)*inputData.PADP+...
-            coeff(4)*inputData.PCWP+...
-            coeff(5)*inputData.CO+...
-            coeff(6)*inputData.SBP+...
-            coeff(7)*inputData.DBP+...
-            100*coeff(8)*max([inputData.Hed_SW inputData.Hed_LW])+...
-            100*coeff(9)*min([inputData.Hed_SW inputData.Hed_LW]);
-        if inputData.Sex == 1
-            k_RV = k_RV/7.2906; 
-        else
-            k_RV = k_RV/11.2290;
-        end 
-        % The above part is not ideal, but it works to get an estimation for kpas_RV and,
-        % consequently, Vw_RV. The regression model used is based on Lasso regression applied to
-        % patients who have Vw_RV measurements.
-        % The regression results are not great. When applied to canonical patients, the estimates
-        % are 7.2906 and 11.2290 times larger than the actual values. Unfortunately, we have no
-        % choice but to calibrate based on these two scaling factors. This part definitely needs
-        % improvement in the future.
-        if (isfield(inputData,'RVEDP'))
-            P_RV = inputData.RVEDP;
-        elseif (isfield(inputData,'RAPmean'))
-            P_RV = inputData.RAPmean;
-        elseif (isfield(inputData,'PCWP'))
-            P_RV = inputData.PASP*inputData.PCWP/inputData.SBP;
-        end
-        right = [P_RV k_RV];
+        % use_Vw_RV = 0;
+        error('Using K Parameter backward calculate volume should be permantly deleted')
+        % coeff = [14853.8592619735
+        %     14531.7636186220
+        %     14769.3961036171
+        %     11440.8528760998
+        %     -21873.4802314862
+        %     456.030613986307
+        %     -4913.60117297433
+        %     156836.996351639
+        %     -155270.878092212];
+        % k_RV = coeff(1)*100*(inputData.LVEDV-inputData.LVESV)/inputData.LVEDV+...
+        %     coeff(2)*inputData.PASP+...
+        %     coeff(3)*inputData.PADP+...
+        %     coeff(4)*inputData.PCWP+...
+        %     coeff(5)*inputData.CO+...
+        %     coeff(6)*inputData.SBP+...
+        %     coeff(7)*inputData.DBP+...
+        %     100*coeff(8)*max([inputData.Hed_SW inputData.Hed_LW])+...
+        %     100*coeff(9)*min([inputData.Hed_SW inputData.Hed_LW]);
+        % if inputData.Sex == 1
+        %     k_RV = k_RV/7.2906; 
+        % else
+        %     k_RV = k_RV/11.2290;
+        % end 
+        % % The above part is not ideal, but it works to get an estimation for kpas_RV and,
+        % % consequently, Vw_RV. The regression model used is based on Lasso regression applied to
+        % % patients who have Vw_RV measurements.
+        % % The regression results are not great. When applied to canonical patients, the estimates
+        % % are 7.2906 and 11.2290 times larger than the actual values. Unfortunately, we have no
+        % % choice but to calibrate based on these two scaling factors. This part definitely needs
+        % % improvement in the future.
+        % if (isfield(inputData,'RVEDP'))
+        %     P_RV = inputData.RVEDP;
+        % elseif (isfield(inputData,'RAPmean'))
+        %     P_RV = inputData.RAPmean;
+        % elseif (isfield(inputData,'PCWP'))
+        %     P_RV = inputData.PASP*inputData.PCWP/inputData.SBP;
+        % end
+        % right = [P_RV k_RV];
     end
 else
     rho_myo = 1.055; % g/mL

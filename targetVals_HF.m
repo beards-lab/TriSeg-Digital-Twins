@@ -185,14 +185,16 @@ if MRI_flag == 1
     end
 end
 
-if (isfield(targetVals,'EF'))
-    CO = 1000 * targetVals.CO / 60;
-    SV = 60 * CO / inputVals.HR;
-    inputVals.LVEDV =   SV/ (targetVals.EF*0.01);
-    inputVals.LVESV =   inputVals.LVEDV-SV;
-elseif isfield(targetVals,'LVIDd')
-    inputVals.LVEDV = targetVals.LVIDd^3*0.7851+97.32;
-    inputVals.LVESV = targetVals.LVIDs^3*0.9185+63.92;
+if ~MRI_flag == 1
+    if (isfield(targetVals,'EF'))
+        CO = 1000 * targetVals.CO / 60;
+        SV = 60 * CO / inputVals.HR;
+        inputVals.LVEDV =   SV/ (targetVals.EF*0.01);
+        inputVals.LVESV =   inputVals.LVEDV-SV;
+    elseif isfield(targetVals,'LVIDd')
+        inputVals.LVEDV = targetVals.LVIDd^3*0.7851+97.32;
+        inputVals.LVESV = targetVals.LVIDs^3*0.9185+63.92;
+    end
 end
 
 % LAVmax can be assigned as either an input or a target
@@ -324,8 +326,10 @@ if MRI_flag == 1
 end
 
 %% Right Side assumption
+
+load LassoRV.mat
+
 if ~MRI_flag == 1
-    load LassoRV.mat
     Raw_Lasso_RVEDV = inputVals.Sex*k_RVEDV(1) + inputVals.Age*k_RVEDV(2) +...
         inputVals.Height*k_RVEDV(3) + inputVals.Height*inputVals.Weight*k_RVEDV(4) +...
         inputVals.HR*k_RVEDV(5) + targetVals.SBP*k_RVEDV(6) +...
@@ -355,7 +359,9 @@ if ~MRI_flag == 1
     end
     targetVals.RVEF = C_Lasso_RVEF;
     inputVals.RVESV = targetVals.RVEDV * (100-targetVals.RVEF) * 0.01;
+end
 
+if isnan(Data.('MRI_RVMass'))
     if  (~isnan(Data.('RAa'))) || (~isnan(Data.('RAv')))
         coeff3= targetVals.RAPmax;
     elseif ~isnan(Data.('RAm'))
@@ -382,7 +388,6 @@ if ~MRI_flag == 1
     end
     targetVals.Hed_RW = C_Lasso_TRW;
 end
-
 %% Parameters requiring modification (mods), used in the function estimParams.m
 % Default parameters should be always optimized
 mods_0 = {'k_pas_LV','k_pas_RV','k_act_LV','k_act_RV',...
@@ -405,10 +410,10 @@ end
 if ~isnan(Data.('PCW')) && ~isnan(Data.('RAm'))
     if abs(Data.('PCW') - Data.('RAm')) <= 5
         mods_pN{end + 1} = 'expPeri';
-        mods_pN{end + 1} = 'K1';
+        % mods_pN{end + 1} = 'K1';
     else
         mods_pN{end + 1} = 'K1';
-        mods_pN{end + 1} = 'expPeri';
+        % mods_pN{end + 1} = 'expPeri';
     end
 end
 
