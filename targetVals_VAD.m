@@ -1,4 +1,4 @@
-function [Windowdate, targetVals, inputVals, mods] = targetVals_VAD(data,Patient_no)
+function [Windowdate, targetVals, inputVals, mods] = targetVals_VAD(data,Patient_no,ModelWin)
 %% Function Purpose:
 % Retrieves data for input and target, with default modifiers assigned.
 % No processing decisions—only data collection.
@@ -17,13 +17,7 @@ function [Windowdate, targetVals, inputVals, mods] = targetVals_VAD(data,Patient
 %               which the model does not fit
 % mods        - Cell array of names to adjust selected parameters
 % Windowdate  - Date the model was built at
-if ismember(Patient_no,[40 162 241 349 424])
-    Data = data(Patient_no).snapshots(end-2);
-elseif ismember(Patient_no,[67 87 111 115 139 161 166 183 189 191 201 211 234 261 278 284 291 294 307 331 346 377 382 389 437 458])
-    Data = data(Patient_no).snapshots(end-1);
-else
-    Data = data(Patient_no).snapshots(end);
-end
+Data = data(Patient_no).snapshots(ModelWin);
 Windowdate = mean([Data.RHCDate;Data.TTEDate]);
 %% Assign input values
 % Default inputs from data
@@ -301,7 +295,7 @@ targetVals.Hed_RW = C_Lasso_TRW;
 mods_0 = {'k_pas_LV','k_pas_RV','k_act_LV','k_act_RV',...
     'C_SA','C_PA','R_SA','R_PA','R_Veins','R_m_o',...
     'Vw_LV','LvSepR','Vw_RV',... % LV Septum ratio provides information on both LV and RV, so it replaces Vw_SEP
-    ...'Amref_LV','Amref_RV',...
+    'Amref_LV','Amref_RV',...
     ... 'V_SV_s','V0u_coeff','V0c_coeff', % fixed blood volume
     'expPeri','K1',...
     'R_tPA','R_tSA'};

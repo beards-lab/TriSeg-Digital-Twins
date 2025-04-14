@@ -5,11 +5,12 @@ function [targetVals, inputVals, mods] = targetVals_PKU(MRI_flag)
 % Sets direct measurements from Echo and RHC as targets.
 
 % Created by Feng Gu
-% Last modified: 03/20/2025
+% Last modified: 11/28/2024
 
 % Inputs:
-% Havn't get enough data from PKU this function is still on hold
-% MRI_flag    - 1 stands for reading info from CMR, other is not reading
+% Data        - Table of data extracted from the narrative
+% Patient_no  - Vector to locate the patient
+% Window_No   - Vector to locate the time point
 
 % Outputs:
 % targetVals  - Structure of measurements that the model tries to fit
@@ -91,7 +92,7 @@ else
         inputVals.LVESV = targetVals.LVIDs^3*0.9185+63.92;
     end
     inputVals.LAVmax = 25.17*((4.82+6.02)/2)-54.92; % from . (J Am Soc Echocardiogr 2017;30:262-9.)
-    if inputVals.LAVmax <= 0.6*(targetVals.CO/inputVals.HR*1e3)
+    if inputVals.LAVmax <= 0.6*(targetVals.CO/inputVals.HR*100)
         if(inputVals.Sex == 1) % male
             inputVals.LAVmax = 72*r;
             inputVals.LAVmin = 25*r;
@@ -100,7 +101,7 @@ else
             inputVals.LAVmin = 22*r;
         end
     else
-        inputVals.LAVmin = inputVals.LAVmax - 0.6*(targetVals.CO/inputVals.HR*1e3);
+        inputVals.LAVmin = inputVals.LAVmax - 0.6*(targetVals.CO/inputVals.HR*100);
     end
     if(inputVals.Sex == 1) % male
         inputVals.RAVmin = 32/25*inputVals.LAVmin; % from Baseline_resting numbers. need these for diastolic displacement for model intial conditions

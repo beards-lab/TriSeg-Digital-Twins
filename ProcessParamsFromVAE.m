@@ -37,20 +37,14 @@ if ~isreal(beta)
     error("unreal geometery")
 end
 % Calculate Xm Ym for every optimzation
-syms y beta_sym A1 A2 pi_sym
+optym_d = (optAmref_LV*sin(beta)^2/(2*pi*(1+cos(beta))))^(1/2);
+optAmref_SEP = ((optym_d/sin(beta) - optym_d/tan(beta))^2+ optym_d^2)*pi;
 
-eq = y^4 - (sin(beta_sym)^2 * (A1 + A2)/(2 * pi_sym * (1 + sin(beta_sym)^2))) * y^2 ...
-     - ((A2 - A1)^2 * sin(beta_sym)^4/(16 * pi_sym^2 * (1 + sin(beta_sym)^2))) == 0;
+% Calculate LVEDV
+optLVEDV = 1/6*sqrt((optAmref_LV+optAmref_SEP)^3/pi) - 0.5*(optVw_LV+optVw_SEP);
 
-y_solutions = solve(eq, y,"ReturnConditions",true);
-beta_sym = beta;
-A1 = optAmref_LV;
-A2 = optAmref_SEP;
-pi_sym = pi;
-y_solutions_numeric = subs(y_solutions.y);
-optym_d = double(y_solutions_numeric(arrayfun(@(s) isreal(s) && s > 0, y_solutions_numeric)));
-optxm_LV = -optym_d / sin(beta) + (A2 - A1) * sin(beta) / (4 * optym_d * pi);
-optxm_SEP = optym_d / sin(beta) + (A2 - A1) * sin(beta) / (4 * optym_d * pi);
+optxm_LV = -optym_d / sin(beta) + (optAmref_SEP - optAmref_LV) * sin(beta) / (4 * optym_d * pi);
+optxm_SEP = optym_d / sin(beta) + (optAmref_SEP - optAmref_LV) * sin(beta) / (4 * optym_d * pi);
 optxm_RV = sqrt(optAmref_RV/pi-optym_d^2);
 optRVEDV = (pi / 6) * optxm_RV * (optxm_RV^2 + 3 * optym_d^2)-0.5*(optVw_RV+optVw_SEP)- ((pi / 6) * optxm_SEP * (optxm_SEP^2 + 3 * optym_d^2));
 if optRVEDV < 0 || optLVEDV < 0||optLvSepR >= 1 || optLvSepR < 0

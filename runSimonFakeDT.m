@@ -179,43 +179,6 @@ r_SEP = o(48, :)';
 r_RV = o(49, :)';
 P_external = o(50, :)';
 
-%% Using LV biomechanics to inform RV biomechanics and iteratively refine RV geometry
-
-if ~MRI_flag == 1
-    % load UWcohort.mat
-    load Kconstrain.mat
-    mdl1 = fitlm(XKpasLV, YKpasRV); % passive
-    new_x1 = sigma_pas_LV(1);
-    new_y1 = sigma_pas_RV(1);
-    if new_x1 <= 0 || new_y1 <= 0
-        error('negative passive property')
-    end
-    [~, pi1] = predict(mdl1, new_x1, 'Prediction', 'observation', 'Alpha', 0.05);
-    [~, pi2] = predict(mdl1, new_x1, 'Alpha', 0.05);
-    alpha1 = 1e10; % parameter control Smooth
-    cost_pas = 1e-4*((new_y1 - pi2(1)).^4 .* (1 ./ (1 + exp(-alpha1 * (new_y1 - pi2(1))))) ...
-        + 0.5 * (new_y1 - pi2(1)).^4 .* (1 ./ (1 + exp(-alpha1 * (new_y1 - pi1(1))))) ...
-        + 0.5 * (new_y1 - pi2(2)).^4 .* (1 ./ (1 + exp(-alpha1 * (pi2(2) - new_y1)))) ...
-        + (new_y1 - pi2(2)).^4 .* (1 ./ (1 + exp(-alpha1 * (pi1(2) - new_y1)))));
-    mdl2 = fitlm(XSPPASP, YKactLVRV);
-    % new_x2 = targets.SBP;
-    new_x3 = targets.PASP;
-    % new_y2 = (max(sigma_act_LV)+max(sigma_act_SEP));
-    new_y3 = max(sigma_act_RV);
-    % [~, pi3] = predict(mdl2, new_x2, 'Prediction', 'observation', 'Alpha', 0.05);
-    % [~, pi4] = predict(mdl2, new_x2, 'Alpha', 0.05);
-    alpha2 = 1e-4; % parameter control Smooth
-    % cost_act_1 = 1e-6*((new_y2 - pi4(1)).^4 .* (1 ./ (1 + exp(-alpha2 * (new_y2 - pi4(1))))) ...
-    %           + 1 * (new_y2 - pi4(1)).^4 .* (1 ./ (1 + exp(-alpha2 * (new_y2 - pi3(1))))) ...
-    %           + 1 * (new_y2 - pi4(2)).^4 .* (1 ./ (1 + exp(-alpha2 * (pi4(2) - new_y2)))) ...
-    %           + (new_y2 - pi4(2)).^4 .* (1 ./ (1 + exp(-alpha2 * (pi3(2) - new_y2)))));
-    [~, pi5] = predict(mdl2, new_x3, 'Prediction', 'observation', 'Alpha', 0.05);
-    [~, pi6] = predict(mdl2, new_x3, 'Alpha', 5e-7);
-    cost_act = 1e-7*((new_y3 - pi6(1)).^4 .* (1 ./ (1 + exp(-alpha2 * (new_y3 - pi6(1))))) ...
-        + 1 * (new_y3 - pi6(1)).^4 .* (1 ./ (1 + exp(-alpha2 * (new_y3 - pi5(1))))) ...
-        + 1 * (new_y3 - pi6(2)).^4 .* (1 ./ (1 + exp(-alpha2 * (pi6(2) - new_y3)))) ...
-        + (new_y3 - pi6(2)).^4 .* (1 ./ (1 + exp(-alpha2 * (pi5(2) - new_y3)))));
-end
 %% Simulation outputs requiring post-processing for cross-valve flow
 
 end_beat_i = find(t >= 1.02*T, 1) - 1; % index for end of one complete cardiac cycle, sometime flow shift and a wave is in the middle of the T
@@ -616,9 +579,9 @@ else
     T2maxPSA = t(locsTSA)-T;
 end
 
-% if T2maxPSA/T <= 0.2
-%     error('KactLV may too big')
-% end
+if T2maxPSA/T <= 0.2
+    error('KactLV may too big')
+end
 
 
 if t(locsTPA) < T
@@ -627,9 +590,9 @@ else
     T2maxPPA = t(locsTPA)-T;
 end
 
-% if T2maxPPA/T <= 0.2
-%     error('KactRV may too big')
-% end
+if T2maxPPA/T <= 0.2
+    error('KactRV may too big')
+end
 
 
 Tint = (t(1):0.001:t(end));

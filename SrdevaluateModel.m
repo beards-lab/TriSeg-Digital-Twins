@@ -15,10 +15,12 @@ try
     end
         [INIparams, INIinit] = estiminiParams(targets,inputs);
         [params, init] = optParams(INIparams, INIinit, mods,modifiers);
+        MRI_flag = 1;
         runSim;
     if total_cost<0
         total_cost = inf;
     end
-catch
+catch ME
     total_cost = inf;
+    disp(ME.message)
 end

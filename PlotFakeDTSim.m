@@ -13,7 +13,7 @@
 % Last modified: 10/29/2024
 
 trng = [t(1) t(end)];
-figure(1); clf;
+figure(101); clf;
 tiles = tiledlayout(2,3);
 tiles.TileSpacing = 'compact';
 tiles.Padding = 'tight';

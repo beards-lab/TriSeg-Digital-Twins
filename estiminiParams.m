@@ -154,7 +154,7 @@ end
 if(~isfield(inputData, 'LV_m'))
     % Thicknesses are from echo, wall volumes are based on lvedv estimate
     if(isfield(inputData,'Hed_LW')) % always have both measurements
-        H_LW_and_SW = (inputData.Hed_LW + inputData.Hed_SW) / 2; % This doesn't make sense if we're trying to fit both independently
+        H_LW_and_SW = (inputData.Hed_LW + inputData.Hed_SW) / 2; 
     else
         assert(false); 
     end

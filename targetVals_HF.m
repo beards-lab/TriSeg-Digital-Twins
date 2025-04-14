@@ -410,10 +410,10 @@ end
 if ~isnan(Data.('PCW')) && ~isnan(Data.('RAm'))
     if abs(Data.('PCW') - Data.('RAm')) <= 5
         mods_pN{end + 1} = 'expPeri';
-        % mods_pN{end + 1} = 'K1';
+        mods_pN{end + 1} = 'K1';
     else
         mods_pN{end + 1} = 'K1';
-        % mods_pN{end + 1} = 'expPeri';
+        mods_pN{end + 1} = 'expPeri';
     end
 end
 
