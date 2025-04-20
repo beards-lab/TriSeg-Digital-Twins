@@ -298,9 +298,9 @@ RVcost = NaN(64,1);
 PredictedRVEDV = NaN(64,1);
 PredictedRVEF = NaN(64,1);
 PredictedTRW = NaN(64,1);
-for PATIENT_NO = 1:64
+for PATIENT_NO = 1
     try
-        MRI_flag = 0;
+        MRI_flag = 1;
         [targets, inputs, mods] = targetVals_UW(UWpatients, PATIENT_NO, MRI_flag);
         [INIparams, INIinit] = estiminiParams(targets,inputs);
         RUNOPT = 0; % 0 for simulation and 1 for optimazation
@@ -313,9 +313,9 @@ for PATIENT_NO = 1:64
             else
                 load(sprintf('Sims0401UW/P_NO%d.mat',PATIENT_NO)); % load results from great lake clusters
             end
-            modifiers = output.m;
-            % modifiers = ones(1,length(mods));
-            [params, init] = optParamsWrongVersion(INIparams, INIinit, mods,modifiers);
+            % modifiers = output.m;
+            modifiers = ones(1,length(mods));
+            [params, init] = optParams(INIparams, INIinit, mods,modifiers);
             % if isfield(targets, 'EAr')
             %     targets = rmfield(targets, 'EAr'); % 移除字段 'b'
             % end
@@ -326,7 +326,7 @@ for PATIENT_NO = 1:64
             % init = output.init;
             runSim;
             Print_cost = 1;% 1 for performance, other for patient's pre-condition (PHI sensitive)
-            NplotFit; % 6-panel figure for HF patientsP
+            NplotFit; % 6-panel figure for HF patients
             Cost(PATIENT_NO) = total_cost;
             RVcost (PATIENT_NO)  = ((o_vals.RVEDV - UWpatients.RVEDV(PATIENT_NO)) / std(UWpatients.RVEDV)).^2 + ...
                 ((o_vals.RVESV - UWpatients.RVESV(PATIENT_NO)) / std(UWpatients.RVESV)).^2 + ...
@@ -436,60 +436,60 @@ DTTable = readtable("LastWindowDTinfo.csv",VariableNamingRule="preserve");
 
 %%
 tic
-for PATIENT_NO = 25
+for PATIENT_NO = 158:473
     try
-        if ismember(PATIENT_NO,[40 162 241 349 424])
-            ModelWin = length(patients(PATIENT_NO).snapshots)-2;
-        elseif ismember(PATIENT_NO,[67 87 111 115 139 161 166 183 189 191 201 211 234 261 278 284 291 294 307 331 346 377 382 389 437 458])
-            ModelWin = length(patients(PATIENT_NO).snapshots)-1;
-        else
-            ModelWin = length(patients(PATIENT_NO).snapshots);
-        end
+        % if ismember(PATIENT_NO,[40 162 241 349 424])
+        %     ModelWin = length(patients(PATIENT_NO).snapshots)-2;
+        % elseif ismember(PATIENT_NO,[67 87 111 115 139 161 166 183 189 191 201 211 234 261 278 284 291 294 307 331 346 377 382 389 437 458])
+        %     ModelWin = length(patients(PATIENT_NO).snapshots)-1;
+        % else
+        %     ModelWin = length(patients(PATIENT_NO).snapshots);
+        % end
         MRI_flag = 0;
-        % windowslot = mean([patients(PATIENT_NO).snapshots.RHCDate;patients(PATIENT_NO).snapshots.TTEDate],1);
-        % targetstable = readtable("share_addmisionDate_VADdate.xlsx","VariableNamingRule","preserve");
-        % [~,idx] = ismember(patients(PATIENT_NO).snapshots(1).patKey,targetstable.patkey);
-        % targetsDate = targetstable.date_admit(idx);
-        % [~, ModelWin] = min(abs(windowslot -  targetsDate));
-        try
-            [Windowdate,targets, inputs, mods] = targetVals_VAD(patients,PATIENT_NO,ModelWin);
-            [INIparams, INIinit] = estiminiParams(targets,inputs);
-        catch
+        windowslot = [patients(PATIENT_NO).snapshots.RHCDate;patients(PATIENT_NO).snapshots.TTEDate];
+        targetstable = readtable("share_addmisionDate_VADdate.xlsx","VariableNamingRule","preserve");
+        [~,idx] = ismember(patients(PATIENT_NO).snapshots(1).patKey,targetstable.patkey);
+        targetsDate = targetstable.date_admit(idx);
+        distance = abs(windowslot(1,:) - targetsDate) + abs(windowslot(2,:) - targetsDate);
+        [~, ModelWin] = min(distance);
+        if ismember(PATIENT_NO,[31 38 52 103 267 295])
             ModelWin = ModelWin+1;
-            [Windowdate,targets, inputs, mods] = targetVals_VAD(patients,PATIENT_NO,ModelWin);
-            [INIparams, INIinit] = estiminiParams(targets,inputs);
+        elseif ismember(PATIENT_NO,[284 307 331])
+            ModelWin = ModelWin-1;
         end
-        load(sprintf('Sims0402VAD/P_NO%d.mat',PATIENT_NO)); % load results from great lake clusters
+        [Windowdate,targets, inputs, mods] = targetVals_VAD(patients,PATIENT_NO,ModelWin);
+        [INIparams, INIinit] = estiminiParams(targets,inputs);
+
+        load(sprintf('Sims0411VAD/P_NO%d.mat',PATIENT_NO)); % load results from great lake clusters
         modifiers = output.m;
         % modifiers = ones(1,length(mods));
         [params, init] = optParamsWrongVersion(INIparams, INIinit, mods,modifiers);
         runSim;
-        % Prediction.LVpowerIndex_S = LVpower/BSA;
-        % Prediction.RVpowerIndex_S = RVpower/BSA;
-        % Prename = fieldnames(Prediction);
-        % for j = 1:length(Prename)
-        %     p = Prediction.(Prename{j});
-        %     DTTable.(Prename{j})(PATIENT_NO ) = p;
-        % end
-        % outputname = fieldnames(o_vals);
-        % for j = 1:length(outputname)
-        %     o = o_vals.(outputname{j});
-        %     DTTable.(outputname{j}+"_S")(PATIENT_NO ) = o;
-        % end
-        % DTTable.minRVP_S(PATIENT_NO) = o_vals.P_RV_min;
-        % DTTable.minLVP_S(PATIENT_NO) = o_vals.P_LV_min;
-        % DTTable.LVm_S(PATIENT_NO) = o_vals.LV_m;
-        % DTTable.RVm_S(PATIENT_NO) = o_vals.RV_m;
-        % DTTable.HedLW_S(PATIENT_NO) = o_vals.Hed_LW;
-        % DTTable.HedSW_S(PATIENT_NO) = o_vals.Hed_SW;
-        Print_cost = 1;% 1 for performance, other for patient's pre-condition (PHI sensitive)
-        NplotFit; % 6-panel figure for HF patients
+        Prediction.LVpowerIndex_S = LVpower/BSA;
+        Prediction.RVpowerIndex_S = RVpower/BSA;
+        Prename = fieldnames(Prediction);
+        for j = 1:length(Prename)
+            p = Prediction.(Prename{j});
+            DTTable.(Prename{j})(PATIENT_NO ) = p;
+        end
+        outputname = fieldnames(o_vals);
+        for j = 1:length(outputname)
+            o = o_vals.(outputname{j});
+            DTTable.(outputname{j}+"_S")(PATIENT_NO ) = o;
+        end
+        DTTable.minRVP_S(PATIENT_NO) = o_vals.P_RV_min;
+        DTTable.minLVP_S(PATIENT_NO) = o_vals.P_LV_min;
+        DTTable.LVm_S(PATIENT_NO) = o_vals.LV_m;
+        DTTable.RVm_S(PATIENT_NO) = o_vals.RV_m;
+        DTTable.HedLW_S(PATIENT_NO) = o_vals.Hed_LW;
+        DTTable.HedSW_S(PATIENT_NO) = o_vals.Hed_SW;
+        % Print_cost = 1;% 1 for performance, other for patient's pre-condition (PHI sensitive)
+        % NplotFit; % 6-panel figure for HF patients
         % GetMovie;
-        See_TriSeg;
-        pause(3);
+        % See_TriSeg;
+        % pause(3);
     catch ME
         disp(['Error: ', ME.message, 'PatID',num2str(PATIENT_NO)])
-        % break
     end
 end
 toc
@@ -498,7 +498,7 @@ clear
 load('AllPatients_preVAD_data.mat')
 Table = readtable("RVoutcomes.xlsx");
 figure(101);clf;
-for i = 2
+for i = 241
     [~,idx] = ismember(patients(i).snapshots(1).patKey,Table.patkey);
     plot([min([patients(i).snapshots(1).RHCDate patients(i).snapshots(1).TTEDate])...
         Table.VADOpDate(idx)],i*ones(1,2),'Color',[0.7 0.7 0.7,0.5]);
@@ -517,7 +517,7 @@ end
 
 
 %%
-DTTable = readtable("LastWindowDTinfo.csv");
+DTTable = readtable("Close2AdmitDTinfo.csv");
 listorder = (1:473);
 PatientNumber =listorder(~isnan(DTTable.C_SA));
 TableList = cell(473,1);
@@ -530,11 +530,17 @@ for i = 1:473
     % else
     %     ModelWin = length(patients(PATIENT_NO).snapshots);
     % end
-    windowslot = mean([patients(PATIENT_NO).snapshots.RHCDate;patients(PATIENT_NO).snapshots.TTEDate],1);
-    targetstable = readtable("share_addmisionDate_VADdate.xlsx","VariableNamingRule","preserve");
-    [~,idx] = ismember(patients(PATIENT_NO).snapshots(1).patKey,targetstable.patkey);
-    targetsDate = targetstable.date_admit(idx);
-    [~, ModelWin] = min(abs(windowslot -  targetsDate));
+        windowslot = [patients(PATIENT_NO).snapshots.RHCDate;patients(PATIENT_NO).snapshots.TTEDate];
+        targetstable = readtable("share_addmisionDate_VADdate.xlsx","VariableNamingRule","preserve");
+        [~,idx] = ismember(patients(PATIENT_NO).snapshots(1).patKey,targetstable.patkey);
+        targetsDate = targetstable.date_admit(idx);
+        distance = abs(windowslot(1,:) - targetsDate) + abs(windowslot(2,:) - targetsDate);
+        [~, ModelWin] = min(distance);
+        if ismember(PATIENT_NO,[31 38 52 103 267 295])
+            ModelWin = ModelWin+1;
+        elseif ismember(PATIENT_NO,[284 307 331])
+            ModelWin = ModelWin-1;
+        end
     DataToConvert = patients(PATIENT_NO).snapshots(ModelWin);
     OutputTable = struct2table(DataToConvert);
 
@@ -552,6 +558,7 @@ end
 DataTable.Age = round(years(mean([DataTable.RHCDate DataTable.TTEDate],2)-DataTable.Birthday));
 %%
 writetable(DataTable,'Close2AdmitData.csv');
+writetable(DTTable,'Close2AdmitDTinfo.csv');
 %%
 T1 = readtable("Close2AdmitData.csv");
 T2 = readtable("LastWindowData.csv");
@@ -581,4 +588,10 @@ for PATIENT_NO = 1:64
     catch ME
         disp({ME.message num2str(PATIENT_NO)})
     end
+end
+%% will delete at the end of 0415
+list = [2	5	7	8	10	14	15	29	30	31	33	34	35	36	38	40	41	50	52	56	62	63	65	66	67	72	74	76	79	80	84	86	89	90	92	93	94	95	96	97	99	102	103	104	106	107	110	112	113	115	116	117	118	119	121	122	123	127	128	130	132	133	134	137	139	144	147	149	150	151	159	161	162	164	165	167	168	171	174	175	177	180	181	184	185	186	189	190	193	195	196	197	199	201	202	206	208	209	211	214	217	218	219	221	224	226	227	228	229	230	233	234	237	241	242	243	244	248	252	255	256	258	262	264	265	267	270	273	274	276	277	278	279	280	284	287	292	295	298	299	300	301	302	305	306	307	308	312	313	314	317	318	320	322	323	324	325	326	329	330	331	333	337	338	341	342	343	344	349	350	351	363	365	367	370	371	374	377	379	382	384	385	390	391	392	394	396	397	399	400	404	406	409	410	412	413	417	422	423	425	427	428	430	431	432	436	438	439	442	445	448	451	452	453	455	457	459	460	462	465	467	468];
+for  i  = 179:length(list)
+    PATIENT_NO = list(i);
+    load(sprintf('Sims0411VAD/P_NO%d.mat',PATIENT_NO)); % load results from great lake clusters
 end

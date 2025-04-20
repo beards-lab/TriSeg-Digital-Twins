@@ -247,7 +247,7 @@ mods_0 = {'k_pas_LV','k_pas_RV','k_act_LV','k_act_RV',...
     'Vw_LV','LvSepR','Vw_RV',... % LV Septum ratio provides information on both LV and RV, so it replaces Vw_SEP
     'Amref_LV','Amref_RV',...
     ... 'V_SV_s','V0u_coeff','V0c_coeff', % fixed blood volume
-    'K1','expPeri',...
+    ... 'K1','expPeri',...
     'R_tPA','R_tSA'};
 
 %% Add additional mods based on the availability of the patient's data.
@@ -260,6 +260,14 @@ if ~isnan(Data.('RVSP'))
     end
 end
 
+
+if ~isnan(Data.('PCWP')) && ~isnan(Data.('RAPmax'))
+    if abs(Data.('PCWP') - Data.('RAPmax') + 2) <= 5
+        mods_pN{end + 1} = 'expPeri';
+    else
+        mods_pN{end + 1} = 'K1';
+    end
+end
 
 vlv_def = dictionary('MVr','R_m_c', ...
     'MS','R_m_o', ...

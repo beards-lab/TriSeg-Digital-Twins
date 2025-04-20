@@ -131,6 +131,12 @@ if ~isnan(Data.('IVSd'))
     else
         targetVals.Hed_SW = Data.('IVSd');
     end
+elseif ~isnan(Data.('LVPWd'))
+    if Data.('LVPWd') > 3
+        targetVals.Hed_SW = Data.('LVPWd')/10; % this is from ECHO
+    else
+        targetVals.Hed_SW = Data.('LVPWd');
+    end
 end
 
 if ~isnan(Data.('LVPWd'))
@@ -139,8 +145,12 @@ if ~isnan(Data.('LVPWd'))
     else
         targetVals.Hed_LW = Data.('LVPWd');
     end
-% else
-%     targetVals.Hed_LW  = targetVals.Hed_SW;
+elseif ~isnan(Data.('IVSd'))
+    if Data.('IVSd') > 3
+        targetVals.Hed_LW = Data.('IVSd')/10; % this is from ECHO
+    else
+        targetVals.Hed_LW = Data.('IVSd');
+    end
 end
 
 
@@ -349,7 +359,7 @@ tg_bounds = dictionary('SBP',{[50 300]}, ...
     'tPLVmin',{[0 1]},...
     'RAPmean',{[0 50]}, ...
     'RAPmax',{[0 50]}, ...
-    'PCWPmax',{[0 75]}, ...
+    'PCWPmax',{[0 100]}, ...
     'RVSP',{[5 150]}, ...
     'RVEDP',{[0 50]}, ...
     'P_RV_min',{[0 50]}, ...
