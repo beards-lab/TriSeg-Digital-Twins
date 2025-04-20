@@ -1,40 +1,73 @@
-function [dxdt, outputs] = dXdT(t,x, params)     
+function [dxdt, outputs] = dXdT(t,x, params,iniGeo)     
 %% Function Purpose:
 % This function contains the differential equations that the ODE solver calls.
 
 % Created by EB Randall, modified by Filip Jezek, Andrew Meyer, and Feng Gu
 % Last modified: 10/29/2024
+% Important update on 04/20/2025:
+% Split TriSeg and 0D hemodynamic models. Solve AE using fsolve and retain the original ODE formulation, instead of forming a DAE.
 
 % Inputs: 
 % t       - Time vector for simulation
 % x       - Variables to be solved
 % params  - Structure of parameter values
+% iniGeo  - Variables of initial guessing of TriSeg heart geometery
 
 % Outputs: 
 % dxdt    - Differential equations
 % outputs - Simulation outputs
 
 %% Variables 
-% TriSeg geometries (cm)
-xm_LV  = x(1); 
-xm_SEP = x(2); 
-xm_RV  = x(3);
-ym     = x(4); 
 
 % Contractile element length (um)
-Lsc_LV  = x(5); 
-Lsc_SEP = x(6); 
-Lsc_RV  = x(7); 
+Lsc_LV  = x(1); 
+Lsc_SEP = x(2); 
+Lsc_RV  = x(3); 
 
 % Volumes (mL) 
-V_LV = x(8); % left ventricle
-V_RV = x(9); % right ventricle
-V_SA = x(10); % systemic arteries
-V_SV = x(11); % systemic veins
-V_PA = x(12); % pulmonary arteries
-V_PV = x(13); % pulmonary veins
-V_LA = x(14); % left atrium
-V_RA = x(15); % right atrium
+V_LV = x(4); % left ventricle
+V_RV = x(5); % right ventricle
+V_SA = x(6); % systemic arteries
+V_SV = x(7); % systemic veins
+V_PA = x(8); % pulmonary arteries
+V_PV = x(9); % pulmonary veins
+V_LA = x(10); % left atrium
+V_RA = x(11); % right atrium
+%% Decoupled TriSeg Mechanics (Algebraic Equation Solver)
+
+% Persistent variable to store the previous solution as the initial guess,
+% which helps accelerate convergence in the next time step.
+persistent guessGeom  
+if t == 0
+    guessGeom = iniGeo;  % Use the provided initial geometry at t = 0
+end
+
+% Define the algebraic equation function to solve for geometric variables
+eqFun = @(geomVar) triSegEquations(geomVar, t, V_LV, V_RV, ...
+                                   Lsc_LV, Lsc_SEP, Lsc_RV, params);
+options = optimset('Display', 'off', 'TolFun', 1e-7);  
+
+% Solve the algebraic equations using fsolve
+[solGeom, ~, exitflag] = fsolve(eqFun, guessGeom, options);
+
+% Handle failure case if fsolve doesn't converge
+if exitflag <= 0
+    warning('fsolve failed at t = %g. Using previous solution as fallback.', t);
+    % Optional fallback strategies:
+    % 1) Retain the previous guess without update
+    % 2) Assign NaNs to dxdt to force simulation termination
+    % Here, we simply reuse the last known good solution
+    solGeom = guessGeom;  
+end
+
+% Update guessGeom for the next time step
+guessGeom = solGeom;  
+
+% Parse the solved geometric variables
+xm_LV  = solGeom(1);
+xm_SEP = solGeom(2);
+xm_RV  = solGeom(3);
+ym     = solGeom(4);
 
 %% Activation function 
 T = 60/params.HR; 
@@ -142,6 +175,7 @@ Tm_LV  = (params.Vw_LV  * sigma_LV  / (2 * Am_LV))  * (1 + (z_LV^2)/3  + (z_LV^4
 Tm_SEP = (params.Vw_SEP * sigma_SEP / (2 * Am_SEP)) * (1 + (z_SEP^2)/3 + (z_SEP^4)/5); 
 Tm_RV  = (params.Vw_RV  * sigma_RV  / (2 * Am_RV))  * (1 + (z_RV^2)/3  + (z_RV^4)/5);
 
+
 % Axial midwall tension component 
 Tx_LV  = Tm_LV  * 2 * xm_LV  * ym / (xm_LV^2  + ym^2); 
 Tx_SEP = Tm_SEP * 2 * xm_SEP * ym / (xm_SEP^2 + ym^2); 
@@ -236,11 +270,6 @@ elseif params.R_p_c < Inf
     P_PA = (params.R_PA*params.R_p_c*V_PA + params.C_PA*P_RV*params.R_PA*params.R_tPA + params.C_PA*P_PV*params.R_p_c*params.R_tPA)/(params.C_PA*(params.R_PA*params.R_p_c + params.R_PA*params.R_tPA + params.R_p_c*params.R_tPA));
 end 
 
-% Equations 1 - 4 (AE's)
-eq1  = -V_LV - 0.5 * params.Vw_LV - 0.5 * params.Vw_SEP + Vm_SEP - Vm_LV; 
-eq2 = Tx_LV + Tx_SEP + Tx_RV;
-eq3  = V_RV + 0.5 * params.Vw_RV + 0.5 * params.Vw_SEP + Vm_SEP - Vm_RV;
-eq4  = Ty_LV + Ty_SEP + Ty_RV; 
 
 % Equations 5 - 7 (ODE's from TriSeg)
 dLsc_LV  = ((Ls_LV  - Lsc_LV)  / Lse_iso - 1) * v_max;
@@ -257,22 +286,24 @@ dV_PV = Q_PA - QIN_LA; %
 dV_RA = QIN_RA - QIN_RV; % V_RA
 dV_LA = QIN_LA - QIN_LV; % V_LA
 
-dxdt = [eq1; eq2; eq3; eq4; dLsc_LV; dLsc_SEP; dLsc_RV; dV_LV; dV_RV; dV_SA; dV_SV; dV_PA; dV_PV; dV_LA; dV_RA]; 
-
-outputs = [P_LV; P_SA; P_SV; P_RV; P_PA; P_PV;          % 1-6
-        Vm_LV; Vm_SEP; Vm_RV;                           % 7-9
-        Am_LV; Am_SEP; Am_RV;                           % 10-12
-        Cm_LV; Cm_SEP; Cm_RV;                           % 13-15
-        eps_LV; eps_SEP; eps_RV;                        % 16-18
-        sigma_pas_LV; sigma_pas_SEP; sigma_pas_RV;      % 19-21
-        sigma_act_LV; sigma_act_SEP; sigma_act_RV;      % 22-24
-        sigma_LV; sigma_SEP; sigma_RV;                  % 25-27
-        QIN_LV; QOUT_LV; QIN_RV; QOUT_RV;               % 28-31
-        Q_SA; Q_PA;                                     % 32-33
-        Tx_LV; Tx_SEP; Tx_RV;                           % 34-36
-        Y;                                             % 37
-        V_RA; V_LA; P_RA; P_LA; QIN_RA;                 % 38-42                                           
-        H_LW; H_SW; H_RW;act;                           % 43-46
-        r_LV;r_SEP;r_RV;Peri];                            %47-50            
+dxdt = [dLsc_LV; dLsc_SEP; dLsc_RV; dV_LV; dV_RV; dV_SA; dV_SV; dV_PA; dV_PV; dV_LA; dV_RA]; 
+outputs = [xm_LV;xm_SEP;xm_RV;ym;   % 1-4 Geometrical state
+        P_LV; P_SA; P_SV; P_RV; P_PA; P_PV; P_RA; P_LA;     % 5-12 Pressures
+        Vm_LV; Vm_SEP; Vm_RV;                           % 13-15 TriSeg Geometery
+        Am_LV; Am_SEP; Am_RV;                           % 16-18
+        Cm_LV; Cm_SEP; Cm_RV;                           % 19-21
+        eps_LV; eps_SEP; eps_RV;                        % 22-24
+        sigma_pas_LV; sigma_pas_SEP; sigma_pas_RV;      % 25-27 TriSeg Mechinics
+        sigma_act_LV; sigma_act_SEP; sigma_act_RV;      % 28-30 
+        sigma_LV; sigma_SEP; sigma_RV;                  % 31-33
+        QIN_LV; QOUT_LV; QIN_RV; QOUT_RV;               % 34-37 Lumped model flow
+        Q_SA; Q_PA; QIN_RA; QIN_LA                      % 38-41
+        Tx_LV; Tx_SEP; Tx_RV;                           % 42-44 AE tension
+        Ty_LV; Ty_SEP; Ty_RV;                           % 45-47
+        Y; act;                                         % 48-49 Activation function                                      
+        H_LW; H_SW; H_RW;                               % 50-52 Wall Thickness
+        r_LV; r_SEP; r_RV;                              % 53-55 Radius lumen volume
+        Peri;                                           % 56 Pressure for Pericardium
+        ];                                   
             
 end 

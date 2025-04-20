@@ -5,126 +5,157 @@
 
 % Created by Andrew Meyer and Feng Gu
 % Last modified: 10/29/2024
+% Important update on 04/20/2025
+% Debug script to make sure current one works for ode instead of DAE
 
 %% Solve the differential equations using the ODE solver
 T = params.T;
 HR = params.HR;
 init_vec = cell2mat(struct2cell(init))';
+iniGeo = init_vec(1:4);
+init_vec  = init_vec(5:end);
 M = eye(length(init_vec));
-M(1,1) = 0;
-M(2,2) = 0;
-M(3,3) = 0;
-M(4,4) = 0;
-options = odeset('Mass', M, 'RelTol', 1e-7, 'AbsTol', 1e-7, 'MaxStep', T/30); % set options for ode
-warning('off', 'all'); % turn off warnings message on the command window
-maxTime = 10; % maximum time for odeWithTimeout function
-lastwarn('', ''); % clear the warning
-initialStep = 1; % initial step size
-success = false; % flag for success status
+options = odeset('Mass', M, 'MassSingular', 'yes', 'RelTol', 1e-7, 'AbsTol', 1e-7, 'MaxStep', T/30,'OutputFcn', @(t, y, flag) myOutputFcn(t, y, flag, params, iniGeo,init_vec)); % set options for ode
+warning('on', 'all'); % turn off warnings message on the command window
+maxTime = 100; % maximum time for odeWithTimeout function
 
 % This loop is designed primarily for optimization. The differential equations are very stiff,
 % especially for xm_sep, which may approach 0, causing the numerical solver to crash or get stuck.
 % This loop can penalize this condition, although it is not perfect. Ideally, the solution should
 % not depend on the initial step, but the equations are too stiff for the numerical solver to handle.
-while true
-    options.InitialStep = initialStep;  % update the initial step size
-    [t, y] = odeWithTimeout(@dXdT, [0, 20*T], init_vec, options, params, maxTime); % run the ODE solver
-    [lastWarnMsg, lastWarnId] = lastwarn; % get warning information
-    if isempty(lastWarnMsg)
-        success = true; % if no warnings, update success status
-        break; % exit the loop
-    end
-    lastwarn('', ''); % clear the warning
-    initialStep = initialStep / 10^(0.1); % decrease the initial step size
-    if initialStep < eps % check if the initial step size is less than machine precision
-        break; % if the initial step size is too small, exit the loop
-    end
-end
 
-if ~success
-    error('Unable to find a suitable initial step size. All attempts triggered a warning.'); % if the loop finishes without success, throw an error
-else
-    % Find the index where t is within the last two periods, which reflects the steady state
-    startIndex = find(t >= t(end) - 2*T, 1, 'first');
-    lastTwoPeriodsT = t(startIndex:end);
-    lastTwoPeriodsY = y(startIndex:end, :);
-end
-t = lastTwoPeriodsT-lastTwoPeriodsT(1);
-y = lastTwoPeriodsY; % solutions of ODE
+[t, y] = odeWithTimeout(@dXdT, [0, 20*T], init_vec, options, params,iniGeo, maxTime); % run the ODE solver
 
-xm_LV  = y(:,1);
-xm_SEP = y(:,2);
-xm_RV  = y(:,3);
-ym     = y(:,4);
-Lsc_LV  = y(:,5);
-Lsc_SEP = y(:,6);
-Lsc_RV  = y(:,7);
-V_LV = y(:,8);
-V_RV = y(:,9);
-V_SA = y(:,10);
-V_SV = y(:,11);
-V_PA = y(:,12);
-V_PV = y(:,13);
-Vtot = sum(y(end,8:13)) ;
+% Define the number of outputs
+output_no = 56;
 
-%% Collect simulation outputs
+% Preallocate a 2D array to store outputs at all time points
+o = zeros(output_no, length(t));
 
-output_no = 50;
-o = zeros(output_no,length(t)); % outputs from simulation
+% Loop through all time points and evaluate outputs using dXdT
 for i = 1:length(t)
-    [~,o(:,i)] = dXdT(t(i),y(i,:), params);
+    [~, o(:,i)] = dXdT(t(i), y(i,:), params, iniGeo);
 end
 
-P_LV = o(1,:)';
-P_SA = o(2,:)';
-P_SV = o(3,:)';
-P_RV = o(4,:)';
-P_PA = o(5,:)';
-P_PV = o(6,:)';
-Vm_LV  = o(7,:)';
-Vm_SEP = o(8,:)';
-Vm_RV  = o(9,:)';
-Am_LV  = o(19,:)';
-Am_SEP = o(11,:)';
-Am_RV  = o(12,:)';
-Cm_LV  = o(13,:)';
-Cm_SEP = o(14,:)';
-Cm_RV  = o(15,:)';
-eps_LV  = o(16,:)';
-eps_SEP = o(17,:)';
-eps_RV  = o(18,:)';
-sigma_pas_LV  = o(19,:)';
-sigma_pas_SEP = o(20,:)';
-sigma_pas_RV  = o(21,:)';
-sigma_act_LV  = o(22,:)';
-sigma_act_SEP = o(23,:)';
-sigma_act_RV  = o(24,:)';
-sigma_LV  = o(25,:)';
-sigma_SEP = o(26,:)';
-sigma_RV  = o(27,:)';
-Q_m = o(28,:)' ;    % Flow across mitral valve (QIN_LV)
-Q_a = o(29,:)';     % Flow across aortic valve (QOUT_LV)
-Q_t = o(30,:)' ;    % Flow across tricuspid valve (QIN_RV)
-Q_p = o(31,:)' ;    % Flow across pulmonary valve (QOUT_RV)
-Q_SA = o(32,:)' ;
-Q_PA = o(33,:)' ;
-Tm_LV  = o(34,:)';
-Tm_SEP = o(35,:)';
-Tm_RV  = o(36,:)';
-Y = o(37,:)';
-V_RA = o(38,:)';
-V_LA = o(39,:)';
-P_RA = o(40,:)';
-P_LA = o(41,:)';
-QIN_RA = o(42,:)';
-d_LW = o(43, :)';
-d_SW = o(44, :)';
-d_RW = o(45, :)';
-act = o(46, :)';
-r_LV = o(47, :)';
-r_SEP = o(48, :)';
-r_RV = o(49, :)';
-Pericardial = o(50, :)';
+%% Collect simulation outputs from the last two cardiac cycles
+% Identify the starting index for the last two periods
+startIndex = find(t >= t(end) - 2*T, 1, 'first');
+lastTwoPeriodsT = t(startIndex:end);
+lastTwoPeriodsY = y(startIndex:end, :);
+lastTwoPeriodsO = o(:,startIndex:end);
+
+% Shift time to start from zero and update variables
+t = lastTwoPeriodsT - lastTwoPeriodsT(1);
+y = lastTwoPeriodsY;        % ODE solutions
+o = lastTwoPeriodsO;        % Post-processed outputs
+
+% Extract state variables
+Lsc_LV  = y(:,1);
+Lsc_SEP = y(:,2);
+Lsc_RV  = y(:,3);
+V_LV    = y(:,4);
+V_RV    = y(:,5);
+V_SA    = y(:,6);
+V_SV    = y(:,7);
+V_PA    = y(:,8);
+V_PV    = y(:,9);
+V_LA    = y(:,10);
+V_RA    = y(:,11);
+Vtot    = sum(y(end, 4:11));  % Total blood volume at the final time point
+
+% Parse each row of `o` into human-readable vectors or matrices
+% 1–4: Septal geometry
+xm_LV  = o(1,:)';
+xm_SEP = o(2,:)';
+xm_RV  = o(3,:)';
+ym     = o(4,:)';
+
+% 5–12: Pressures in different compartments
+P_LV = o(5,:)';
+P_SA = o(6,:)';
+P_SV = o(7,:)';
+P_RV = o(8,:)';
+P_PA = o(9,:)';
+P_PV = o(10,:)';
+P_RA = o(11,:)';
+P_LA = o(12,:)';
+
+% 13–15: Myocardial wall volumes
+Vm_LV  = o(13,:)';
+Vm_SEP = o(14,:)';
+Vm_RV  = o(15,:)';
+
+% 16–18: Myocardial wall areas
+Am_LV  = o(16,:)';
+Am_SEP = o(17,:)';
+Am_RV  = o(18,:)';
+
+% 19–21: Wall curvatures
+Cm_LV  = o(19,:)';
+Cm_SEP = o(20,:)';
+Cm_RV  = o(21,:)';
+
+% 22–24: Fiber strains
+eps_LV  = o(22,:)';
+eps_SEP = o(23,:)';
+eps_RV  = o(24,:)';
+
+% 25–27: Passive fiber stresses
+sigma_pas_LV  = o(25,:)';
+sigma_pas_SEP = o(26,:)';
+sigma_pas_RV  = o(27,:)';
+
+% 28–30: Active fiber stresses
+sigma_act_LV  = o(28,:)';
+sigma_act_SEP = o(29,:)';
+sigma_act_RV  = o(30,:)';
+
+% 31–33: Total fiber stresses (passive + active)
+sigma_LV  = o(31,:)';
+sigma_SEP = o(32,:)';
+sigma_RV  = o(33,:)';
+
+% 34–37: Valve flows
+Q_m = o(34,:)';  % Mitral valve
+Q_a = o(35,:)';  % Aortic valve
+Q_t = o(36,:)';  % Tricuspid valve
+Q_p = o(37,:)';  % Pulmonary valve
+
+% 38–41: Circulatory flows
+Q_SA  = o(38,:)';  % Systemic arterial flow
+Q_PA  = o(39,:)';  % Pulmonary arterial flow
+QIN_RA = o(40,:)'; % Inflow to right atrium
+QIN_LA = o(41,:)'; % Inflow to left atrium
+
+% 42–44: Tensions in the x-direction
+Tx_LV  = o(42,:)';
+Tx_SEP = o(43,:)';
+Tx_RV  = o(44,:)';
+
+% 45–47: Tensions in the y-direction
+Ty_LV  = o(45,:)';
+Ty_SEP = o(46,:)';
+Ty_RV  = o(47,:)';
+
+% 48–49: Activation functions
+Y   = o(48,:)';
+act = o(49,:)';
+
+% 50–52: Wall thickness
+d_LW = o(50,:)';
+d_SW = o(51,:)';
+d_RW = o(52,:)';
+
+% 53–55: Curvature radii
+r_LV  = o(53,:)';
+r_SEP = o(54,:)';
+r_RV  = o(55,:)';
+
+% 56: Pericardial constraint pressure
+Peri = o(56,:)';
+
+% Post-analysis: average left atrial pressure over last two cycles
+LVfilling = trapz(t, P_LA) / (t(end) - t(1));
 
 %% Simulation outputs requiring post-processing for cross-valve flow
 
@@ -927,11 +958,11 @@ end
 
 %% Function to kill inf loop of ode15s
 
-function [T,Y,TE,YE,IE] = odeWithTimeout(odefun, tspan, y0, options, params, maxTime)
+function [T,Y,TE,YE,IE] = odeWithTimeout(odefun, tspan, y0, options, params,iniGeo, maxTime)
 ticID = tic; % record time
 evalc('options.Events = @(t, y) eventFunction(t, y, maxTime, ticID);'); % set up event
 % ode
-[T, Y, TE, YE, IE] = ode15s(@(t,y) odefun(t,y,params), tspan, y0, options); % attention passing params is dangerous
+[T, Y, TE, YE, IE] = ode15s(@(t,y) odefun(t,y,params,iniGeo), tspan, y0, options); % attention passing params is dangerous
 end
 
 % define time out
@@ -941,5 +972,33 @@ value = elapsed < maxTime; %
 isterminal = 1; % stop
 direction = 0; % find all direction 0
 end
+
+function status = myOutputFcn(t, y, flag, params, iniGeo, init_vec)
+% Custom output function to collect outputs at each solver step
+% Stores results in the persistent variable `o_internal` and exports to base at the end
+
+persistent o_internal
+
+switch flag
+    case 'init'
+        % At the beginning of the integration: initialize with output at t = 0
+        [~, output0] = dXdT(0, init_vec, params, iniGeo);  % Initial output
+        o_internal = output0;  % First column is the initial output
+
+    case ''
+        % During each solver step: append output for each time step
+        for i = 1:length(t)
+            [~, output_now] = dXdT(t(i), y(:,i), params, iniGeo);
+            o_internal(:, end+1) = output_now;
+        end
+
+    case 'done'
+        % After solver is finished: assign output to workspace
+        assignin('base', 'o', o_internal);
+end
+
+status = 0;  % Return status to allow solver to continue
+end
+
 
 
