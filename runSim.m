@@ -26,17 +26,6 @@ maxTime = 100; % maximum time for odeWithTimeout function
 
 [t, y] = odeWithTimeout(@dXdT, [0, 20*T], init_vec, options, params,iniGeo, maxTime); % run the ODE solver
 
-% Define the number of outputs
-output_no = 56;
-
-% Preallocate a 2D array to store outputs at all time points
-o = zeros(output_no, length(t));
-
-% Loop through all time points and evaluate outputs using dXdT
-for i = 1:length(t)
-    [~, o(:,i)] = dXdT(t(i), y(i,:), params, iniGeo);
-end
-
 %% Collect simulation outputs from the last two cardiac cycles
 % Identify the starting index for the last two periods
 startIndex = find(t >= t(end) - 2*T, 1, 'first');
