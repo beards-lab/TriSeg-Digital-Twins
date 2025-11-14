@@ -22,6 +22,9 @@ cost = evaluateModel(m,patients,PatID,ModelWin); % call cost function in runSim.
 % m(5) = 0.25;
 m = zeros(1,length(mods));
 cost = evaluateModelPacing(m,MRI_flag); % call cost function in runSim.m
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 
 % %% GA

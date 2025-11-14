@@ -7,12 +7,15 @@
 % Last modified: 11/14/2025
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 % m = ones(1,length(mods)); % First time run
 if GENDER ==1
     m = readmatrix('modifiers_male.csv');
 else
     m = readmatrix('modifiers_female.csv');
 =======
+=======
+>>>>>>> Stashed changes
 m = zeros(1,length(mods)); % First time run
 idx = (1:length(mods));
 % if GENDER ==1

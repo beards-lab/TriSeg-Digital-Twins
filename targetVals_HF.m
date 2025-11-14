@@ -363,7 +363,10 @@ end
 
 %% Right Side assumption
 
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
 load LassoRV.mat
 if ~MRI_flag == 1
     Raw_Lasso_RVEDV = inputVals.Sex*k_RVEDV(1) + inputVals.Age*k_RVEDV(2) +...
@@ -436,11 +439,17 @@ else
     QS2 = 546.5-2.0*inputVals.HR;
 end
 
+<<<<<<< Updated upstream
 
 IVRT = 70*75/inputVals.HR;
 inputVals.ActT = QS2+IVRT;
 
 
+=======
+IVRT = 70*75/inputVals.HR;
+inputVals.ActT = QS2+IVRT;
+
+>>>>>>> Stashed changes
 %% Parameters requiring modification (mods), used in the function estimParams.m
 % Default parameters should be always optimized
 mods_0 = {'k_pas_LV','k_pas_RV','k_act_LV','k_act_RV',...
@@ -462,14 +471,20 @@ if ~isnan(Data.('RVs'))
     end
 end
 
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
 % 6/11 finally turn out to be need 2 params
 mods_pN{end + 1} = 'expPeri';
 mods_pN{end + 1} = 'K1';
 
+<<<<<<< Updated upstream
 
 
 
+=======
+>>>>>>> Stashed changes
 
 
 if ~isnan(Data.('LVs'))
@@ -487,7 +502,10 @@ vlv_def = dictionary('MVr','R_m_c', ...
     'PVr','R_p_c', ...
     'PVpg','R_p_o');
 
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
 for k = keys(vlv_def)'
     if(Data.(k) >= 1.2)
         mods_pN(end + 1) = cellstr(vlv_def(k));

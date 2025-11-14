@@ -21,6 +21,9 @@ try
         [params, init] = optParams(INIparams, INIinit, mods,modifiers);
         MRI_flag = 1;
         runSimOnGL;
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
     if total_cost<0
         total_cost = inf;
