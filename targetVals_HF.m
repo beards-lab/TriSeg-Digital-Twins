@@ -294,6 +294,7 @@ if isnan(Data.('MRI_LVMass'))
     targetVals.FakeLV_m = (Vw_LV + Vw_SEP) * 1.055;
 end
 
+<<<<<<< Updated upstream
 %% Parameters requiring modification (mods), used in the function estimParams.m
 % Default parameters should be always optimized
 mods_0 = {'k_pas_LV','k_pas_RV','k_act_LV','k_act_RV',...
@@ -305,6 +306,88 @@ mods_0 = {'k_pas_LV','k_pas_RV','k_act_LV','k_act_RV',...
     'Vw_LV','LvSepR',... % LV Septum ratio provides information on both LV and RV, so it replaces Vw_SEP
     ... 'V_SV_s','V0u_coeff','V0c_coeff', % fixed blood volume 
     'K_P','B_P',...
+=======
+%% Right Side assumption
+
+load LassoRV.mat
+if ~MRI_flag == 1
+    Raw_Lasso_RVEDV = inputVals.Sex*k_RVEDV(1) + inputVals.Age*k_RVEDV(2) +...
+        inputVals.Height*k_RVEDV(3) + inputVals.Height*inputVals.Weight*k_RVEDV(4) +...
+        inputVals.HR*k_RVEDV(5) + targetVals.SBP*k_RVEDV(6) +...
+        targetVals.PASP*k_RVEDV(7) + targetVals.PADP*k_RVEDV(8) +...
+        targetVals.CO*k_RVEDV(9) + Data.('AVr') * k_RVEDV(10) + ...
+        Data.('TVr') * k_RVEDV(11) + Data.('PVr') * k_RVEDV(12) + ...
+        b_RVEDV;
+    C_Lasso_RVEDV = Raw_Lasso_RVEDV*ck_RVEDV+cb_RVEDV;
+    if  C_Lasso_RVEDV > 600
+        C_Lasso_RVEDV = 600;
+    end
+    if  C_Lasso_RVEDV <50
+        C_Lasso_RVEDV = 50;
+    end
+    targetVals.RVEDV = C_Lasso_RVEDV;
+    Raw_Lasso_RVEF = inputVals.Sex * k_RVEF(1) + inputVals.Age * k_RVEF(2) + ...
+        targetVals.SBP * k_RVEF(3) + targetVals.PADP * k_RVEF(4) + ...
+        targetVals.CO * k_RVEF(5) + targetVals.EF * k_RVEF(6) + ...
+        Data.('TVr') * k_RVEF(7) + Data.('PVr') * k_RVEF(8) + ...
+        b_RVEF;
+    C_Lasso_RVEF = Raw_Lasso_RVEF * ck_RVEF + cb_RVEF;
+    % if  C_Lasso_RVEF > 75
+    %     C_Lasso_RVEF = 75;
+    % end
+    % if  C_Lasso_RVEF < 10
+    %     C_Lasso_RVEF = 10;
+    % end
+    targetVals.RVEF = C_Lasso_RVEF;
+    inputVals.RVESV = targetVals.RVEDV * (100-targetVals.RVEF) * 0.01;
+end
+
+if isnan(Data.('MRI_RVMass'))
+    if  (~isnan(Data.('RAa'))) || (~isnan(Data.('RAv')))
+        coeff3= targetVals.RAPmax;
+    elseif ~isnan(Data.('RAm'))
+        coeff3 = targetVals.RAPmean+3.5;
+    else
+        coeff3 = 15.11;
+    end
+
+
+    if  ~isnan(Data.('RVs'))
+        coeff4 = targetVals.RVSP;
+
+    else
+        coeff4 = targetVals.PASP;
+    end
+
+    Raw_Lasso_TRW = inputVals.Height * k_TRW(1) + targetVals.SBP * k_TRW(2) + ...
+        coeff3* k_TRW(3) + coeff4 * k_TRW(4) + ...
+        targetVals.PADP * k_TRW(5) + Data.('TVr') * k_TRW(6) + ...
+        b_TRW;
+    C_Lasso_TRW = Raw_Lasso_TRW * ck_TRW + cb_TRW;
+    if  C_Lasso_TRW > 1
+        C_Lasso_TRW = 1;
+    end
+    targetVals.Hed_RW = C_Lasso_TRW;
+end
+%% Add info to define tau
+if inputVals.Sex == 1
+    QS2 = 545.17-2.117*inputVals.HR;
+else
+    QS2 = 546.5-2.0*inputVals.HR;
+end
+
+IVRT = 70*75/inputVals.HR;
+inputVals.ActT = QS2+IVRT;
+
+%% Parameters requiring modification (mods), used in the function estimParams.m
+% Default parameters should be always optimized
+mods_0 = {'k_pas_LV','k_pas_RV','k_act_LV','k_act_RV',...
+    'C_SA','C_PA','R_SA','R_PA','R_Veins','R_m_o',...
+    'Vw_LV','LvSepR','Vw_RV',... % LV Septum ratio provides information on both LV and RV, so it replaces Vw_SEP
+    'Amref_LV','Amref_RV',...
+    'C_SV','C_PV',...
+    ... 'V_SV_s','V0u_coeff','V0c_coeff', % fixed blood volume
+>>>>>>> Stashed changes
     'R_tPA','R_tSA'};
 
 %% Add additional mods based on the availability of the patient's data.
@@ -316,9 +399,19 @@ if ~isnan(Data.('RVs'))
         mods_pN{end + 1} = 'R_p_o';
     end
 end
+<<<<<<< Updated upstream
 if ~isnan(Data.('MRI_RVMass'))
         mods_pN{end + 1} = 'Vw_RV'; % only opt when having targets
 end
+=======
+
+% 6/11 finally turn out to be need 2 params
+mods_pN{end + 1} = 'expPeri';
+mods_pN{end + 1} = 'K1';
+
+
+
+>>>>>>> Stashed changes
 if ~isnan(Data.('LVs'))
     if(targetVals.SBP <= 0.925 * targetVals.LVESP) % if SBP is 7.5% less than LVESP
         mods_pN{end + 1} = 'R_a_o';
@@ -332,6 +425,7 @@ vlv_def = dictionary('MVr','R_m_c', ...
     'TVr','R_t_c', ...
     'PVr','R_p_c', ...
     'PVpg','R_p_o');
+
 for k = keys(vlv_def)'
     if(Data.(k) >= 1.2)
         mods_pN(end + 1) = cellstr(vlv_def(k));
