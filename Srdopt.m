@@ -11,12 +11,15 @@
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 % m = ones(1,length(mods)); % First time run
 if GENDER ==1
     m = readmatrix('modifiers_male.csv');
 else
     m = readmatrix('modifiers_female.csv');
 =======
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 =======

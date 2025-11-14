@@ -367,7 +367,10 @@ end
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 =======
@@ -452,11 +455,17 @@ end
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 
 IVRT = 70*75/inputVals.HR;
 inputVals.ActT = QS2+IVRT;
 
 
+=======
+IVRT = 70*75/inputVals.HR;
+inputVals.ActT = QS2+IVRT;
+
+>>>>>>> Stashed changes
 =======
 IVRT = 70*75/inputVals.HR;
 inputVals.ActT = QS2+IVRT;
@@ -502,7 +511,10 @@ end
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 =======
@@ -519,9 +531,12 @@ mods_pN{end + 1} = 'K1';
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 
 
 
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 =======
@@ -551,7 +566,10 @@ vlv_def = dictionary('MVr','R_m_c', ...
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 =======
