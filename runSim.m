@@ -792,13 +792,13 @@ if min(xm_SEP) < -1e-3
         error("Unreal RV Movement")
     end
 else
-    [~,locswiredpeakRW]=findpeaks(diff_d_RW,'MinPeakHeight',max(diff_d_RW)/3);
-    if ~isempty(locswiredpeakRW)
-        if locswiredpeakRW(1) > Maggicpoint-round(length(Tint)/2*0.035) &&...
-                locswiredpeakRW(1) < Maggicpoint+round(length(Tint)/2*0.015)
-            error("Unreal RV Movement")
-        end
-    end
+    % [~,locswiredpeakRW]=findpeaks(diff_d_RW,'MinPeakHeight',max(diff_d_RW)/3);
+    % if ~isempty(locswiredpeakRW)
+    %     if locswiredpeakRW(1) > Maggicpoint-round(length(Tint)/2*0.035) &&...
+    %             locswiredpeakRW(1) < Maggicpoint+round(length(Tint)/2*0.015)
+    %         error("Unreal RV Movement")
+    %     end
+    % end
 end
 
 

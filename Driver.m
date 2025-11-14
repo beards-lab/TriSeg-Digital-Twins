@@ -23,7 +23,7 @@ for GENDER  = 2 % 1 for male and other for female
     Sim = 1; % 1 for simulation and other for optimazation
     if Sim ==1
         [params, init] = optParams(INIparams, INIinit, mods,modifiers);
-        runSimOnGL;
+        runSim;
         NplotSrd; % 4-panel figure just for canonical subjects
         GetMovie; % TriSeg model: displacement and stress as functions of time
         See_TriSeg; % slices of GetMoive.m       
