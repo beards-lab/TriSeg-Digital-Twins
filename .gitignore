@@ -22,3 +22,5 @@ runSimonFakeDT.m
 RunSimWithinPVA.m
 test.m
 VirtualPacingFigure.m
+estimPacingParams.m
+PacingevaluateModel.m
