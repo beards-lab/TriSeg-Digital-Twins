@@ -9,6 +9,7 @@ lb = ub;
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 pairs = dictionary('C_SA', {[0.1 10]}, ...
                    'C_SV', {[0.1 10]}, ...
                    'C_PA', {[0.1 10]}, ...
@@ -62,6 +63,8 @@ pairs = dictionary('C_SA', {[0.1 10]}, ...
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
 pairs = dictionary('C_SA', {[-2 2]}, ...
     'C_PA', {[-2 2]}, ...
     'C_SV', {[-2 2]}, ...
@@ -94,6 +97,9 @@ pairs = dictionary('C_SA', {[-2 2]}, ...
     'LvSepR',{[-0.06 0.06]});
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
