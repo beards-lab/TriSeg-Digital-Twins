@@ -6,10 +6,23 @@
 % Created by Andrew Meyer and Feng Gu
 % Last modified: 10/29/2024
 
+<<<<<<< Updated upstream
 load(sprintf('Sims/P_NO%dWindow%d.mat',PatID,ModelWin)); % if it does exist
 m = output.modifiers;
 % m = 1*ones(1,length(mods)); % if the predefined modifiers do not exist
 cost = evaluateModel(m,patients,PatID,ModelWin); % call cost function in runSim.m
+=======
+% load(sprintf('Sims/P_NO%dWindow%d.mat',PATIENT_NO,ModelWin)); % if it does exist
+% m = output.modifiers;
+% m = 1*ones(1,length(mods)); % if the predefined modifiers do not exist
+% load P_NO1.mat
+% m = output.modifiers;
+% m = [modifiers(1:4) 0.25 modifiers(5:end)];
+% m(2) = 0.9;
+% m(5) = 0.25;
+m = zeros(1,length(mods));
+cost = evaluateModelPacing(m,MRI_flag); % call cost function in runSim.m
+>>>>>>> Stashed changes
 
 % %% GA
 % [ub, lb] = m_bounds(mods); % use a simple function to set up boundary conditions for all modifiers

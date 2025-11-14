@@ -23,10 +23,10 @@ if(isfield(targets,'EAr'))
 else
     plot_EA = NaN;
 end
-if(~exist('total_cost','var'))
-    assert(exist('struct_pXX','var'));
-    total_cost = struct_pXX.output_vals.total_cost;
-end
+% if(~exist('total_cost','var'))
+%     assert(exist('struct_pXX','var'));
+%     total_cost = struct_pXX.output_vals.total_cost;
+% end
 
 figure(1); clf;
 tiles = tiledlayout(2,4);

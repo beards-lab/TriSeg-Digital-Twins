@@ -3,12 +3,19 @@
 % ode15s, and to collect the corresponding simulation output.
 % A cost function is embedded in the last several sections of the script
 
+<<<<<<< Updated upstream:runSim.m
+=======
+% 03/20: The biggest difference between this version and the previous one
+% is that the current version incorporates several empirical correlations
+% identified from the UW cohort to constrain RV mechanical and geometrical
+% properties, helping to eliminate unrealistic conditions during optimization.
+
+>>>>>>> Stashed changes:runSimOnGL.m
 % Created by Andrew Meyer and Feng Gu
-% Last modified: 10/29/2024
-% Important update on 04/20/2025
-% Debug script to make sure current one works for ode instead of DAE
+% Last modified: 03/20/2024
 
 %% Solve the differential equations using the ODE solver
+<<<<<<< Updated upstream:runSim.m
 T = params.T;
 HR = params.HR;
 init_vec = cell2mat(struct2cell(init))';
@@ -25,133 +32,305 @@ maxTime = 100; % maximum time for odeWithTimeout function
 % not depend on the initial step, but the equations are too stiff for the numerical solver to handle.
 
 [t, y] = odeWithTimeout(@dXdT, [0, 20*T], init_vec, options, params,iniGeo, maxTime); % run the ODE solver
+=======
+try
+    T = params.T;
+    HR = params.HR;
+    if init.LAVmin >= 150||init.RAVmin>=100
+        init.LAVmin = init.LAVmin/3;
+        init.RAVmin = init.RAVmin/3;
+    end
+    init_vec = cell2mat(struct2cell(init))';
+    M = eye(length(init_vec));
+    M(1,1) = 0;
+    M(2,2) = 0;
+    M(3,3) = 0;
+    M(4,4) = 0;
+    options = odeset('Mass', M, 'RelTol', 1e-7, 'AbsTol', 1e-7, 'MaxStep', T/30); % set options for ode
+    warning('off', 'all'); % turn off warnings message on the command window
+    maxTime = 10; % maximum time for odeWithTimeout function
+    lastwarn('');   % 清空上一个warning
+    [t, y] = odeWithTimeout1(@dXdTOnGL, [0, 30*T], init_vec, options, params, maxTime);
+    [lastWarnMsg, lastWarnId] = lastwarn;  % 检查warning
+    if ~isempty(lastWarnMsg)
+        error(['ODE solver warning: ', lastWarnMsg]);  % 直接终止，并抛出warning信息
+    end
 
-%% Collect simulation outputs from the last two cardiac cycles
-% Identify the starting index for the last two periods
-startIndex = find(t >= t(end) - 2*T, 1, 'first');
-lastTwoPeriodsT = t(startIndex:end);
-lastTwoPeriodsY = y(startIndex:end, :);
-lastTwoPeriodsO = o(:,startIndex:end);
+    % Find the index where t is within the last two periods, which reflects the steady state
+    startIndex = find(t >= t(end) - 2*T, 1, 'first');
+    lastTwoPeriodsT = t(startIndex:end);
+    lastTwoPeriodsY = y(startIndex:end, :);
+    t = lastTwoPeriodsT-lastTwoPeriodsT(1);
+    y = lastTwoPeriodsY; % solutions of ODE
+    xm_LV  = y(:,1);
+    xm_SEP = y(:,2);
+    xm_RV  = y(:,3);
+    ym     = y(:,4);
+    Lsc_LV  = y(:,5);
+    Lsc_SEP = y(:,6);
+    Lsc_RV  = y(:,7);
+    V_LV = y(:,8);
+    V_RV = y(:,9);
+    V_SA = y(:,10);
+    V_SV = y(:,11);
+    V_PA = y(:,12);
+    V_PV = y(:,13);
+    Vtot = sum(y(end,8:13)) ;
+>>>>>>> Stashed changes:runSimOnGL.m
 
-% Shift time to start from zero and update variables
-t = lastTwoPeriodsT - lastTwoPeriodsT(1);
-y = lastTwoPeriodsY;        % ODE solutions
-o = lastTwoPeriodsO;        % Post-processed outputs
+    %% Collect simulation outputs
 
-% Extract state variables
-Lsc_LV  = y(:,1);
-Lsc_SEP = y(:,2);
-Lsc_RV  = y(:,3);
-V_LV    = y(:,4);
-V_RV    = y(:,5);
-V_SA    = y(:,6);
-V_SV    = y(:,7);
-V_PA    = y(:,8);
-V_PV    = y(:,9);
-V_LA    = y(:,10);
-V_RA    = y(:,11);
-Vtot    = sum(y(end, 4:11));  % Total blood volume at the final time point
+    output_no = 50;
+    o = zeros(output_no,length(t)); % outputs from simulation
+    for i = 1:length(t)
+        [~,o(:,i)] = dXdTOnGL(t(i),y(i,:), params);
+    end
 
-% Parse each row of `o` into human-readable vectors or matrices
-% 1–4: Septal geometry
-xm_LV  = o(1,:)';
-xm_SEP = o(2,:)';
-xm_RV  = o(3,:)';
-ym     = o(4,:)';
+    P_LV = o(1,:)';
+    P_SA = o(2,:)';
+    P_SV = o(3,:)';
+    P_RV = o(4,:)';
+    P_PA = o(5,:)';
+    P_PV = o(6,:)';
+    Vm_LV  = o(7,:)';
+    Vm_SEP = o(8,:)';
+    Vm_RV  = o(9,:)';
+    Am_LV  = o(19,:)';
+    Am_SEP = o(11,:)';
+    Am_RV  = o(12,:)';
+    Cm_LV  = o(13,:)';
+    Cm_SEP = o(14,:)';
+    Cm_RV  = o(15,:)';
+    eps_LV  = o(16,:)';
+    eps_SEP = o(17,:)';
+    eps_RV  = o(18,:)';
+    sigma_pas_LV  = o(19,:)';
+    sigma_pas_SEP = o(20,:)';
+    sigma_pas_RV  = o(21,:)';
+    sigma_act_LV  = o(22,:)';
+    sigma_act_SEP = o(23,:)';
+    sigma_act_RV  = o(24,:)';
+    sigma_LV  = o(25,:)';
+    sigma_SEP = o(26,:)';
+    sigma_RV  = o(27,:)';
+    Q_m = o(28,:)' ;    % Flow across mitral valve (QIN_LV)
+    Q_a = o(29,:)';     % Flow across aortic valve (QOUT_LV)
+    Q_t = o(30,:)' ;    % Flow across tricuspid valve (QIN_RV)
+    Q_p = o(31,:)' ;    % Flow across pulmonary valve (QOUT_RV)
+    Q_SA = o(32,:)' ;
+    Q_PA = o(33,:)' ;
+    Tm_LV  = o(34,:)';
+    Tm_SEP = o(35,:)';
+    Tm_RV  = o(36,:)';
+    Y = o(37,:)';
+    V_RA = o(38,:)';
+    V_LA = o(39,:)';
+    P_RA = o(40,:)';
+    P_LA = o(41,:)';
+    QIN_RA = o(42,:)';
+    d_LW = o(43, :)';
+    d_SW = o(44, :)';
+    d_RW = o(45, :)';
+    act = o(46, :)';
+    r_LV = o(47, :)';
+    r_SEP = o(48, :)';
+    r_RV = o(49, :)';
+    P_external = o(50, :)';
+catch ME1
+    disp(['runSim failed: ', ME1.message]);
+    %% Solve the differential equations using the ODE solver
+    T = params.T;
+    HR = params.HR;
+    init_vec = cell2mat(struct2cell(init))';
+    iniGeo = init_vec(1:4);
+    init_vec  = init_vec(5:end);
+    M = eye(length(init_vec));
+    options = odeset('Mass', M, 'MassSingular', 'yes', 'RelTol', 1e-7, 'AbsTol', 1e-7, 'MaxStep', params.T / 30);
+    maxTime = 100;
 
-% 5–12: Pressures in different compartments
-P_LV = o(5,:)';
-P_SA = o(6,:)';
-P_SV = o(7,:)';
-P_RV = o(8,:)';
-P_PA = o(9,:)';
-P_PV = o(10,:)';
-P_RA = o(11,:)';
-P_LA = o(12,:)';
+    [t, y, ~, ~, ~, o] = odeWithTimeout2(@dXdT, [0, 22 * params.T], init_vec, options, params, iniGeo, maxTime);
 
-% 13–15: Myocardial wall volumes
-Vm_LV  = o(13,:)';
-Vm_SEP = o(14,:)';
-Vm_RV  = o(15,:)';
+    %% Collect simulation outputs from the last two cardiac cycles
+    % Identify the starting index for the last two periods
+    startIndex = find(t >= t(end) - 2*T, 1, 'first');
+    lastTwoPeriodsT = t(startIndex:end);
+    lastTwoPeriodsY = y(startIndex:end, :);
+    lastTwoPeriodsO = o(:,startIndex:end);
 
-% 16–18: Myocardial wall areas
-Am_LV  = o(16,:)';
-Am_SEP = o(17,:)';
-Am_RV  = o(18,:)';
+    % Shift time to start from zero and update variables
+    t = lastTwoPeriodsT - lastTwoPeriodsT(1);
+    y = lastTwoPeriodsY;        % ODE solutions
+    o = lastTwoPeriodsO;        % Post-processed outputs
 
-% 19–21: Wall curvatures
-Cm_LV  = o(19,:)';
-Cm_SEP = o(20,:)';
-Cm_RV  = o(21,:)';
+    % Extract state variables
+    Lsc_LV  = y(:,1);
+    Lsc_SEP = y(:,2);
+    Lsc_RV  = y(:,3);
+    V_LV    = y(:,4);
+    V_RV    = y(:,5);
+    V_SA    = y(:,6);
+    V_SV    = y(:,7);
+    V_PA    = y(:,8);
+    V_PV    = y(:,9);
+    V_LA    = y(:,10);
+    V_RA    = y(:,11);
+    Vtot    = sum(y(end, 4:11));  % Total blood volume at the final time point
 
-% 22–24: Fiber strains
-eps_LV  = o(22,:)';
-eps_SEP = o(23,:)';
-eps_RV  = o(24,:)';
+    % Parse each row of `o` into human-readable vectors or matrices
+    % 1–4: Septal geometry
+    xm_LV  = o(1,:)';
+    xm_SEP = o(2,:)';
+    xm_RV  = o(3,:)';
+    ym     = o(4,:)';
 
-% 25–27: Passive fiber stresses
-sigma_pas_LV  = o(25,:)';
-sigma_pas_SEP = o(26,:)';
-sigma_pas_RV  = o(27,:)';
+    % 5–12: Pressures in different compartments
+    P_LV = o(5,:)';
+    P_SA = o(6,:)';
+    P_SV = o(7,:)';
+    P_RV = o(8,:)';
+    P_PA = o(9,:)';
+    P_PV = o(10,:)';
+    P_RA = o(11,:)';
+    P_LA = o(12,:)';
 
-% 28–30: Active fiber stresses
-sigma_act_LV  = o(28,:)';
-sigma_act_SEP = o(29,:)';
-sigma_act_RV  = o(30,:)';
+    % 13–15: Myocardial wall volumes
+    Vm_LV  = o(13,:)';
+    Vm_SEP = o(14,:)';
+    Vm_RV  = o(15,:)';
 
-% 31–33: Total fiber stresses (passive + active)
-sigma_LV  = o(31,:)';
-sigma_SEP = o(32,:)';
-sigma_RV  = o(33,:)';
+    % 16–18: Myocardial wall areas
+    Am_LV  = o(16,:)';
+    Am_SEP = o(17,:)';
+    Am_RV  = o(18,:)';
 
-% 34–37: Valve flows
-Q_m = o(34,:)';  % Mitral valve
-Q_a = o(35,:)';  % Aortic valve
-Q_t = o(36,:)';  % Tricuspid valve
-Q_p = o(37,:)';  % Pulmonary valve
+    % 19–21: Wall curvatures
+    Cm_LV  = o(19,:)';
+    Cm_SEP = o(20,:)';
+    Cm_RV  = o(21,:)';
 
-% 38–41: Circulatory flows
-Q_SA  = o(38,:)';  % Systemic arterial flow
-Q_PA  = o(39,:)';  % Pulmonary arterial flow
-QIN_RA = o(40,:)'; % Inflow to right atrium
-QIN_LA = o(41,:)'; % Inflow to left atrium
+    % 22–24: Fiber strains
+    eps_LV  = o(22,:)';
+    eps_SEP = o(23,:)';
+    eps_RV  = o(24,:)';
 
-% 42–44: Tensions in the x-direction
-Tx_LV  = o(42,:)';
-Tx_SEP = o(43,:)';
-Tx_RV  = o(44,:)';
+    % 25–27: Passive fiber stresses
+    sigma_pas_LV  = o(25,:)';
+    sigma_pas_SEP = o(26,:)';
+    sigma_pas_RV  = o(27,:)';
 
-% 45–47: Tensions in the y-direction
-Ty_LV  = o(45,:)';
-Ty_SEP = o(46,:)';
-Ty_RV  = o(47,:)';
+    % 28–30: Active fiber stresses
+    sigma_act_LV  = o(28,:)';
+    sigma_act_SEP = o(29,:)';
+    sigma_act_RV  = o(30,:)';
 
-% 48–49: Activation functions
-Y   = o(48,:)';
-act = o(49,:)';
+    % 31–33: Total fiber stresses (passive + active)
+    sigma_LV  = o(31,:)';
+    sigma_SEP = o(32,:)';
+    sigma_RV  = o(33,:)';
 
-% 50–52: Wall thickness
-d_LW = o(50,:)';
-d_SW = o(51,:)';
-d_RW = o(52,:)';
+    % 34–37: Valve flows
+    Q_m = o(34,:)';  % Mitral valve
+    Q_a = o(35,:)';  % Aortic valve
+    Q_t = o(36,:)';  % Tricuspid valve
+    Q_p = o(37,:)';  % Pulmonary valve
 
-% 53–55: Curvature radii
-r_LV  = o(53,:)';
-r_SEP = o(54,:)';
-r_RV  = o(55,:)';
+    % 38–41: Circulatory flows
+    Q_SA  = o(38,:)';  % Systemic arterial flow
+    Q_PA  = o(39,:)';  % Pulmonary arterial flow
+    QIN_RA = o(40,:)'; % Inflow to right atrium
+    QIN_LA = o(41,:)'; % Inflow to left atrium
 
-% 56: Pericardial constraint pressure
-Peri = o(56,:)';
+    % 42–44: Tensions in the x-direction
+    Tx_LV  = o(42,:)';
+    Tx_SEP = o(43,:)';
+    Tx_RV  = o(44,:)';
 
-% Post-analysis: average left atrial pressure over last two cycles
-LVfilling = trapz(t, P_LA) / (t(end) - t(1));
+    % 45–47: Tensions in the y-direction
+    Ty_LV  = o(45,:)';
+    Ty_SEP = o(46,:)';
+    Ty_RV  = o(47,:)';
 
+    % 48–49: Activation functions
+    Y   = o(48,:)';
+    act = o(49,:)';
+
+<<<<<<< Updated upstream:runSim.m
 %% Simulation outputs requiring post-processing for cross-valve flow
 
 end_beat_i = find(t >= 1.02*T, 1) - 1; % index for end of one complete cardiac cycle, sometime flow shift and a wave is in the middle of the T
 [Qm_maxima, Qm_maxima_i,Qm_wid,Qm_prom] = findpeaks(Q_m(1:end_beat_i));
 [Qt_maxima, Qt_maxima_i] = findpeaks(Q_t(1:end_beat_i));
 
+=======
+    % 50–52: Wall thickness
+    d_LW = o(50,:)';
+    d_SW = o(51,:)';
+    d_RW = o(52,:)';
+
+    % 53–55: Curvature radii
+    r_LV  = o(53,:)';
+    r_SEP = o(54,:)';
+    r_RV  = o(55,:)';
+
+    % 56: Pericardial constraint pressure
+    P_external = o(56,:)';
+end
+
+%% Kill wired balancing
+if max(sigma_pas_RV)/max(sigma_act_RV) >= 1.2
+    error('RV contraction disappear')
+end
+
+if max(sigma_pas_LV)/max(sigma_act_LV) >= 0.9
+    error('LV contraction disappear')
+end
+
+%% Using LV biomechanics to inform RV biomechanics and iteratively refine RV geometry
+
+if ~MRI_flag == 1
+    % load UWcohort.mat
+    load Kconstrain.mat
+    mdl1 = fitlm(XKpasLV, YKpasRV); % passive
+    new_x1 = sigma_pas_LV(1);
+    new_y1 = sigma_pas_RV(1);
+    if new_x1 <= 0 || new_y1 <= 0
+        error('negative passive property')
+    end
+    [~, pi1] = predict(mdl1, new_x1, 'Prediction', 'observation', 'Alpha', 0.05);
+    [~, pi2] = predict(mdl1, new_x1, 'Alpha', 0.05);
+    alpha1 = 1e10; % parameter control Smooth
+    cost_pas = 1e-4*((new_y1 - pi2(1)).^4 .* (1 ./ (1 + exp(-alpha1 * (new_y1 - pi2(1))))) ...
+        + 0.5 * (new_y1 - pi2(1)).^4 .* (1 ./ (1 + exp(-alpha1 * (new_y1 - pi1(1))))) ...
+        + 0.5 * (new_y1 - pi2(2)).^4 .* (1 ./ (1 + exp(-alpha1 * (pi2(2) - new_y1)))) ...
+        + (new_y1 - pi2(2)).^4 .* (1 ./ (1 + exp(-alpha1 * (pi1(2) - new_y1)))));
+    mdl2 = fitlm(XSPPASP, YKactLVRV);
+    % new_x2 = targets.SBP;
+    new_x3 = targets.PASP;
+    % new_y2 = (max(sigma_act_LV)+max(sigma_act_SEP));
+    new_y3 = max(sigma_act_RV);
+    % [~, pi3] = predict(mdl2, new_x2, 'Prediction', 'observation', 'Alpha', 0.05);
+    % [~, pi4] = predict(mdl2, new_x2, 'Alpha', 0.05);
+    alpha2 = 1e-4; % parameter control Smooth
+    % cost_act_1 = 1e-6*((new_y2 - pi4(1)).^4 .* (1 ./ (1 + exp(-alpha2 * (new_y2 - pi4(1))))) ...
+    %           + 1 * (new_y2 - pi4(1)).^4 .* (1 ./ (1 + exp(-alpha2 * (new_y2 - pi3(1))))) ...
+    %           + 1 * (new_y2 - pi4(2)).^4 .* (1 ./ (1 + exp(-alpha2 * (pi4(2) - new_y2)))) ...
+    %           + (new_y2 - pi4(2)).^4 .* (1 ./ (1 + exp(-alpha2 * (pi3(2) - new_y2)))));
+    [~, pi5] = predict(mdl2, new_x3, 'Prediction', 'observation', 'Alpha', 0.05);
+    [~, pi6] = predict(mdl2, new_x3, 'Alpha', 5e-7);
+    cost_act = 1e-7*((new_y3 - pi6(1)).^4 .* (1 ./ (1 + exp(-alpha2 * (new_y3 - pi6(1))))) ...
+        + 1 * (new_y3 - pi6(1)).^4 .* (1 ./ (1 + exp(-alpha2 * (new_y3 - pi5(1))))) ...
+        + 1 * (new_y3 - pi6(2)).^4 .* (1 ./ (1 + exp(-alpha2 * (pi6(2) - new_y3)))) ...
+        + (new_y3 - pi6(2)).^4 .* (1 ./ (1 + exp(-alpha2 * (pi5(2) - new_y3)))));
+end
+%% Simulation outputs requiring post-processing for cross-valve flow
+
+end_beat_i = find(t >= 1.02*T, 1) - 1; % index for end of one complete cardiac cycle, sometime flow shift and a wave is in the middle of the T
+[Qm_maxima, Qm_maxima_i,Qm_wid,Qm_prom] = findpeaks(Q_m(1:end_beat_i),'MinPeakHeight',max(Q_m)/10);
+[Qt_maxima, Qt_maxima_i] = findpeaks(Q_t(1:end_beat_i),'MinPeakHeight',max(Q_t)/10);
+% if ~(length(Qt_maxima) == 2)
+%     error('TV wrong flow')
+% end
+>>>>>>> Stashed changes:runSimOnGL.m
 % E/A ratio
 if(length(Qm_maxima) == 2)
     if(Qm_maxima(1) < 0 || Qm_maxima(2) < 0)
@@ -293,6 +472,57 @@ RF_t = 100 * (RVol_t / SV_RA_pos);
 RVol_p = -trapz(t(Qp_neg), Q_p(Qp_neg));
 SV_RV_pos = trapz(t(Qp_pos), Q_p(Qp_pos));
 RF_p = 100 * (RVol_p / SV_RV_pos);
+
+%% Kill bad sacromere movement
+Tunit = (0:0.001:t(end));
+interpLV = griddedInterpolant(t,V_LV,'pchip');
+V_LVnew = interpLV(Tunit)';
+new_min = 90;
+new_max = 150;
+currentLV_min = min(V_LVnew);
+currentLV_max = max(V_LVnew);
+V_LVnew_scaled = (V_LVnew - currentLV_min) * (new_max - new_min) / (currentLV_max - currentLV_min) + new_min;
+dVLV = diff(V_LVnew_scaled);
+LVpotentialPeriod = Tunit([false; abs(dVLV) < 0.02]);
+[~,LVjump] = maxk(diff(LVpotentialPeriod),3);
+LVjump = sort(LVjump);
+LVperiod = [LVpotentialPeriod(1) LVpotentialPeriod(LVjump(1)); LVpotentialPeriod(LVjump(1)+1) LVpotentialPeriod(LVjump(2));...
+    LVpotentialPeriod(LVjump(2)+1) LVpotentialPeriod(LVjump(3)); LVpotentialPeriod(LVjump(3)+1) LVpotentialPeriod(end)];
+TisorelaxLV = mean([LVperiod(2,2)-LVperiod(2,1) LVperiod(4,2)-LVperiod(4,1)]);
+TisocontractLV = LVperiod(3,2)-LVperiod(3,1);
+
+interpRV = griddedInterpolant(t,V_RV,'pchip');
+V_RVnew = interpRV(Tunit)';
+currentRV_min = min(V_RVnew);
+currentRV_max = max(V_RVnew);
+V_RVnew_scaled = (V_RVnew - currentRV_min) * (new_max - new_min) / (currentRV_max - currentRV_min) + new_min;
+dVRV = diff(V_RVnew_scaled);
+RVpotentialPeriod = Tunit([false; abs(dVRV) < 0.02]);
+[~,RVjump] = maxk(diff(RVpotentialPeriod),3);
+RVjump = sort(RVjump);
+RVperiod = [RVpotentialPeriod(1) RVpotentialPeriod(RVjump(1)); RVpotentialPeriod(RVjump(1)+1) RVpotentialPeriod(RVjump(2));...
+    RVpotentialPeriod(RVjump(2)+1) RVpotentialPeriod(RVjump(3)); RVpotentialPeriod(RVjump(3)+1) RVpotentialPeriod(end)];
+TisorelaxRV = mean([RVperiod(2,2)-RVperiod(2,1) RVperiod(4,2)-RVperiod(4,1)]);
+TisocontractRV = RVperiod(3,2)-RVperiod(3,1);
+
+% This is used to prevent the isocontract and isorelax phases from disappearing.
+if abs(min(Q_t)) / abs(max(Q_t)) < 0.1
+    if  TisocontractRV/T <0.015 
+        error("unreal condition")
+    end
+elseif abs(min(Q_p)) / abs(max(Q_p)) < 0.1
+    if  TisorelaxRV/T <0.01
+        error("unreal condition")
+    end
+elseif abs(min(Q_m)) / abs(max(Q_m)) < 0.1
+    if  TisocontractLV/T <0.015
+        error("unreal condition")
+    end
+elseif  abs(min(Q_a)) / abs(max(Q_a)) < 0.1
+    if  TisorelaxLV/T <0.01
+        error("unreal condition")
+    end
+end
 
 %% Other simulation outputs requiring post-processing
 
@@ -489,6 +719,10 @@ o_vals.RAP_v = RAP_v;
 o_vals.PCWP_a = PCWP_a;
 o_vals.PCWP_v = PCWP_v;
 
+% mean LV/RV pressure during systolic
+o_vals.LVSPmean = trapz(t(Qa_pos),P_LV(Qa_pos))/(t(Qa_pos(end))-t(Qa_pos(1)));
+o_vals.RVSPmean = trapz(t(Qp_pos),P_RV(Qp_pos))/(t(Qp_pos(end))-t(Qp_pos(1)));
+
 % Convery RF to grades
 g = [1, 2, 3, 4]; % grades: none, mild, moderate, severe.
 
@@ -507,7 +741,105 @@ o_vals.AVr = interp1(gmt_AR, g, RF_a, 'linear', 'extrap');
 o_vals.TVr = interp1(gmt_TR, g, RF_t, 'linear', 'extrap');
 o_vals.PVr = interp1(gmt_PR, g, RF_p, 'linear', 'extrap');
 
+<<<<<<< Updated upstream:runSim.m
 % Calibration and weighting
+=======
+outputno = struct2array(o_vals);
+if any(~isreal(outputno))
+    error('bad guessing')
+end
+
+% Calculate the ejection period
+o_vals.FcQS2 = t(Qa_pos_end)/T;
+PEP = (t(Qa_pos_start))/T;
+LVET = (t(Qa_pos_end)-t(Qa_pos_start))/T;
+o_vals.EJr = PEP/LVET;
+%% Implent
+% Adding additional costs to enforce synchronization:
+% The goal is to ensure synchronized contraction and relaxation
+% among the left ventricle (LV), right ventricle (RV), and septum (SEP).
+
+Tint = (t(1):0.001:t(end));
+NewPLV = interp1(t,P_LV,Tint);
+NewPRV = interp1(t,P_RV,Tint);
+Newd_LW = interp1(t,d_LW,Tint);
+Newd_SW = interp1(t,d_SW,Tint);
+Newd_RW = interp1(t,d_RW,Tint);
+[~, locsMinPLV] = min(NewPLV);
+if locsMinPLV >length(Tint)/2
+    locsMinPLV = round(locsMinPLV-length(Tint)/2);
+end
+[~, locsMinPRV] = min(NewPRV);
+if locsMinPRV >length(Tint)/2
+    locsMinPRV = round(locsMinPRV-length(Tint)/2);
+end
+
+Maggicpoint = round(mean([locsMinPRV; locsMinPLV]));
+diff_d_LW = diff(Newd_LW);
+diff_d_SW = diff(Newd_SW);
+diff_d_RW = diff(Newd_RW);
+
+[~,locswiredpeakLW]=findpeaks(diff_d_LW,'MinPeakHeight',max(diff_d_LW)/3);
+if ~isempty(locswiredpeakLW)
+    % if locswiredpeakLW(1) > Maggicpoint-round(length(Tint)/2*0.035) &&...
+    %         locswiredpeakLW(1) < Maggicpoint+round(length(Tint)/2*0.015)
+    %     error("Unreal LV Movement")
+    % end
+end
+
+% [~,locswiredpeakSW]=findpeaks(diff_d_SW,'MinPeakHeight',max(diff_d_SW)/3);
+% if ~isempty(locswiredpeakSW)
+%     if locswiredpeakSW(1) > Maggicpoint-round(length(Tint)/2*0.035) &&...
+%             locswiredpeakSW(1) < Maggicpoint+round(length(Tint)/2*0.015)
+%         error("Unreal SEP Movement")
+%     end
+% end
+
+if min(xm_SEP) < -1e-3
+    numPeaks = length(findpeaks(NewPRV));
+    [~,PeakLocs] = findpeaks(NewPRV);
+    if numPeaks > 4||...
+        (numPeaks == 4 && all(abs(Tint(PeakLocs)-T) > 5e-2))
+        error("Unreal RV Movement")
+    end
+else
+    [~,locswiredpeakRW]=findpeaks(diff_d_RW,'MinPeakHeight',max(diff_d_RW)/3);
+    if ~isempty(locswiredpeakRW)
+        % if locswiredpeakRW(1) > Maggicpoint-round(length(Tint)/2*0.035) &&...
+        %         locswiredpeakRW(1) < Maggicpoint+round(length(Tint)/2*0.015)
+        %     error("Unreal RV Movement")
+        % end
+    end
+end
+
+
+% 05/06 R_tPA or R_tSA tax. The previsous DNA/DNP not quite working
+targets.DNA = (targets.SBP - targets.DBP)/2 + targets.DBP;
+targets.DNP = (targets.PASP - targets.PADP)/2 + targets.PADP;
+
+% Kill Unreal R_tSA
+TestingPeriodPSA = P_SA(Qa_neg);
+dPSA = diff(TestingPeriodPSA);
+SAsignal_range = max(TestingPeriodPSA) - min(TestingPeriodPSA);
+SAtol = SAsignal_range * 1e-3; 
+n_badSA = sum(dPSA > SAtol);
+max_bad = 40;
+if n_badSA >= max_bad
+    error('too big R_tSA');
+end
+
+% Kill Unreal R_tPA
+% TestingPeriodPPA = P_PA(Qp_neg);
+% dPPA = diff(TestingPeriodPPA);
+% PAsignal_range = max(TestingPeriodPPA) - min(TestingPeriodPPA);
+% PAtol = PAsignal_range * 1e-3; 
+% n_badPA = sum(dPPA > PAtol);
+% if n_badPA >= max_bad - 2
+%     error('too big R_tPA');
+% end
+
+%% Calibration and weighting
+>>>>>>> Stashed changes:runSimOnGL.m
 % Since different targets have different ranges and units, which may unequally contribute to the
 % cost function, we calibrated them based on canonical subjects. Additionally, we have varying
 % confidence in the accuracy of different targets. Therefore, we assign different weights to them.
@@ -607,6 +939,18 @@ elseif inputs.Sex == 2
     c.tPLVmin = 0.55;
     c.RVEF = 60;
 end
+<<<<<<< Updated upstream:runSim.m
+=======
+c.T2MaxLsc_RV = 0.05;
+c.T2MinLsc_RV = 0.38;
+c.T2maxPPA = 0.25;
+c.CVPmin = 1;
+c.RAPmin = 1;
+c.CVPmax = 6;
+c.EJr = 0.4;
+c.FcQS2 = 0.4;
+
+>>>>>>> Stashed changes:runSimOnGL.m
 
 % Weighting
 w = struct();
@@ -649,8 +993,13 @@ if(isfield(targets,'EAr'))
     w.EAr = 88;
 end
 wt = 1.5; % use to adjust thickness and length
+<<<<<<< Updated upstream:runSim.m
 w.Hed_LW = wt*25*0.3;
 w.Hed_SW = wt*25*0.3;
+=======
+w.Hed_LW = wt*25;
+w.Hed_SW = wt*25;
+>>>>>>> Stashed changes:runSimOnGL.m
 w.Hed_RW = wt*25*0.3;
 w.LVIDd = wt*3;
 w.LVIDs = wt*3;
@@ -659,9 +1008,25 @@ w.RVIDs = wt*3;
 
 wg = 4; % weight of valve insuffiency grades
 w.MVmg = wg/5;
-w.AVpg = wg/25;
+if isfield(targets,'LVESP')
+    w.AVpg = wg/5;
+else
+    w.AVpg = wg;
+end
 w.TVmg = wg/5;
+<<<<<<< Updated upstream:runSim.m
 w.PVpg = wg/25;
+=======
+if isfield(targets,'RVSP')
+    w.PVpg = wg/5;
+else
+    w.PVpg = wg;
+end
+w.MS = wg*25;
+w.AS = wg*25;
+w.PS = wg*25;
+>>>>>>> Stashed changes:runSimOnGL.m
+
 
 % The following loop attempts to build a cost function for valve regurgitation. If the difference in
 % regurgitation grade is within one grade (e.g., 2.1 vs 2), it will have a small cost. However, if
@@ -795,12 +1160,12 @@ end
 
 %LV_m
 if(isfield(targets,'LV_m'))
-    w.LV_m = 100;
+    w.LV_m = 20;
 end
-w.FakeLV_m = 50;
+w.FakeLV_m = 10;
 %RV_m
 if(isfield(targets,'RV_m'))
-    w.RV_m = 100;
+    w.RV_m = 20;
 end
 
 % The following part calculates extra costs, referred to as "tax."
@@ -839,7 +1204,7 @@ cost = zeros(1, N);
 if ~exist('print_sim','var')
     print_sim = false;
 end
-EX = 7.2812; % 11/7/2023, Dollars to Yuan exchange rate. This is the date I began modifying this code. Hope it brings me good luck.
+EX = 7.1720; % 06/24/2025, Dollars to Yuan exchange rate. This is the date I am really hybriding the AI and modeling. Hope good luck!
 for i = 1:N
     % Normalized squared difference
     % After conducting experiments, we found that normalizing e^2/target^2 is the best approach.
@@ -941,6 +1306,7 @@ if ~exist('GENDER', 'var')
     fclose(FID);
 end
 
+<<<<<<< Updated upstream:runSim.m
 if print_sim
     fprintf('Total cost: %1.2f \n\n', total_cost);
 end
@@ -952,6 +1318,99 @@ ticID = tic; % record time
 evalc('options.Events = @(t, y) eventFunction(t, y, maxTime, ticID);'); % set up event
 % ode
 [T, Y, TE, YE, IE] = ode15s(@(t,y) odefun(t,y,params,iniGeo), tspan, y0, options); % attention passing params is dangerous
+=======
+% fprintf('RVEDV from measurements is %.2f and from simulation is %.2f\n', UWpatients.RVEDV(PATIENT_NO), o_vals.RVEDV);
+% fprintf('TRW from measurements is %.2f and from simulation is %.2f\n',UWpatients.Hed_RW(PATIENT_NO),o_vals.Hed_RW);
+% fprintf('RVEF from measurements is %.2f%% and from simulation is %.2f%%\n',UWpatients.EF_RV(PATIENT_NO),EF_RV*100);
+
+
+%% Temp Post-processing
+% load('AllPatients_preVAD_data.mat')
+% height = patients(PATIENT_NO).snapshots(ModelWin).Height;
+% weight = patients(PATIENT_NO).snapshots(ModelWin).Weight;
+% BSA = sqrt((height * weight) / 3600);
+% NParams.C_SA = params.C_SA/BSA;
+% NParams.C_SV = params.C_SV/BSA;
+% NParams.C_PA = params.C_PA/BSA;
+% NParams.C_PV = params.C_PV/BSA;
+% NParams.k_act_LV = params.k_act_LV;
+% NParams.k_act_RV = params.k_act_RV;
+% NParams.k_pas_LV = params.k_pas_LV;
+% NParams.k_pas_RV = params.k_pas_RV;
+% NParams.Vw_LV = params.Vw_LV/BSA;
+% NParams.Vw_RV = params.Vw_RV/BSA;
+% NParams.Vw_SEP = params.Vw_SEP/BSA;
+% NParams.Amref_LV = params.Amref_LV/BSA;
+% NParams.Amref_RV = params.Amref_RV/BSA;
+% NParams.Amref_SEP = params.Amref_SEP/BSA;
+% NParams.R_SV = (params.R_SV*BSA);
+% NParams.R_PV = (params.R_PV*BSA);
+% NParams.R_SA = (params.R_SA*BSA);
+% NParams.R_PA = (params.R_PA*BSA);
+% NParams.R_tPA = (params.R_tPA*BSA);
+% NParams.R_tSA = (params.R_tSA*BSA);
+% NParams.Vh0 = params.Vh0/BSA;NParams.K1 = params.K1;NParams.expPeri = params.expPeri;
+%
+% NParams.R_t_c = (params.R_t_c*BSA);
+% NParams.R_p_o = (params.R_p_o*BSA);
+% NParams.R_p_c = (params.R_p_c*BSA);
+% NParams.R_m_o = (params.R_m_o*BSA);
+% NParams.R_m_c = (params.R_m_c*BSA);
+% NParams.R_a_o = (params.R_a_o*BSA);
+% NParams.R_a_c = (params.R_a_c*BSA);
+%
+% paramsname = fieldnames(NParams);
+% for j = 1:length(paramsname)
+%     p = NParams.(paramsname{j});
+%     load standardnormalizationNew.mat;
+%     if inputs.Sex == 1
+%         p = p/standardparamstable.(paramsname{j})(1);
+%     elseif inputs.Sex ==2
+%         p = p/standardparamstable.(paramsname{j})(2);
+%     end
+%     DTTable.(paramsname{j})(PATIENT_NO) = p;
+% end
+%
+% %% Get Power and PV loop figure
+% area1 = polyarea(V_LV,P_LV)/2;
+% LVpower = 1.33322e-4*area1*HR/60; % make power unit as W.
+% LVMD = LVpower/LV_m;
+%
+%
+% area2 = polyarea(V_RV,P_RV)/2;
+% RVpower = 1.33322e-4*area2*HR/60; % make power unit as W.
+% RVMD = RVpower/RV_m;
+%
+% T_pv = (t(1):t(end)/3000:t(end));
+% PV_P_LV = interp1(t,P_LV,T_pv);
+% PV_P_RV = interp1(t,P_RV,T_pv);
+% PV_V_LV = interp1(t,V_LV,T_pv);
+% PV_V_RV = interp1(t,V_RV,T_pv);
+%
+% % Get Prediction table
+% Prediction.StressLV_S = max(sigma_LV);
+% Prediction.StressSEP_S = max(sigma_SEP);
+% Prediction.StressRV_S = max(sigma_RV);
+% Prediction.StrainLV_S = max(eps_LV)-min(eps_LV);
+% Prediction.StrainSEP_S = max(eps_SEP)-min(eps_SEP);
+% Prediction.StrainRV_S = max(eps_RV)-min(eps_RV);
+% Prediction.LVMD_S = LVpower/LV_m;
+% Prediction.RVMD_S = RVpower/RV_m;
+% Prediction.LVpower_S = LVpower;
+% Prediction.RVpower_S = RVpower;
+% Prediction.RVSWI_S = area2/BSA;
+% Prediction.PAC_S = params.C_PA;
+% Prediction.PVR_S = params.R_PA*1000/60*80;
+% Prediction.SVR_S = params.R_SA*1000/60*80;
+
+%% Function to kill inf loop of ode15s
+
+function [T,Y,TE,YE,IE] = odeWithTimeout1(odefun, tspan, y0, options, params, maxTime)
+ticID = tic; % record time
+evalc('options.Events = @(t, y) eventFunction(t, y, maxTime, ticID);'); % set up event
+% ode
+[T, Y, TE, YE, IE] = ode15s(@(t,y) odefun(t,y,params), tspan, y0, options); % attention passing params is dangerous
+>>>>>>> Stashed changes:runSimOnGL.m
 end
 
 % define time out
@@ -962,6 +1421,7 @@ isterminal = 1; % stop
 direction = 0; % find all direction 0
 end
 
+<<<<<<< Updated upstream:runSim.m
 function status = myOutputFcn(t, y, flag, params, iniGeo, init_vec)
 % Custom output function to collect outputs at each solver step
 % Stores results in the persistent variable `o_internal` and exports to base at the end
@@ -991,3 +1451,45 @@ end
 
 
 
+=======
+function [T, Y, TE, YE, IE, o] = odeWithTimeout2(odefun, tspan, y0, options, params, iniGeo, maxTime)
+% Function to run ODE solver with timeout and collect custom outputs
+
+% Variable to collect output
+o_internal = [];
+
+% Start timer
+ticID = tic;
+
+% Set up event function
+options = odeset(options, 'Events', @(t, y) eventFunction(t, y, maxTime, ticID));
+
+% Set custom output function (uses nested function to access o_internal)
+options = odeset(options, 'OutputFcn', @(t, y, flag) myOutputFcn(t, y, flag));
+
+% Run the solver
+[T, Y, TE, YE, IE] = ode15s(@(t, y) odefun(t, y, params, iniGeo), tspan, y0, options);
+
+% Return collected output
+o = o_internal;
+
+% --------- Nested OutputFcn ---------
+    function status = myOutputFcn(t, y, flag)
+        switch flag
+            case 'init'
+                [~, output0] = odefun(0, y0, params, iniGeo);
+                o_internal = output0;
+
+            case ''
+                for i = 1:length(t)
+                    [~, output_now] = odefun(t(i), y(:, i), params, iniGeo);
+                    o_internal(:, end+1) = output_now;
+                end
+
+            case 'done'
+                % nothing to do
+        end
+        status = 0;
+    end
+end
+>>>>>>> Stashed changes:runSimOnGL.m
