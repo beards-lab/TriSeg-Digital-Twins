@@ -12,7 +12,7 @@ This repository supports the manuscript "Identification of Digital Twins to Guid
 - **targetVals____.m**: A series of "targetVals" functions that return target, input structs, and an array of modifier values for adjustable parameters. Non-void versions (e.g., `targetVals_HF.m`) use patient numbers to assign targets and parameters and validate patient clinical values.
 - **estimParams.m**: Accepts targets and inputs for a patient, returning a parameter struct and initial conditions for the model’s ODE solver, estimating parameters to replicate clinical measurements.
 - **calc_xm_ym.m** and **gemo_0.m**: Functions that estimate heart geometry metrics. `gemo_0.m` calculates wall and lumen volumes, while `calc_xm_ym.m` computes sarcomere reference length and solves for xm and ym values for consistent initial conditions.
-- **dXdT.m**: Defines the DAE system governing the TriSeg model. Inputs include time, state variables, and model parameters, and outputs constraints and state variable differentials for the MATLAB ODE solver (`ode15s`).
+- **dXdTDAE.m and dXdTode.m**: Defines the DAE or ODE system governing the TriSeg model. Inputs include time, state variables, and model parameters, and outputs constraints and state variable differentials for the MATLAB ODE solver (`ode15s`).
 - **runSim.m**: Runs the model using estimated parameters and initial conditions. It calls the ODE solver to simulate the cardiac cycle, adjusting ODE options as necessary for performance.
 - **HF_opt.m** and **Srd_opt.m**: Used for parameter estimation, incorporating Genetic Algorithm (GA), Pattern Search, and `fminsearch`.
 - **evaluateModel.m**: Accepts a patient number and modifier vector, returning the cost of one simulation. Used by optimizers as the objective function.
