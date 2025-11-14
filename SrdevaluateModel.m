@@ -22,6 +22,9 @@ try
         MRI_flag = 1;
         runSimOnGL;
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes

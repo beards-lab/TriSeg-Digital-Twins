@@ -13,6 +13,9 @@ clear
 =======
 MRI_flag = 1;
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
@@ -20,6 +23,7 @@ for GENDER  = 1 % 1 for male and other for female
     if GENDER == 1
         [targets, inputs, mods] = targetVals_male();
         modifiers = readmatrix('modifiers_male.csv','range','2:2');
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
         [~,params, init] = estimParams(targets,inputs,mods,modifiers);
@@ -35,6 +39,8 @@ for GENDER  = 1 % 1 for male and other for female
         GetMovie; % TriSeg model: displacement and stress as functions of time
         See_TriSeg; % slices of GetMoive.m
 =======
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
         % modifiers = zeros(1,length(mods));
@@ -132,6 +138,9 @@ for GENDER  = 1 % 1 for male and other for female
         % See_TriSeg; % slices of GetMoive.m
         
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
@@ -145,11 +154,14 @@ load AllPatients.mat
 secondslot = [17 79 206 256 288 325 352 355 360 361]; % patients with 2 3-month windows
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 % Shuntlist = [34 41 54 61 83 116 183 231 268 278 312]; % patients with shunt 
 for PatID = 192 % any number between 1 and 370, example patient in paper is 192
     for ModelWin =  1
         [Windowdate,targets, inputs, mods] = targetVals_HF(patients,PatID,ModelWin);
 =======
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 % Order = [1	2 13 15	16	17	20	22	25	26	35	37	42	45	46	48	50	55	57	60	62	66	67	77	78	79	84	87	88	90	91	92	93	94	97	98	99	102	103	104	106	108	111	112	113	118	122	126	130	131	132	133	137	141	146	147	150	151	164	167	168	173	177	178	186	188	195	196	197	199	202	203	204	205	206	207	209	212	213	214	217	218	222	223	224	230	232	234	235	236	240	244	246	248	250	252	267	269	271	274	281	282	283	284	293	294	300	302	303	304	306	309	316	318	324	325	327	329	335	341	342	343	344	345	346	350	351	368];
@@ -680,6 +692,9 @@ end
 %%
 writetable(RawT,'inputPredictors.csv')
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes

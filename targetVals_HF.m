@@ -364,7 +364,10 @@ end
 %% Right Side assumption
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 load LassoRV.mat
@@ -440,11 +443,17 @@ else
 end
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 
 IVRT = 70*75/inputVals.HR;
 inputVals.ActT = QS2+IVRT;
 
 
+=======
+IVRT = 70*75/inputVals.HR;
+inputVals.ActT = QS2+IVRT;
+
+>>>>>>> Stashed changes
 =======
 IVRT = 70*75/inputVals.HR;
 inputVals.ActT = QS2+IVRT;
@@ -472,7 +481,10 @@ if ~isnan(Data.('RVs'))
 end
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 % 6/11 finally turn out to be need 2 params
@@ -480,9 +492,12 @@ mods_pN{end + 1} = 'expPeri';
 mods_pN{end + 1} = 'K1';
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 
 
 
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 
@@ -503,7 +518,10 @@ vlv_def = dictionary('MVr','R_m_c', ...
     'PVpg','R_p_o');
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 for k = keys(vlv_def)'
