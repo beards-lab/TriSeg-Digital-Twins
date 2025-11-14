@@ -15,6 +15,9 @@ MRI_flag = 1;
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
@@ -26,6 +29,7 @@ for GENDER  = 1 % 1 for male and other for female
     if GENDER == 1
         [targets, inputs, mods] = targetVals_male();
         modifiers = readmatrix('modifiers_male.csv','range','2:2');
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
@@ -43,6 +47,8 @@ for GENDER  = 1 % 1 for male and other for female
         GetMovie; % TriSeg model: displacement and stress as functions of time
         See_TriSeg; % slices of GetMoive.m
 =======
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 =======
@@ -146,6 +152,9 @@ for GENDER  = 1 % 1 for male and other for female
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
@@ -165,11 +174,14 @@ secondslot = [17 79 206 256 288 325 352 355 360 361]; % patients with 2 3-month 
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 % Shuntlist = [34 41 54 61 83 116 183 231 268 278 312]; % patients with shunt 
 for PatID = 192 % any number between 1 and 370, example patient in paper is 192
     for ModelWin =  1
         [Windowdate,targets, inputs, mods] = targetVals_HF(patients,PatID,ModelWin);
 =======
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 =======
@@ -706,6 +718,9 @@ writetable(RawT,'inputPredictors.csv')
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes

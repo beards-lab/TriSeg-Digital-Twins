@@ -6,8 +6,11 @@
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream:runSim.m
 =======
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 =======
@@ -22,7 +25,10 @@
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 >>>>>>> Stashed changes:runSimOnGL.m
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 =======
@@ -33,6 +39,7 @@
 % Last modified: 03/20/2024
 
 %% Solve the differential equations using the ODE solver
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
@@ -296,6 +303,8 @@ end_beat_i = find(t >= 1.02*T, 1) - 1; % index for end of one complete cardiac c
 =======
 =======
 >>>>>>> Stashed changes
+=======
+>>>>>>> Stashed changes
 try
     T = params.T;
     HR = params.HR;
@@ -526,6 +535,7 @@ catch ME1
     r_SEP = o(54,:)';
     r_RV  = o(55,:)';
 
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
 >>>>>>> Stashed changes
 =======
@@ -759,6 +769,8 @@ catch ME1
     r_SEP = o(54,:)';
     r_RV  = o(55,:)';
 
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
@@ -823,7 +835,10 @@ end_beat_i = find(t >= 1.02*T, 1) - 1; % index for end of one complete cardiac c
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 >>>>>>> Stashed changes:runSimOnGL.m
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 =======
@@ -835,8 +850,13 @@ if(length(Qm_maxima) == 2)
     if(Qm_maxima(1) < 0 || Qm_maxima(2) < 0)
         E_A_ratio = -100;
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     %elseif(find(Qm_wid .* Qm_prom < 100,1))
      %   E_A_ratio = -100;
+=======
+        %elseif(find(Qm_wid .* Qm_prom < 100,1))
+        %   E_A_ratio = -100;
+>>>>>>> Stashed changes
 =======
         %elseif(find(Qm_wid .* Qm_prom < 100,1))
         %   E_A_ratio = -100;
@@ -852,6 +872,7 @@ elseif(length(Qm_maxima) > 2)
     E_A_ratio = Qm_maxima(1) / Qm_maxima(2);
 else
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     E_A_ratio = -100; 
     error('EAr bug 2 runSim');
 end
@@ -859,6 +880,8 @@ end
 
 % Mitral Valve 
 =======
+=======
+>>>>>>> Stashed changes
     % dQm = gradient(Q_m, t);
     % [~,locsNeg] = findpeaks(-dQm,'MinPeakHeight',500);
     % [~,locsPos] = findpeaks(dQm);
@@ -880,6 +903,9 @@ end
 
 
 % Mitral Valve
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 Qm_sign = sign(Q_m);
 if(Qm_sign(1) <= 0)
@@ -898,8 +924,13 @@ else
     Qm_pos_end = find(Qm_sign ~= 1, 1) + Qm_maxima_i(end) - 2;
 end
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 Qm_pos = [Qm_pos_start: Qm_pos_end]; % indices for positive mitral flow
 Qm_neg = [Qm_neg_start: Qm_neg_end]; % indices for negative mitral flow
+=======
+Qm_pos = Qm_pos_start: Qm_pos_end; % indices for positive mitral flow
+Qm_neg = Qm_neg_start: Qm_neg_end; % indices for negative mitral flow
+>>>>>>> Stashed changes
 =======
 Qm_pos = Qm_pos_start: Qm_pos_end; % indices for positive mitral flow
 Qm_neg = Qm_neg_start: Qm_neg_end; % indices for negative mitral flow
@@ -923,8 +954,13 @@ else
     Qa_pos_end = find(Qa_sign ~= 1, 1) + Qa_pos_start - 2;
 end
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 Qa_pos = [Qa_pos_start: Qa_pos_end]; % indices for positive aortic flow
 Qa_neg = [Qa_neg_start: Qa_neg_end]; % indices for negative aortic flow
+=======
+Qa_pos = Qa_pos_start: Qa_pos_end; % indices for positive aortic flow
+Qa_neg = Qa_neg_start: Qa_neg_end; % indices for negative aortic flow
+>>>>>>> Stashed changes
 =======
 Qa_pos = Qa_pos_start: Qa_pos_end; % indices for positive aortic flow
 Qa_neg = Qa_neg_start: Qa_neg_end; % indices for negative aortic flow
@@ -950,8 +986,13 @@ else
 
 end
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 Qt_pos = [Qt_pos_start: Qt_pos_end]; % indices for positive tricuspid flow
 Qt_neg = [Qt_neg_start: Qt_neg_end]; % indices for negative tricuspid flow
+=======
+Qt_pos = Qt_pos_start: Qt_pos_end; % indices for positive tricuspid flow
+Qt_neg = Qt_neg_start: Qt_neg_end; % indices for negative tricuspid flow
+>>>>>>> Stashed changes
 =======
 Qt_pos = Qt_pos_start: Qt_pos_end; % indices for positive tricuspid flow
 Qt_neg = Qt_neg_start: Qt_neg_end; % indices for negative tricuspid flow
@@ -975,8 +1016,13 @@ else
     Qp_pos_end = find(Qp_sign ~= 1, 1) + Qp_pos_start - 2;
 end
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 Qp_pos = [Qp_pos_start: Qp_pos_end]; % indices for positive pulmonary flow
 Qp_neg = [Qp_neg_start: Qp_neg_end]; % indices for negative pulmonary flow
+=======
+Qp_pos = Qp_pos_start: Qp_pos_end; % indices for positive pulmonary flow
+Qp_neg = Qp_neg_start: Qp_neg_end; % indices for negative pulmonary flow
+>>>>>>> Stashed changes
 =======
 Qp_pos = Qp_pos_start: Qp_pos_end; % indices for positive pulmonary flow
 Qp_neg = Qp_neg_start: Qp_neg_end; % indices for negative pulmonary flow
@@ -1004,7 +1050,11 @@ Peak_PG_p = max(P_RV(Qp_pos) - P_PA(Qp_pos)); % PVpg
 RVol_m = -trapz(t(Qm_neg), Q_m(Qm_neg)); % regurgitant volume over period where Qm is negative
 SV_LA_pos = trapz(t(Qm_pos), Q_m(Qm_pos));
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 SV_LA = max(V_LA) - min(V_LA); 
+=======
+SV_LA = max(V_LA) - min(V_LA);
+>>>>>>> Stashed changes
 =======
 SV_LA = max(V_LA) - min(V_LA);
 >>>>>>> Stashed changes
@@ -1079,6 +1129,7 @@ end
 %% Other simulation outputs requiring post-processing
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 SV_LV_tot = max(V_LV) - min(V_LV); 
 SV_RV_tot = max(V_RV) - min(V_RV);
 
@@ -1092,6 +1143,8 @@ MPAP = (1/3) * (max(P_PA)) + (2/3) * (min(P_PA));
 
 [~, LVED_i] = max(V_LV); % index of end diastole. 
 =======
+=======
+>>>>>>> Stashed changes
 SV_LV_tot = max(V_LV) - min(V_LV);
 SV_RV_tot = max(V_RV) - min(V_RV);
 
@@ -1106,6 +1159,9 @@ MPAP = (1/3) * (max(P_PA)) + (2/3) * (min(P_PA));
 MAP = (1/3) * (max(P_SA)) + (2/3) * (min(P_SA));
 
 [~, LVED_i] = max(V_LV); % index of end diastole.
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 [~, RVED_i] = max(V_RV);
 [~, LVES_i] = min(V_LV);
@@ -1152,7 +1208,11 @@ rho_myo = 1.0550;
 Hed_LW = d_LW(LVED_i);
 Hed_SW = d_SW(LVED_i);
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 Hed_RW = d_RW(RVED_i); 
+=======
+Hed_RW = d_RW(RVED_i);
+>>>>>>> Stashed changes
 =======
 Hed_RW = d_RW(RVED_i);
 >>>>>>> Stashed changes
@@ -1228,9 +1288,12 @@ else
 end
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 
 
 
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 %% Calculate cost function metrics
@@ -1254,8 +1317,13 @@ o_vals.RAVmin = min(V_RA);
 o_vals.RAPmax = max(P_RA);
 o_vals.RAPmin = min(P_RA);
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 o_vals.RAPmean = trapz(t,P_RA)/(t(end)-t(1)); 
 o_vals.PASP = max(P_PA); 
+=======
+o_vals.RAPmean = trapz(t,P_RA)/(t(end)-t(1));
+o_vals.PASP = max(P_PA);
+>>>>>>> Stashed changes
 =======
 o_vals.RAPmean = trapz(t,P_RA)/(t(end)-t(1));
 o_vals.PASP = max(P_PA);
@@ -1266,17 +1334,23 @@ o_vals.PCWPmax = max(P_PV);
 o_vals.PCWPmin = min(P_PV);
 o_vals.CVP = trapz(t,P_SV)/(t(end)-t(1));
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 o_vals.CO = CO_RV;% CO from RHC report is RV
 o_vals.Hed_LW = d_LW(LVED_i);
 o_vals.Hed_SW = d_SW(LVED_i);
 o_vals.Hed_RW = d_RW(RVED_i); 
 =======
+=======
+>>>>>>> Stashed changes
 o_vals.CVPmax = max(P_SV);
 o_vals.CVPmin = min(P_SV);
 o_vals.CO = CO_RV;% CO from RHC report is RV
 o_vals.Hed_LW = d_LW(LVED_i);
 o_vals.Hed_SW = d_SW(LVED_i);
 o_vals.Hed_RW = d_RW(RVED_i);
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 o_vals.RVEDP = P_RV(RVEDP_i); % Activation function beginning coincides with start of pressure development on right side. Beginning of activation function is in the first few indices.
 o_vals.P_RV_min = min(P_RV);
@@ -1303,6 +1377,10 @@ o_vals.Vtot = Vtot;
 o_vals.DNA = DNA;
 o_vals.DNP = DNP;
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+=======
+o_vals.MAP = MAP;
+>>>>>>> Stashed changes
 =======
 o_vals.MAP = MAP;
 >>>>>>> Stashed changes
@@ -1323,18 +1401,25 @@ g = [1, 2, 3, 4]; % grades: none, mild, moderate, severe.
 % Mitral
 gmt_MR = [0, 20, 40, 60];
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 % Aortic
 gmt_AR = [0, 20, 40, 60];
 =======
+=======
+>>>>>>> Stashed changes
 gmt_MS = [2.5, 3.75, 7.5, 12];
 % Aortic
 gmt_AR = [0, 20, 40, 60];
 gmt_AS = [2.25, 10, 30, 50];
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 % Tricuspid
 gmt_TR = [0, 17.5, 35, 52.5];
 % Pulmonary
 gmt_PR = [0, 15, 30 ,45];
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
 
 % Interpret RF into grades
@@ -1347,6 +1432,8 @@ o_vals.PVr = interp1(gmt_PR, g, RF_p, 'linear', 'extrap');
 % Calibration and weighting
 =======
 =======
+=======
+>>>>>>> Stashed changes
 gmt_PS = [0.67, 22, 50, 78]; % Peak pressure gradient
 
 % Interpret RF into grades
@@ -1358,6 +1445,9 @@ o_vals.TVr = interp1(gmt_TR, g, RF_t, 'linear', 'extrap');
 o_vals.PVr = interp1(gmt_PR, g, RF_p, 'linear', 'extrap');
 o_vals.PS = interp1(gmt_PS, g, Peak_AG_p, 'linear', 'extrap');
 
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 outputno = struct2array(o_vals);
 if any(~isreal(outputno))
@@ -1455,7 +1545,10 @@ end
 
 %% Calibration and weighting
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 >>>>>>> Stashed changes:runSimOnGL.m
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 % Since different targets have different ranges and units, which may unequally contribute to the
@@ -1558,8 +1651,11 @@ elseif inputs.Sex == 2
     c.RVEF = 60;
 end
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream:runSim.m
 =======
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 c.T2MaxLsc_RV = 0.05;
@@ -1574,7 +1670,10 @@ c.FcQS2 = 0.4;
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 >>>>>>> Stashed changes:runSimOnGL.m
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 =======
@@ -1626,6 +1725,7 @@ wt = 1.5; % use to adjust thickness and length
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream:runSim.m
 w.Hed_LW = wt*25*0.3;
 w.Hed_SW = wt*25*0.3;
@@ -1633,6 +1733,10 @@ w.Hed_SW = wt*25*0.3;
 w.Hed_LW = wt*25;
 w.Hed_SW = wt*25;
 >>>>>>> Stashed changes:runSimOnGL.m
+=======
+w.Hed_LW = wt*25;
+w.Hed_SW = wt*25;
+>>>>>>> Stashed changes
 =======
 w.Hed_LW = wt*25;
 w.Hed_SW = wt*25;
@@ -1662,9 +1766,12 @@ w.TVmg = wg/5;
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream:runSim.m
 w.PVpg = wg/25;
 =======
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 =======
@@ -1680,9 +1787,12 @@ w.MS = wg*25;
 w.AS = wg*25;
 w.PS = wg*25;
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 >>>>>>> Stashed changes:runSimOnGL.m
 
 
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 
@@ -1697,17 +1807,23 @@ for i = 1:length(vlv_def)
     if isfield(targets,vlv_def(i))
         if (targets.(vlv_def(i)) > 3.5) && (o_vals.(vlv_def(i)) > targets.(vlv_def(i)))
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
             w.(vlv_def(i)) = wg;
         else
             if targets.(vlv_def(i)) == 1.5
                 if  o_vals.(vlv_def(i)) < targets.(vlv_def(i))
                     w.(vlv_def(i)) = wg;
 =======
+=======
+>>>>>>> Stashed changes
             w.(vlv_def(i)) = 5 * wg;
         else
             if targets.(vlv_def(i)) == 1.5
                 if  o_vals.(vlv_def(i)) < targets.(vlv_def(i))
                     w.(vlv_def(i)) =  wg;
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
                 else
                     w.(vlv_def(i)) = 25 * wg;
@@ -1717,7 +1833,11 @@ for i = 1:length(vlv_def)
                     w.(vlv_def(i)) = 25 * wg;
                 else
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
                     w.(vlv_def(i)) = wg;
+=======
+                    w.(vlv_def(i)) = 5 * wg;
+>>>>>>> Stashed changes
 =======
                     w.(vlv_def(i)) = 5 * wg;
 >>>>>>> Stashed changes
@@ -1729,17 +1849,23 @@ end
 if isfield(targets,"TVr")
     if (targets.TVr > 3.5) && (o_vals.TVr > targets.TVr)
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
         w.TVr = wg;
     else
         if targets.TVr == 4
             if abs(o_vals.TVr - targets.TVr) < 0.7143
                 w.TVr = wg;
 =======
+=======
+>>>>>>> Stashed changes
         w.TVr = 5 * wg;
     else
         if targets.TVr == 4
             if abs(o_vals.TVr - targets.TVr) < 0.7143
                 w.TVr = 5 * wg;
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
             else
                 w.TVr = 25*wg;
@@ -1748,7 +1874,11 @@ if isfield(targets,"TVr")
         if targets.TVr == 3.5
             if abs(o_vals.TVr - targets.TVr) < 0.5
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
                 w.TVr = wg;
+=======
+                w.TVr = 5 * wg;
+>>>>>>> Stashed changes
 =======
                 w.TVr = 5 * wg;
 >>>>>>> Stashed changes
@@ -1759,7 +1889,11 @@ if isfield(targets,"TVr")
         if targets.TVr == 3
             if abs(o_vals.TVr - targets.TVr) < 0.2857
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
                 w.TVr = wg;
+=======
+                w.TVr = 5 * wg;
+>>>>>>> Stashed changes
 =======
                 w.TVr = 5 * wg;
 >>>>>>> Stashed changes
@@ -1770,7 +1904,11 @@ if isfield(targets,"TVr")
         if targets.TVr == 2.5
             if abs(o_vals.TVr - targets.TVr) < 0.3571
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
                 w.TVr = wg;
+=======
+                w.TVr = 5 * wg;
+>>>>>>> Stashed changes
 =======
                 w.TVr = 5 * wg;
 >>>>>>> Stashed changes
@@ -1781,7 +1919,11 @@ if isfield(targets,"TVr")
         if targets.TVr == 2
             if abs(o_vals.TVr - targets.TVr) <= 0.7143
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
                 w.TVr = wg;
+=======
+                w.TVr = 5 * wg;
+>>>>>>> Stashed changes
 =======
                 w.TVr = 5 * wg;
 >>>>>>> Stashed changes
@@ -1804,17 +1946,23 @@ end
 if isfield(targets,"PVr")
     if (targets.PVr > 3.5) && (o_vals.PVr > targets.PVr)
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
         w.PVr = wg;
     else
         if targets.PVr == 4
             if abs(o_vals.PVr - targets.PVr) < 0.3333
                 w.PVr = wg;
 =======
+=======
+>>>>>>> Stashed changes
         w.PVr = 5 * wg;
     else
         if targets.PVr == 4
             if abs(o_vals.PVr - targets.PVr) < 0.3333
                 w.PVr = 5 * wg;
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
             else
                 w.PVr = 25*wg;
@@ -1823,7 +1971,11 @@ if isfield(targets,"PVr")
         if targets.PVr == 3.5
             if abs(o_vals.PVr - targets.PVr) < .5
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
                 w.PVr = wg;
+=======
+                w.PVr = 5 * wg;
+>>>>>>> Stashed changes
 =======
                 w.PVr = 5 * wg;
 >>>>>>> Stashed changes
@@ -1834,7 +1986,11 @@ if isfield(targets,"PVr")
         if targets.PVr == 3
             if abs(o_vals.PVr - targets.PVr) <= 0.6667
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
                 w.PVr = wg;
+=======
+                w.PVr = 5 * wg;
+>>>>>>> Stashed changes
 =======
                 w.PVr = 5 * wg;
 >>>>>>> Stashed changes
@@ -1845,7 +2001,11 @@ if isfield(targets,"PVr")
         if targets.PVr == 2.5
             if abs(o_vals.PVr - targets.PVr) < .5
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
                 w.PVr = wg;
+=======
+                w.PVr = 5 * wg;
+>>>>>>> Stashed changes
 =======
                 w.PVr = 5 * wg;
 >>>>>>> Stashed changes
@@ -1856,7 +2016,11 @@ if isfield(targets,"PVr")
         if targets.PVr == 2
             if abs(o_vals.PVr - targets.PVr) <= 0.3333
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
                 w.PVr = wg;
+=======
+                w.PVr = 5 * wg;
+>>>>>>> Stashed changes
 =======
                 w.PVr = 5 * wg;
 >>>>>>> Stashed changes
@@ -1888,6 +2052,11 @@ if(isfield(targets,'RV_m'))
 end
 
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+=======
+w.EJr = 4e4;
+w.FcQS2 = 4e4;
+>>>>>>> Stashed changes
 =======
 w.EJr = 4e4;
 w.FcQS2 = 4e4;
@@ -1902,6 +2071,7 @@ Lsc_target = 2; % target for sarcomere length
 Lsc_ED = [max(Lsc_LV), max(Lsc_SEP), max(Lsc_RV)];
 cost_Lsc = 0;
 for i = 1:length(Lsc_ED)
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
     cost_Lsc = cost_Lsc + 600*(Lsc_target - Lsc_ED(i))^4;
 end
@@ -1926,6 +2096,8 @@ end
 
 % Cost function
 =======
+=======
+>>>>>>> Stashed changes
     cost_Lsc = cost_Lsc + 6000*(Lsc_target - Lsc_ED(i))^2;
 end
 
@@ -1941,6 +2113,9 @@ end
 
 
 %% Cost function
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 cost = zeros(1, N);
 if ~exist('print_sim','var')
@@ -1952,7 +2127,11 @@ for i = 1:N
     % After conducting experiments, we found that normalizing e^2/target^2 is the best approach.
     % After normalization, the result is multiplied by the corresponding weight.
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     cost(i) = (o_vals.(targetsfn{i}) - targets.(targetsfn{i}))^2 /c.(targetsfn{i})^2 *w.(targetsfn{i})*EX; 
+=======
+    cost(i) = (o_vals.(targetsfn{i}) - targets.(targetsfn{i}))^2 /c.(targetsfn{i})^2 *w.(targetsfn{i})*EX;
+>>>>>>> Stashed changes
 =======
     cost(i) = (o_vals.(targetsfn{i}) - targets.(targetsfn{i}))^2 /c.(targetsfn{i})^2 *w.(targetsfn{i})*EX;
 >>>>>>> Stashed changes
@@ -1961,6 +2140,7 @@ for i = 1:N
     end
 
 end
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
 if(exist('cost_EA','var'))
     tax = cost_Lsc + cost_EA; % add any extra costs that are independent of targets (i.e. constraints or something)
@@ -2067,6 +2247,8 @@ evalc('options.Events = @(t, y) eventFunction(t, y, maxTime, ticID);'); % set up
 [T, Y, TE, YE, IE] = ode15s(@(t,y) odefun(t,y,params,iniGeo), tspan, y0, options); % attention passing params is dangerous
 =======
 =======
+=======
+>>>>>>> Stashed changes
 
 if(exist('cost_EA','var'))
     tax = ...cost_RVEF + cost_RVEDV +...
@@ -2092,6 +2274,9 @@ for j = 1:length(paramsname)
     end
 end
 
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 % fprintf('RVEDV from measurements is %.2f and from simulation is %.2f\n', UWpatients.RVEDV(PATIENT_NO), o_vals.RVEDV);
 % fprintf('TRW from measurements is %.2f and from simulation is %.2f\n',UWpatients.Hed_RW(PATIENT_NO),o_vals.Hed_RW);
@@ -2187,7 +2372,10 @@ evalc('options.Events = @(t, y) eventFunction(t, y, maxTime, ticID);'); % set up
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 >>>>>>> Stashed changes:runSimOnGL.m
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 =======
@@ -2204,6 +2392,7 @@ isterminal = 1; % stop
 direction = 0; % find all direction 0
 end
 
+<<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
@@ -2238,6 +2427,8 @@ end
 
 
 =======
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 =======
@@ -2286,8 +2477,12 @@ o = o_internal;
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
 end
 >>>>>>> Stashed changes:runSimOnGL.m
+=======
+end
+>>>>>>> Stashed changes
 =======
 end
 >>>>>>> Stashed changes

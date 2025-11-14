@@ -25,6 +25,9 @@ cost = evaluateModelPacing(m,MRI_flag); % call cost function in runSim.m
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
+>>>>>>> Stashed changes
+=======
 >>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
