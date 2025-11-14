@@ -4,76 +4,134 @@
 % Note that GA will take a lot of time.
 
 % Created by Andrew Meyer and Feng Gu
-% Last modified: 10/29/2024
+% Last modified: 11/14/2025
 
-<<<<<<< Updated upstream
-load(sprintf('Sims/P_NO%dWindow%d.mat',PatID,ModelWin)); % if it does exist
-m = output.modifiers;
-% m = 1*ones(1,length(mods)); % if the predefined modifiers do not exist
-cost = evaluateModel(m,patients,PatID,ModelWin); % call cost function in runSim.m
-=======
-% load(sprintf('Sims/P_NO%dWindow%d.mat',PATIENT_NO,ModelWin)); % if it does exist
-% m = output.modifiers;
-% m = 1*ones(1,length(mods)); % if the predefined modifiers do not exist
-% load P_NO1.mat
-% m = output.modifiers;
-% m = [modifiers(1:4) 0.25 modifiers(5:end)];
-% m(2) = 0.9;
-% m(5) = 0.25;
-m = zeros(1,length(mods));
-cost = evaluateModelPacing(m,MRI_flag); % call cost function in runSim.m
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
+idx = 1:length(mods);
+m = zeros(1, length(mods));
 
-% %% GA
-% [ub, lb] = m_bounds(mods); % use a simple function to set up boundary conditions for all modifiers
-% ub_0 = 4 .* ones(1,length(ub));
-% lb_0 = 0.25 .* ones(1,length(lb));
-% maxStallGen = 8;
-% maxGen = Inf;
-% popSize = 100;
-% options = optimoptions("ga",'Display','iter', 'MaxStallGenerations', maxStallGen, 'UseParallel',true,'MaxGenerations',maxGen,'PopulationSize',popSize,'InitialPopulationRange',[lb_0; ub_0]);
-% [m,fcost,~,ga_out,fpop,fscores] = ga(@(m)evaluateModel(m,patients,PatID,ModelWin), length(m),[],[],[],[],lb, ub,[], options);
-% 
-% %% patternsearch
-% % Set up options for patternsearch
-% options = optimoptions('patternsearch',...
-%     'Display', 'iter',...
-%     'PlotFcn', @psplotbestf,...
-%     'FunctionTolerance', 1e-4,...
-%     'StepTolerance', 1e-3,...
-%     'MaxIterations', 648,...
-%     'UseCompletePoll', true,...
-%     'UseParallel', true);
-% [m, fval, exitflag, output] = patternsearch(@(m)evaluateModel(m,patients,PatID,ModelWin), m, [], [], [], [], [], [], [], options);
+%% Set up boundary conditions and GA basic parameters
+[ub, lb] = m_bounds(mods);                 % Parameter bounds for all modifiers
+maxStallGen = 5;                           % Early stopping for GA
+maxGen = inf;                              % Max GA generations
+popSize = 150;                             % Total population size for GA
 
-%% Fminsearch
-while true
-    options = optimset('Display','iter','PlotFcns',@optimplotfval, 'TolFun', 1e-4, 'TolX', 1e-3, 'MaxIter',100); % reduce maxiter if you think it's getting stuck
-    m = fminsearch(@(m)evaluateModel(m,patients,PatID,ModelWin), m, options);
-    costnew = evaluateModel(m,patients,PatID,ModelWin);
-    if  cost - costnew <=1
+numVars = length(lb);
+halfPop = round(popSize / 2);
+
+%% Generate initial population (50% uniform + 50% normal)
+
+% 50% uniform distribution within bounds
+popUniform = lb + rand(halfPop, numVars) .* (ub - lb);
+
+% 50% normal distribution (mean = midpoint of scaled space, std = range/6)
+mu = 0;
+sigma = (1.5 - 0.5) / 6;
+popNormal = normrnd(mu, sigma, halfPop, numVars);
+
+% Combine the two distributions
+InitialPopulationMatrix = [popUniform; popNormal];
+
+% Clamp to ensure all samples fall within [lb, ub]
+InitialPopulationMatrix = max(min(InitialPopulationMatrix, ub), lb);
+
+%% GA options
+ga_options = optimoptions("ga", ...
+    'Display', 'iter', ...
+    'MaxStallGenerations', maxStallGen, ...
+    'UseParallel', true, ...
+    'MaxGenerations', maxGen, ...
+    'PopulationSize', popSize, ...
+    'MutationFcn', {@mutationadaptfeasible, 0.2}, ...   % Increased mutation rate
+    'EliteCount', ceil(0.05 * popSize), ...             % Preserve top 5% individuals
+    'InitialPopulationMatrix', InitialPopulationMatrix); % Custom hybrid population
+
+%% Patternsearch (first stage): uses GA-based search function
+options_PS_first = optimoptions('patternsearch', ...
+    'SearchFcn', {@searchga, idx, ga_options}, ...      % Hybrid: GA inside patternsearch
+    'Display', 'iter', ...
+    'MeshTolerance', 1e-6, ...
+    'StepTolerance', 1e-6, ...
+    'FunctionTolerance', 1e-6, ...
+    'MaxIterations', 3, ...                             % Limited iterations for first stage
+    'UseCompletePoll', true, ...
+    'UseParallel', true);
+
+%% fminsearch options (local refinement)
+options_Fmin = optimset( ...
+    'Display', 'iter', ...
+    'TolFun', 1e-4, ...
+    'TolX', 1e-3, ...
+    'MaxIter', 98);                                     % Reduce if convergence stalls
+
+%% First round: patternsearch → fminsearch
+[m, ~, ~, ~] = patternsearch(@(m)evaluateModelUmich(m,patients,PATIENT_NO,ModelWin,MRI_flag), ...
+                             m, [], [], [], [], lb, ub, [], options_PS_first);
+
+m = fminsearch(@(m)evaluateModelUmich(m,patients,PATIENT_NO,ModelWin,MRI_flag), ...
+               m, options_Fmin);
+
+CurrentBestCost = evaluateModelUmich(m,patients,PATIENT_NO,ModelWin,MRI_flag);
+
+%% Iterative refinement loop
+options_PS_following = optimoptions('patternsearch', ...
+    'Display', 'iter', ...
+    'MeshTolerance', 1e-6, ...
+    'StepTolerance', 1e-6, ...
+    'FunctionTolerance', 1e-6, ...
+    'MaxIterations', 98, ...                            % Full patternsearch iterations
+    'UseCompletePoll', true, ...
+    'UseParallel', true);
+
+maxIter = 3;
+iter = 0;
+
+while iter < maxIter
+    iter = iter + 1;
+
+    % Patternsearch refinement
+    [m, ~, ~, ~] = patternsearch(@(m)evaluateModelUmich(m,patients,PATIENT_NO,ModelWin,MRI_flag), ...
+                                 m, [], [], [], [], lb, ub, [], options_PS_following);
+
+    % Local refinement
+    m = fminsearch(@(m)evaluateModelUmich(m,patients,PATIENT_NO,ModelWin,MRI_flag), ...
+                   m, options_Fmin);
+
+    % Evaluate improvement
+    costnew = evaluateModelUmich(m,patients,PATIENT_NO,ModelWin,MRI_flag);
+
+    % Stop if improvement is small or solution diverges
+    if abs(CurrentBestCost - costnew) <= 10 || isinf(costnew)
         break;
     else
-        cost = costnew;
+        CurrentBestCost = costnew;
     end
 end
 
-%% Save the output structure
-output.mods = mods;
-output.modifiers = m;
-save(sprintf('Sims/P_NO%dWindow%d.mat',PatID,ModelWin), "output");
+%% Construct and save output structure
+[~, targets, inputs, mods] = targetVals_HF(patients, PATIENT_NO, ModelWin, MRI_flag);
+[INIparams, INIinit] = estiminiParams(targets, inputs);
+[params, init] = optParams(INIparams, INIinit, mods, m);
+
+try
+    runSimOnGL;
+
+    output.mods    = mods;
+    output.m       = m;
+    output.params  = params;
+    output.init    = init;
+    output.targets = targets;
+    output.inputs  = inputs;
+    output.o       = o;
+    output.y       = y;
+    output.t       = t;
+
+    save(sprintf('Sims0707UM/P_NO%d', PATIENT_NO), "output");
+
+catch
+    % If runSimOnGL fails, save minimal outputs for debugging
+    output.mods = mods;
+    output.m    = m;
+
+    save(sprintf('Sims0707UM/P_NO%d_failedGL', PATIENT_NO), "output");
+    error('Simulation failed in runSimOnGL.');
+end
