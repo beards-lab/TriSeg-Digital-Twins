@@ -43,8 +43,8 @@ for PATIENT_NO =192 % any number between 1 and 370, example patient in paper is 
     try
         for ModelWin =  1
             MRI_flag = 1; % 1:with, 0:without
-            % [Windowdate,targets, inputs, mods] = targetVals_HF(patients,PATIENT_NO,ModelWin,MRI_flag);
-            % [INIparams, INIinit] = estiminiParams(targets,inputs);
+            [Windowdate,targets, inputs, mods] = targetVals_HF(patients,PATIENT_NO,ModelWin,MRI_flag);
+            [INIparams, INIinit] = estiminiParams(targets,inputs);
             RUNOPT = 0; % 0 for simulation and 1 for optimazation
             if RUNOPT ==1
                 HFopt; % optimize modifiers of HF patients, Current HFopt is still used for full model
@@ -55,6 +55,10 @@ for PATIENT_NO =192 % any number between 1 and 370, example patient in paper is 
                 inputs = output.inputs;
                 params = output.params;
                 init = output.init;
+                % if you want to run this function yourself... otherwise I
+                % have saved everything
+                % modifiers = output.m; 
+                % [params, init] = optParams(INIparams, INIinit, mods,modifiers);
                 runSim;
             end
         end
