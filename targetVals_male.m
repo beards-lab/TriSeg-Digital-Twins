@@ -16,6 +16,7 @@ targetVals.DBP = 75.7;
 targetVals.Hed_LW = 0.93; 
 targetVals.Hed_SW = 0.92; 
 targetVals.EAr = 1.36; 
+inputVals.Hed_RW = 0.35;
 
 %% CMR measurements
 targetVals.LVEDV = 145; % b-SSFP, papillary muscles in LV lumen volume
@@ -24,6 +25,8 @@ targetVals.LVESV = 53; % b-SSFP, papillary muscles in LV lumen volume
 
 targetVals.RVEDV = 166; % b-SSFP, papillary muscles RV lumen volume
 targetVals.RVESV = 73; % b-SSFP, papillary muscles RV lumen volume
+% inputVals.RVEDV = 150; % b-SSFP, papillary muscles RV lumen volume
+% inputVals.RVESV = 60; % b-SSFP, papillary muscles RV lumen volume
 % inputVals.RVESV = 73; % b-SSFP, exclude papillary muscles
  
 targetVals.LAVmax = 72; % b-SSFP Biplane area-length
@@ -39,6 +42,7 @@ targetVals.RAPmax = 6; % not sex-specific
 targetVals.RAPmin = 2; % not sex-specific
 targetVals.RVEDP = 3; % not sex-specific
 targetVals.RVSP = 20.8; % sPAP. don't give sPAP target, use this ...
+targetVals.PASP = 20; 
 targetVals.PADP = 8.8; % not sex-specific
 targetVals.PCWP = 8; % not sex-specific 
 inputVals.CVP = 4; %
@@ -55,5 +59,11 @@ inputVals.AVpg = 1;
 inputVals.TVr = 1;
 inputVals.PVr = 1;
 inputVals.Pvpg = 0.5;
-mods = {'k_pas_LV','k_pas_RV','k_act_LV','k_act_RV','C_SA','C_PA','R_SA','R_PA','R_atria','R_m_o','Vw_LV','Vw_RV','LvSepR','R_tPA','R_tSA','K_P','B_P'};
+% mods = {'k_pas_LV','k_pas_RV','k_act_LV','k_act_RV','C_SA','C_PA','R_SA','R_PA','R_atria','R_m_o','Vw_LV','Vw_RV','LvSepR','R_tPA','R_tSA','K_P','B_P'};
+mods = {'k_pas_LV','k_pas_RV','k_act_LV','k_act_RV',...
+    'C_SA','C_PA','R_SA','R_PA','R_Veins','R_m_o',...
+    'Vw_LV','LvSepR','Vw_RV',... % LV Septum ratio provides information on both LV and RV, so it replaces Vw_SEP
+    'Amref_LV','Amref_RV',...
+    'K1','expPeri',... 
+    'R_tPA','R_tSA'};
 

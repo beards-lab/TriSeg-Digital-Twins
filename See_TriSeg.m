@@ -69,7 +69,7 @@ colors_RV = cmap(colorIndex_RV, :);
 % Set up figure
 figure(102);
 clf;
-set(gcf, 'defaultLegendAutoUpdate', 'off', 'WindowState', 'maximized', 'Position', get(0, 'Screensize'));
+set(gcf, 'defaultLegendAutoUpdate', 'off','Position', [150, 100, 1280, 720]);
 
 % Set positions for subplots
 positions = [0.05, 0.3, 0.27, 0.4; 0.36, 0.3, 0.27, 0.4; 0.67, 0.3, 0.27, 0.4];

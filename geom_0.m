@@ -50,7 +50,7 @@ if(~use_Vw_RV) % if you are calculating RV geometry based on H_RW
             + H_RW - 2*(-(h^2 + ym^2) / (2*h))) - H_RW)^3);
         % equation definition
         eqn = RVEDV == (pi / 6) * (-ym^2 / h)  * ((-ym^2 / h)^2  + 3 * ym^2) - 0.5 * Vw_RV - SEP_CAP; 
-        h = vpasolve(eqn,h,[-Inf 0]); % h < 0. put restriction on h_RV. I don't know how to set bounds as -Inf < h < 0
+        h = vpasolve(eqn,h,[-inf 0]); % h < 0. put restriction on h_RV. I don't know how to set bounds as -Inf < h < 0
         if(~use_Vw_RV)
             Vw_RV = double(subs(Vw_RV)); %puts sym variable h that was just calculated into previous Vw_RV expression
         end

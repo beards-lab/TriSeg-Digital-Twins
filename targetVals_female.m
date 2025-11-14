@@ -16,6 +16,7 @@ targetVals.DBP = 72.9;
 targetVals.Hed_LW = 0.85; % Posterior LW thickness, end-diastole (cm)
 targetVals.Hed_SW = 0.82; % SW thickness, end-diastole (cm)
 targetVals.EAr = 1.38;
+inputVals.Hed_RW = 0.35; % just used to get inital guessing of parameters
 
 %% CMR measurements
 targetVals.LVEDV = 112; % b-SFFP, papillary muscles included in left ventricular volume
@@ -23,6 +24,8 @@ targetVals.LVESV = 39; % b-SFFP, papillary muscles included in left ventricular 
 % inputVals.LVESV = 39; % b-SFFP, exclude papillary muscles
 targetVals.RVEDV = 122; % b-SFFP, papillary muscles included in right ventricular volume
 targetVals.RVESV = 50; % b-SFFP, papillary muscles included in right ventricular volume
+% inputVals.RVEDV = 150; % just used to get inital guessing of parameters
+% inputVals.RVESV = 60; % just used to get inital guessing of parameters
 % inputVals.RVESV = 50; % b-SFFP, papillary muscles included in right ventricular volume
 targetVals.LAVmax = 64; % SFFP, Simpson6s method; LA appendage excluded
 targetVals.LAVmin = 22; % SFFP, Simpsonis method; LA appendage excluded
@@ -36,6 +39,7 @@ targetVals.RAPmax = 6; % not sex-specific
 targetVals.RAPmin = 2; % not sex-specific
 targetVals.RVEDP = 3; % not sex-specific
 targetVals.RVSP = 20.8; % sPAP. don't give sPAP target, use this ...
+targetVals.PASP = 20; 
 targetVals.PADP = 8.8; % not sex-specific
 targetVals.PCWP = 8; % not sex-specific
 inputVals.CVP = 4; 
@@ -53,4 +57,10 @@ inputVals.TVr = 1;
 inputVals.PVr = 1;
 inputVals.Pvpg = 0.5;
 
-mods = {'k_pas_LV','k_pas_RV','k_act_LV','k_act_RV','C_SA','C_PA','R_SA','R_PA','R_atria','R_m_o','Vw_LV','Vw_RV','LvSepR','R_tPA','R_tSA','K_P','B_P'};
+% mods = {'k_pas_LV','k_pas_RV','k_act_LV','k_act_RV','C_SA','C_PA','R_SA','R_PA','R_atria','R_m_o','Vw_LV','Vw_RV','LvSepR','R_tPA','R_tSA','K_P','B_P'};
+mods = {'k_pas_LV','k_pas_RV','k_act_LV','k_act_RV',...
+    'C_SA','C_PA','R_SA','R_PA','R_Veins','R_m_o',...
+    'Vw_LV','LvSepR','Vw_RV',... % LV Septum ratio provides information on both LV and RV, so it replaces Vw_SEP
+    'Amref_LV','Amref_RV',...
+    'K1','expPeri',... 
+    'R_tPA','R_tSA'};

@@ -4,10 +4,8 @@ function [Windowdate, targetVals, inputVals, mods] = targetVals_HF(data,Patient_
 % No processing decisions—only data collection.
 % Sets direct measurements from Echo, RHC, and Cardiac MRI as targets.
 
-
 % Created by Feng Gu
-% Last modified: 11/24/2025
-
+% Last modified: 3/20/2025
 
 % Inputs:
 % Data        - Structure of data extracted from the narrative
@@ -15,14 +13,12 @@ function [Windowdate, targetVals, inputVals, mods] = targetVals_HF(data,Patient_
 % Window_No   - Vector to locate the time point
 % MRI_flag    - 1 stands for reading info from CMR, other is not reading
 
-
 % Outputs:
 % targetVals  - Structure of measurements that the model tries to fit
 % inputVals   - Structure of other necessary variables to build the model
 %               which the model does not fit
 % mods        - Cell array of names to adjust selected parameters
 % Windowdate  - Date the model was built at
-
 
 Data = data(Patient_no).snapshots(Window_No);
 Windowdate = mean([Data.RHCDate;Data.TTEDate;Data.MRIDate]);
@@ -42,7 +38,6 @@ else                      % Female
 end
 inputVals.HR = nanmean([Data.('HR_rhc') Data.('HR_vitals') Data.('MRI_HR')]);% Fixed: This probably get a lof of situation
 
-
 %% Assign target values
 % Target from RHC
 if ~isnan(Data.('SAs'))
@@ -53,68 +48,55 @@ elseif ~isnan(Data.('NIBPs_vitals'))
     targetVals.SBP = Data.('NIBPs_vitals');
 end
 
-
 if ~isnan(Data.('SAd'))
     targetVals.DBP = Data.('SAd'); % trust cath more than cuff
 elseif ~isnan(Data.('NIBPd_vitals'))
     targetVals.DBP = Data.('NIBPd_vitals');
 end
 
-
 if ~isnan(Data.('RAm'))
     targetVals.RAPmean = Data.('RAm');
 end
-
 
 if (~isnan(Data.('RAa'))) || (~isnan(Data.('RAv')))
     targetVals.RAPmax = max([Data.('RAa');Data.('RAv')]);
 end
 
-
 if ~isnan(Data.('PCW'))
     targetVals.PCWP = Data.('PCW');
 end
-
 
 if (~isnan(Data.('PCWa'))) || (~isnan(Data.('PCWv')))
     targetVals.PCWPmax = max([Data.('PCWa');Data.('PCWv')]);
 end
 
-
 if ~isnan(Data.('RVs'))
     targetVals.RVSP = Data.('RVs');
 end
-
 
 if ~isnan(Data.('RVd'))
     targetVals.RVEDP = Data.('RVd');
 end
 
-
 if ~isnan(Data.('RVmin'))
     targetVals.P_RV_min = Data.('RVmin');
 end
-
 
 if ~isnan(Data.('LVs'))
     targetVals.LVESP = Data.('LVs');
 end
 
-
 if ~isnan(Data.('LVd'))
     targetVals.LVEDP = Data.('LVd');
 end
-
 
 if ~isnan(Data.('LVmin'))
     targetVals.P_LV_min = Data.('LVmin');
 end
 
-
 if ~isnan(Data.('PAs'))
     targetVals.PASP = Data.('PAs');
 end
-
 
 if ~isnan(Data.('PAd'))
     targetVals.PADP = Data.('PAd');
@@ -133,7 +115,6 @@ else
     targetVals.CO = (Data.('CO_td')+Data.('CO_fick'))/2;
 end
 
-
 % Targets from Echo
 if ~isnan(Data.('LVIDd'))
     if Data.('LVIDd') > 10
@@ -143,7 +124,6 @@ if ~isnan(Data.('LVIDd'))
     end
 end
 
-
 if ~isnan(Data.('LVIDs'))
     if Data.('LVIDs') > 10
         targetVals.LVIDs = Data.('LVIDs')/10; % from echo
@@ -151,7 +131,6 @@ if ~isnan(Data.('LVIDs'))
         targetVals.LVIDs = Data.('LVIDs');% making the unit to cm. most of TTE report are mm
     end
 end
-
 
 if ~isnan(Data.('LVPWd'))
     if Data.('LVPWd') > 3
@@ -161,7 +140,6 @@ if ~isnan(Data.('LVPWd'))
     end
 end
 
-
 if ~isnan(Data.('IVSd'))
     if Data.('IVSd') > 3
         targetVals.Hed_SW = Data.('IVSd')/10; % this is from ECHO
@@ -170,18 +148,15 @@ if ~isnan(Data.('IVSd'))
     end
 end
 
-
 if ~isnan(Data.('LVEF_tte'))
     targetVals.EF = Data.('LVEF_tte'); % this is from ECHO
 else
     targetVals.EF = (Data.('MRI_LVEDV') - Data.('MRI_LVESV'))./Data.('MRI_LVEDV')*100; % this is from ECHO
 end
 
-
 if ~isnan(Data.('EA'))
     targetVals.EAr = Data.('EA');
 end
-
 
 % Targets from MRI
 if MRI_flag == 1
@@ -189,32 +164,26 @@ if MRI_flag == 1
         targetVals.LVEDV = Data.('MRI_LVEDV');
     end
 
-
     if ~isnan(Data.('MRI_LVESV'))
         targetVals.LVESV = Data.('MRI_LVESV');
     end
-
 
     if ~isnan(Data.('MRI_RVEDV'))
         targetVals.RVEDV = Data.('MRI_RVEDV');
     end
 
-
     if ~isnan(Data.('MRI_RVESV'))
         targetVals.RVESV = Data.('MRI_RVESV');
     end
-
 
     if ~isnan(Data.('MRI_LVMass'))
         targetVals.LV_m = Data.('MRI_LVMass');
     end
 
-
     if ~isnan(Data.('MRI_RVMass'))
         targetVals.RV_m = Data.('MRI_RVMass');
     end
 end
-
 
 if ~MRI_flag == 1
     if (isfield(targetVals,'EF'))
@@ -227,7 +196,6 @@ if ~MRI_flag == 1
         inputVals.LVESV = targetVals.LVIDs^3*0.9185+63.92;
     end
 end
-
 
 % LAVmax can be assigned as either an input or a target
 if inputVals.Sex == 1
@@ -280,13 +248,11 @@ else % as an input
     end
 end
 
-
 if(inputVals.Sex == 1) % male
     inputVals.RAVmin = 32/25*inputVals.LAVmin; % from Baseline_resting numbers. need these for diastolic displacement for model intial conditions
 else % female
     inputVals.RAVmin = 23/22*inputVals.LAVmin; % from Baseline_resting numbers
 end
-
 
 % Add additional targets to enhance physiological relevance of the model
 % targetVals.DNA = 1.32*((targetVals.SBP-targetVals.DBP)/3+targetVals.DBP)-22.6; % dicrotic Notch Aorta
@@ -300,7 +266,6 @@ if ~isnan(Data.('RAm'))
 else
     inputVals.CVP = 4;
 end
-
 
 %% Assign synthetic target values for patients without MRILVmass
 % Uses a linear regression model from 146 patients.
@@ -360,25 +325,8 @@ if MRI_flag == 1
     end
 end
 
-
 %% Right Side assumption
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 load LassoRV.mat
 if ~MRI_flag == 1
     Raw_Lasso_RVEDV = inputVals.Sex*k_RVEDV(1) + inputVals.Age*k_RVEDV(2) +...
@@ -412,7 +360,6 @@ if ~MRI_flag == 1
     inputVals.RVESV = targetVals.RVEDV * (100-targetVals.RVEF) * 0.01;
 end
 
-
 if isnan(Data.('MRI_RVMass'))
     if  (~isnan(Data.('RAa'))) || (~isnan(Data.('RAv')))
         coeff3= targetVals.RAPmax;
@@ -423,16 +370,12 @@ if isnan(Data.('MRI_RVMass'))
     end
 
 
-
-
     if  ~isnan(Data.('RVs'))
         coeff4 = targetVals.RVSP;
-
 
     else
         coeff4 = targetVals.PASP;
     end
-
 
     Raw_Lasso_TRW = inputVals.Height * k_TRW(1) + targetVals.SBP * k_TRW(2) + ...
         coeff3* k_TRW(3) + coeff4 * k_TRW(4) + ...
@@ -451,41 +394,9 @@ else
     QS2 = 546.5-2.0*inputVals.HR;
 end
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-
 IVRT = 70*75/inputVals.HR;
 inputVals.ActT = QS2+IVRT;
 
-
-=======
-IVRT = 70*75/inputVals.HR;
-inputVals.ActT = QS2+IVRT;
-
->>>>>>> Stashed changes
-=======
-IVRT = 70*75/inputVals.HR;
-inputVals.ActT = QS2+IVRT;
-
->>>>>>> Stashed changes
-=======
-IVRT = 70*75/inputVals.HR;
-inputVals.ActT = QS2+IVRT;
-
->>>>>>> Stashed changes
-=======
-IVRT = 70*75/inputVals.HR;
-inputVals.ActT = QS2+IVRT;
-
->>>>>>> Stashed changes
-=======
-IVRT = 70*75/inputVals.HR;
-inputVals.ActT = QS2+IVRT;
-
->>>>>>> Stashed changes
 %% Parameters requiring modification (mods), used in the function estimParams.m
 % Default parameters should be always optimized
 mods_0 = {'k_pas_LV','k_pas_RV','k_act_LV','k_act_RV',...
@@ -495,7 +406,6 @@ mods_0 = {'k_pas_LV','k_pas_RV','k_act_LV','k_act_RV',...
     'C_SV','C_PV',...
     ... 'V_SV_s','V0u_coeff','V0c_coeff', % fixed blood volume
     'R_tPA','R_tSA'};
-
 
 %% Add additional mods based on the availability of the patient's data.
 mods_pN = cellstr(string(cell(0)));
@@ -507,44 +417,10 @@ if ~isnan(Data.('RVs'))
     end
 end
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 % 6/11 finally turn out to be need 2 params
 mods_pN{end + 1} = 'expPeri';
 mods_pN{end + 1} = 'K1';
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-
-
-
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 
 
 if ~isnan(Data.('LVs'))
@@ -552,7 +428,6 @@ if ~isnan(Data.('LVs'))
         mods_pN{end + 1} = 'R_a_o';
     end
 end
-
 
 vlv_def = dictionary('MVr','R_m_c', ...
     'MVmg','R_m_o', ...
@@ -562,22 +437,6 @@ vlv_def = dictionary('MVr','R_m_c', ...
     'PVr','R_p_c', ...
     'PVpg','R_p_o');
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 for k = keys(vlv_def)'
     if(Data.(k) >= 1.2)
         mods_pN(end + 1) = cellstr(vlv_def(k));
@@ -585,18 +444,14 @@ for k = keys(vlv_def)'
     end
 end
 
-
 mods = [mods_0 mods_pN];
 mods = unique(mods);
-
 
 for i = 1:length(tg_pN)
     targetVals.(tg_pN{i}) = Data.(tg_pN{i});
 end
 
-
 %% Data validation (using empirical bounds to safeguard against unit errors)
-
 
 % Validate targets and inputs
 tg_bounds = dictionary('SBP',{[50 300]}, ...
@@ -645,14 +500,12 @@ tg_bounds = dictionary('SBP',{[50 300]}, ...
     'LV_m',{[35 400]},...
     'FakeLV_m',{[35 400]});
 
-
-tg_fn = fieldnames(targetVals);
-for i = 1:length(tg_fn)
-    bounds_i = cell2mat(tg_bounds(tg_fn{i}));
-    assert(targetVals.(tg_fn{i}) >= bounds_i(1) ...
-        && targetVals.(tg_fn{i}) <= bounds_i(2),sprintf(tg_fn{i}));
-end
-
+% tg_fn = fieldnames(targetVals);
+% for i = 1:length(tg_fn)
+%     bounds_i = cell2mat(tg_bounds(tg_fn{i}));
+%     assert(targetVals.(tg_fn{i}) >= bounds_i(1) ...
+%         && targetVals.(tg_fn{i}) <= bounds_i(2),sprintf(tg_fn{i}));
+% end
 
 in_bounds = dictionary('Height',{[90 230]}, ...
     'Weight',{[30 250]}, ...% 267 over 200kg
@@ -666,10 +519,8 @@ in_bounds = dictionary('Height',{[90 230]}, ...
     'RVESV',{[10 650]}, ...
     'CVP',{[2 20]}); % TBV, LAVmin, RAVmin, are all derived.
 
-
 in_fn = fieldnames(inputVals);
 in_keys = isKey(in_bounds,string(in_fn));
-
 
 for i = 1:length(in_keys)
     if(in_keys(i)) % for those inputs that aren't derived

@@ -7,39 +7,20 @@ function total_cost = SrdevaluateModel(modifiers,GENDER)
 
 try
     % Evaluates the model during optimalization
-    print_sim = true;
+    print_sim = false;
     if GENDER ==1
         [targets, inputs, mods] = targetVals_male();
     else
         [targets, inputs, mods] = targetVals_female();
     end
-<<<<<<< Updated upstream
-    [~ ,params, init] = estimParams(targets,inputs,mods,modifiers);
-    runSim;
-=======
         [INIparams, INIinit] = estiminiParams(targets,inputs);
         [params, init] = optParams(INIparams, INIinit, mods,modifiers);
         MRI_flag = 1;
         runSimOnGL;
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
     if total_cost<0
         total_cost = inf;
     end
-catch
+catch ME
     total_cost = inf;
+    disp(ME.message)
 end

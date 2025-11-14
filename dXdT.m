@@ -175,7 +175,6 @@ Tm_LV  = (params.Vw_LV  * sigma_LV  / (2 * Am_LV))  * (1 + (z_LV^2)/3  + (z_LV^4
 Tm_SEP = (params.Vw_SEP * sigma_SEP / (2 * Am_SEP)) * (1 + (z_SEP^2)/3 + (z_SEP^4)/5); 
 Tm_RV  = (params.Vw_RV  * sigma_RV  / (2 * Am_RV))  * (1 + (z_RV^2)/3  + (z_RV^4)/5);
 
-
 % Axial midwall tension component 
 Tx_LV  = Tm_LV  * 2 * xm_LV  * ym / (xm_LV^2  + ym^2); 
 Tx_SEP = Tm_SEP * 2 * xm_SEP * ym / (xm_SEP^2 + ym^2); 
@@ -186,12 +185,11 @@ Ty_LV  = Tm_LV  * (xm_LV^2  - ym^2) / (xm_LV^2  + ym^2);
 Ty_SEP = Tm_SEP * (xm_SEP^2 - ym^2) / (xm_SEP^2 + ym^2); 
 Ty_RV  = Tm_RV  * (xm_RV^2  - ym^2) / (xm_RV^2  + ym^2);
 
-% pericardiac constrain
-Peri = exp(params.K_P*((V_RA+V_LA+V_LV+V_RV+params.Vw_LV+params.Vw_SEP+params.Vw_RV)/params.Vh0))+params.B_P;
+P_Peri = params.K1 * exp(params.expPeri*((V_LV+V_RV+V_LA+V_RA)/params.Vh0-1));% 0.4 is coming from an experiment fit but just 1 single point
 
 % Ventricular pressure 
-P_LV = -2 * Tx_LV / ym + Peri; 
-P_RV = 2 * Tx_RV / ym+ Peri; 
+P_LV = -2 * Tx_LV / ym + P_Peri; 
+P_RV = 2 * Tx_RV / ym + P_Peri; 
 
 % Atria
 LAV0u = params.LAV0u; % mL. Unstressed volume in atria
@@ -200,17 +198,26 @@ LAV0c = params.LAV0c; % ml. Threshold for exponential PV relation. put a modifie
 RAV0c = params.RAV0c;
 LAV1c = params.LAV1c; % mL. Volume constant dictating behavior of exponential. mkae dif
 RAV1c = params.RAV1c;
-Tact = +0.08; %.1
+Tact = -0.15; %.1
 tc_a = tc_v - Tact - 1*((tc_v-Tact)>(0.5));
 LEp = params.LEp ; % 0.050  passive <try this instead. make dif
 REp = params.REp;
 LEa = params.LEa; %active. 
 REa = params.REa;
 Pc = params.Pc; % 10 mmHg. Collagen
-sigma_a = .0975; %1.5 * 0.065. How wide gaussian is
-act = exp( -(tc_a/sigma_a)^2 );
-P_LA  = 2.0*(LEp*(V_LA-LAV0u) + LEa*act*(V_LA-LAV0u) + Pc*exp((V_LA-LAV0c)/LAV1c)) + Peri ;
-P_RA  = 1.0*(REp*(V_RA-RAV0u) + REa*act*(V_RA-RAV0u) + Pc*exp((V_RA-RAV0c)/RAV1c)) + Peri; % Coefficients here?
+% 03/31 I don't know why the current Atria model doesn't work. I will just back
+% to Dan's version
+if tc_a >= 0 && tc_a < 0.15 
+  act = 0.5*(1 - cos(pi*tc_a/0.15)); 
+elseif tc_a >= 0.15 && tc_a < 0.3 
+  act = 0.5*(1 + cos(pi*(tc_a - 0.15)/0.15)); 
+else
+  act = 0; 
+end
+% sigma_a = .0975; %1.5 * 0.065. How wide gaussian is
+% act = exp(-(tc_a./sigma_a).^2 );
+P_LA  = 2.0*(LEp*(V_LA-LAV0u) + LEa*act*(V_LA-LAV0u) + Pc*exp((V_LA-LAV0c)/LAV1c)) + P_Peri;
+P_RA  = 1.0*(REp*(V_RA-RAV0u) + REa*act*(V_RA-RAV0u) + Pc*exp((V_RA-RAV0c)/RAV1c)) + P_Peri; 
 
 %% Lumped circulatory model 
 % Venous Pressure (mmHg)
@@ -270,7 +277,6 @@ elseif params.R_p_c < Inf
     P_PA = (params.R_PA*params.R_p_c*V_PA + params.C_PA*P_RV*params.R_PA*params.R_tPA + params.C_PA*P_PV*params.R_p_c*params.R_tPA)/(params.C_PA*(params.R_PA*params.R_p_c + params.R_PA*params.R_tPA + params.R_p_c*params.R_tPA));
 end 
 
-
 % Equations 5 - 7 (ODE's from TriSeg)
 dLsc_LV  = ((Ls_LV  - Lsc_LV)  / Lse_iso - 1) * v_max;
 dLsc_SEP = ((Ls_SEP - Lsc_SEP) / Lse_iso - 1) * v_max;
@@ -303,7 +309,7 @@ outputs = [xm_LV;xm_SEP;xm_RV;ym;   % 1-4 Geometrical state
         Y; act;                                         % 48-49 Activation function                                      
         H_LW; H_SW; H_RW;                               % 50-52 Wall Thickness
         r_LV; r_SEP; r_RV;                              % 53-55 Radius lumen volume
-        Peri;                                           % 56 Pressure for Pericardium
+        P_Peri;                                           % 56 Pressure for Pericardium
         ];                                   
             
 end 

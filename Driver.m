@@ -5,62 +5,19 @@
 % second section generates simulations for heart failure patients.
 
 % Created by Feng Gu
-% Last modified: 10/29/2024
+% 03/20/2025 Done with modeling patients without CMR info.
+% Till 03/20 UW cohort is purely fit without CMR. Umich cohort is still
+% based on full data inputs(including CMR) and PKU cohort only have 1
+% example.
+% Last modified: 03/20/2025
 
 %% Simulation for Canonical Subjects
 clear
-<<<<<<< Updated upstream
-=======
 MRI_flag = 1;
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 for GENDER  = 1 % 1 for male and other for female
     if GENDER == 1
         [targets, inputs, mods] = targetVals_male();
         modifiers = readmatrix('modifiers_male.csv','range','2:2');
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-        [~,params, init] = estimParams(targets,inputs,mods,modifiers);
-    else
-        [targets, inputs, mods] = targetVals_female();
-        modifiers = readmatrix('modifiers_female.csv','range','2:2');
-        [~,params, init] = estimParams(targets,inputs,mods,modifiers);
-    end
-    Sim = 1; % 1 for simulation and other for optimazation
-    if Sim ==1
-        runSim; 
-        NplotSrd; % 4-panel figure just for canonical subjects
-        GetMovie; % TriSeg model: displacement and stress as functions of time
-        See_TriSeg; % slices of GetMoive.m
-=======
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
         % modifiers = zeros(1,length(mods));
         [INIparams, INIinit] = estiminiParams(targets,inputs);
         % params.HR = 180;
@@ -155,51 +112,50 @@ for GENDER  = 1 % 1 for male and other for female
         % GetMovie; % TriSeg model: displacement and stress as functions of time
         % See_TriSeg; % slices of GetMoive.m
         
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
     else
         Srdopt; % optimize modifiers of canonical subjects
     end
 end
-%% Simulation for heart failure patients
+%%
+GENDER = [1;2];
+standardparamstable = table(GENDER);
+for No = 1:length(GENDER)
+    paramsname = [fieldnames(ParamM)];
+    for j = 1:length(paramsname)
+        if No == 1
+            if isfield(ParamM,paramsname{j})
+                p = ParamM.(paramsname{j});
+                % elseif isfield(initM,paramsname{j})
+                %     p = initM.(paramsname{j});
+                % elseif isfield(PredictionM,paramsname{j})
+                %     p = PredictionM.(paramsname{j});
+            end
+        elseif No ==2
+            if isfield(ParamF,paramsname{j})
+                p = ParamF.(paramsname{j});
+                % elseif isfield(initF,paramsname{j})
+                %     p = initF.(paramsname{j});
+                % elseif isfield(PredictionF,paramsname{j})
+                %     p = PredictionF.(paramsname{j});
+            end
+        end
+        standardparamstable.(paramsname{j})(No) = p;
+    end
+end
+save('standardnormalizationNew',"standardparamstable");
+
+
+%% Simulation for heart failure patients from Umich cohort without CMR info
 clear
+save_dir = 'FiguresFinal';
+if ~exist(save_dir, 'dir')
+    mkdir(save_dir);  % 如果目录不存在，则创建
+end
 load AllPatients.mat
+% PredictedRVEDV = NaN(370,1);
+% PredictedRVEF = NaN(370,1);
+% CostFunction = NaN(370,1);
 secondslot = [17 79 206 256 288 325 352 355 360 361]; % patients with 2 3-month windows
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-% Shuntlist = [34 41 54 61 83 116 183 231 268 278 312]; % patients with shunt 
-for PatID = 192 % any number between 1 and 370, example patient in paper is 192
-    for ModelWin =  1
-        [Windowdate,targets, inputs, mods] = targetVals_HF(patients,PatID,ModelWin);
-=======
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 % Order = [1	2 13 15	16	17	20	22	25	26	35	37	42	45	46	48	50	55	57	60	62	66	67	77	78	79	84	87	88	90	91	92	93	94	97	98	99	102	103	104	106	108	111	112	113	118	122	126	130	131	132	133	137	141	146	147	150	151	164	167	168	173	177	178	186	188	195	196	197	199	202	203	204	205	206	207	209	212	213	214	217	218	222	223	224	230	232	234	235	236	240	244	246	248	250	252	267	269	271	274	281	282	283	284	293	294	300	302	303	304	306	309	316	318	324	325	327	329	335	341	342	343	344	345	346	350	351	368];
 
 for PATIENT_NO =46 % any number between 1 and 370, example patient in paper is 192
@@ -357,25 +313,181 @@ for PATIENT_NO = 1
         MRI_flag = 0;
         [targets, inputs, mods] = targetVals_PKU(MRI_flag);
         [INIparams, INIinit] = estiminiParams(targets,inputs);
->>>>>>> Stashed changes
         RUNOPT = 0; % 0 for simulation and 1 for optimazation
         if RUNOPT ==1
-            HFopt; % optimize modifiers of HF patients
+            if MRI_flag == 1
+                PKUFullModelOpt; % optimize modifiers of HF patients
+            else
+                PKUFengRVValidationOpt; % optimize modifiers of HF patients without CMR info
+            end
         end
         if RUNOPT == 0
-            load(sprintf('Sims/P_NO%dWindow%d.mat',PatID,ModelWin)); % load results from great lake clusters
+            if MRI_flag == 1
+                load PKUm.mat; % load results from great lake clusters
+            else
+                load PKUmFengRV.mat; % load results from great lake clusters
+            end
             modifiers = output.modifiers;
-            [Error, params, init] = estimParams(targets,inputs,mods, modifiers);
+            [params, init] = optParams(INIparams, INIinit, mods,modifiers);
             runSim;
             Print_cost = 1;% 1 for performance, other for patient's pre-condition (PHI sensitive)
-            NplotFit; % 6-panel figure for HF patients
-            GetMovie;
+            NplotFit; % 6-panel figure for HF patientsP
+            % GetMovie;
             See_TriSeg;
+            pause(3);
+        end
+    catch ME
+        disp(['Error: ', ME.message, 'PatID',num2str(PATIENT_NO)])
+    end
+end
+toc
+
+%% 03/31 Simulation for Mia and Pallak's LVAD patients
+clear
+load('AllPatients_preVAD_data.mat')
+DTTable = readtable("LastWindowDTinfo.csv",VariableNamingRule="preserve");
+
+%%
+tic
+for PATIENT_NO = 1
+    try
+        % if ismember(PATIENT_NO,[40 162 241 349 424])
+        %     ModelWin = length(patients(PATIENT_NO).snapshots)-2;
+        % elseif ismember(PATIENT_NO,[67 87 111 115 139 161 166 183 189 191 201 211 234 261 278 284 291 294 307 331 346 377 382 389 437 458])
+        %     ModelWin = length(patients(PATIENT_NO).snapshots)-1;
+        % else
+        %     ModelWin = length(patients(PATIENT_NO).snapshots);
+        % end
+        MRI_flag = 0;
+        windowslot = [patients(PATIENT_NO).snapshots.RHCDate;patients(PATIENT_NO).snapshots.TTEDate];
+        targetstable = readtable("share_addmisionDate_VADdate.xlsx","VariableNamingRule","preserve");
+        [~,idx] = ismember(patients(PATIENT_NO).snapshots(1).patKey,targetstable.patkey);
+        targetsDate = targetstable.date_admit(idx);
+        distance = abs(windowslot(1,:) - targetsDate) + abs(windowslot(2,:) - targetsDate);
+        [~, ModelWin] = min(distance);
+        if ismember(PATIENT_NO,[31 38 52 103 267 295])
+            ModelWin = ModelWin+1;
+        elseif ismember(PATIENT_NO,[284 307 331])
+            ModelWin = ModelWin-1;
+        end
+        [Windowdate,targets, inputs, mods] = targetVals_VAD(patients,PATIENT_NO,ModelWin);
+        [INIparams, INIinit] = estiminiParams(targets,inputs);
+
+        load(sprintf('Sims0411VAD/P_NO%d.mat',PATIENT_NO)); % load results from great lake clusters
+        modifiers = output.m;
+        % modifiers = ones(1,length(mods));
+        [params, init] = optParamsWrongVersion(INIparams, INIinit, mods,modifiers);
+        runSim;
+        Prediction.LVpowerIndex_S = LVpower/BSA;
+        Prediction.RVpowerIndex_S = RVpower/BSA;
+        Prename = fieldnames(Prediction);
+        for j = 1:length(Prename)
+            p = Prediction.(Prename{j});
+            DTTable.(Prename{j})(PATIENT_NO ) = p;
+        end
+        outputname = fieldnames(o_vals);
+        for j = 1:length(outputname)
+            o = o_vals.(outputname{j});
+            DTTable.(outputname{j}+"_S")(PATIENT_NO ) = o;
+        end
+        DTTable.minRVP_S(PATIENT_NO) = o_vals.P_RV_min;
+        DTTable.minLVP_S(PATIENT_NO) = o_vals.P_LV_min;
+        DTTable.LVm_S(PATIENT_NO) = o_vals.LV_m;
+        DTTable.RVm_S(PATIENT_NO) = o_vals.RV_m;
+        DTTable.HedLW_S(PATIENT_NO) = o_vals.Hed_LW;
+        DTTable.HedSW_S(PATIENT_NO) = o_vals.Hed_SW;
+        Print_cost = 1;% 1 for performance, other for patient's pre-condition (PHI sensitive)
+        NplotFit; % 6-panel figure for HF patients
+        % GetMovie;
+        % See_TriSeg;
+        % pause(3);
+    catch ME
+        disp(['Error: ', ME.message, 'PatID',num2str(PATIENT_NO)])
+    end
+end
+toc
+%% Figure for Mia and Pallak
+clear
+load('AllPatients_preVAD_data.mat')
+Table = readtable("RVoutcomes.xlsx");
+targetstable = readtable("share_addmisionDate_VADdate.xlsx","VariableNamingRule","preserve");
+
+qualifiedPatients = [];
+
+for i = 1:473
+    [~, idx] = ismember(patients(i).snapshots(1).patKey, Table.patkey);
+    admitDate = targetstable.date_admit(idx);
+    vadDate = Table.VADOpDate(idx);
+
+    if isnat(admitDate) || isnat(vadDate)
+        continue;
+    end
+
+    duration = days(vadDate - admitDate);
+    if duration < 15 || duration > 25
+        continue;
+    end
+
+    rhcCount = 0;
+    tteCount = 0;
+    for j = 1:length(patients(i).snapshots)
+        rhcDate = patients(i).snapshots(j).RHCDate;
+        tteDate = patients(i).snapshots(j).TTEDate;
+        if rhcDate >= admitDate && rhcDate <= vadDate
+            rhcCount = rhcCount + 1;
+        end
+        if tteDate >= admitDate && tteDate <= vadDate
+            tteCount = tteCount + 1;
+        end
+    end
+
+    if rhcCount > 0 && tteCount > 0
+        totalCount = rhcCount + tteCount;
+        qualifiedPatients(end+1,:) = [i, totalCount];  % [病人索引, 总数]
+    end
+end
+
+% 根据 RHC+TTE 总数降序排列，取前100个
+qualifiedPatients = sortrows(qualifiedPatients, -2);
+selectedIndices = qualifiedPatients(1:min(100, size(qualifiedPatients,1)), 1);
+
+
+
+%% 画图
+figure(101); clf;
+hold on;
+
+for k = 1:length(selectedIndices)
+    i = selectedIndices(k);
+    [~, idx] = ismember(patients(i).snapshots(1).patKey, Table.patkey);
+    admitDate = targetstable.date_admit(idx);
+    vadDate = Table.VADOpDate(idx);
+    vadDay = days(vadDate - admitDate);
+
+    % Admission 到 VAD 的连线
+    plot([0 vadDay], k*ones(1,2), 'Color', [0 0 0 0.3]);
+
+    % Admission 点
+    scatter(0, k, 4, 'ko', 'filled');
+
+    % VAD 点
+    scatter(vadDay, k, 30, 'rx', 'LineWidth', 1.5);
+
+    % 事件点
+    for j = 1:length(patients(i).snapshots)
+        rhcDate = patients(i).snapshots(j).RHCDate;
+        tteDate = patients(i).snapshots(j).TTEDate;
+
+        if rhcDate >= admitDate && rhcDate <= vadDate
+            rhcDay = days(rhcDate - admitDate);
+            scatter(rhcDay, k, 20, 'ko');
+        end
+        if tteDate >= admitDate && tteDate <= vadDate
+            tteDay = days(tteDate - admitDate);
+            scatter(tteDay, k, 20, 'k|');
         end
     end
 end
-<<<<<<< Updated upstream
-=======
 
 xline(0, '-b', 'LineWidth', 1.5);  % Admission 参考线
 xlabel('Days from admission');
@@ -727,19 +839,3 @@ end
 
 %%
 writetable(RawT,'inputPredictors.csv')
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes

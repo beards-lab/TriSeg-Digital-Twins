@@ -3,317 +3,15 @@
 % ode15s, and to collect the corresponding simulation output.
 % A cost function is embedded in the last several sections of the script
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream:runSim.m
-=======
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 % 03/20: The biggest difference between this version and the previous one
 % is that the current version incorporates several empirical correlations
 % identified from the UW cohort to constrain RV mechanical and geometrical
 % properties, helping to eliminate unrealistic conditions during optimization.
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
->>>>>>> Stashed changes:runSimOnGL.m
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 % Created by Andrew Meyer and Feng Gu
 % Last modified: 03/20/2024
 
 %% Solve the differential equations using the ODE solver
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream:runSim.m
-T = params.T;
-HR = params.HR;
-init_vec = cell2mat(struct2cell(init))';
-iniGeo = init_vec(1:4);
-init_vec  = init_vec(5:end);
-M = eye(length(init_vec));
-options = odeset('Mass', M, 'MassSingular', 'yes', 'RelTol', 1e-7, 'AbsTol', 1e-7, 'MaxStep', T/30,'OutputFcn', @(t, y, flag) myOutputFcn(t, y, flag, params, iniGeo,init_vec)); % set options for ode
-warning('on', 'all'); % turn off warnings message on the command window
-maxTime = 100; % maximum time for odeWithTimeout function
-
-% This loop is designed primarily for optimization. The differential equations are very stiff,
-% especially for xm_sep, which may approach 0, causing the numerical solver to crash or get stuck.
-% This loop can penalize this condition, although it is not perfect. Ideally, the solution should
-% not depend on the initial step, but the equations are too stiff for the numerical solver to handle.
-
-[t, y] = odeWithTimeout(@dXdT, [0, 20*T], init_vec, options, params,iniGeo, maxTime); % run the ODE solver
-=======
-try
-    T = params.T;
-    HR = params.HR;
-    if init.LAVmin >= 150||init.RAVmin>=100
-        init.LAVmin = init.LAVmin/3;
-        init.RAVmin = init.RAVmin/3;
-    end
-    init_vec = cell2mat(struct2cell(init))';
-    M = eye(length(init_vec));
-    M(1,1) = 0;
-    M(2,2) = 0;
-    M(3,3) = 0;
-    M(4,4) = 0;
-    options = odeset('Mass', M, 'RelTol', 1e-7, 'AbsTol', 1e-7, 'MaxStep', T/30); % set options for ode
-    warning('off', 'all'); % turn off warnings message on the command window
-    maxTime = 10; % maximum time for odeWithTimeout function
-    lastwarn('');   % 清空上一个warning
-    [t, y] = odeWithTimeout1(@dXdTOnGL, [0, 30*T], init_vec, options, params, maxTime);
-    [lastWarnMsg, lastWarnId] = lastwarn;  % 检查warning
-    if ~isempty(lastWarnMsg)
-        error(['ODE solver warning: ', lastWarnMsg]);  % 直接终止，并抛出warning信息
-    end
-
-    % Find the index where t is within the last two periods, which reflects the steady state
-    startIndex = find(t >= t(end) - 2*T, 1, 'first');
-    lastTwoPeriodsT = t(startIndex:end);
-    lastTwoPeriodsY = y(startIndex:end, :);
-    t = lastTwoPeriodsT-lastTwoPeriodsT(1);
-    y = lastTwoPeriodsY; % solutions of ODE
-    xm_LV  = y(:,1);
-    xm_SEP = y(:,2);
-    xm_RV  = y(:,3);
-    ym     = y(:,4);
-    Lsc_LV  = y(:,5);
-    Lsc_SEP = y(:,6);
-    Lsc_RV  = y(:,7);
-    V_LV = y(:,8);
-    V_RV = y(:,9);
-    V_SA = y(:,10);
-    V_SV = y(:,11);
-    V_PA = y(:,12);
-    V_PV = y(:,13);
-    Vtot = sum(y(end,8:13)) ;
->>>>>>> Stashed changes:runSimOnGL.m
-
-    %% Collect simulation outputs
-
-    output_no = 50;
-    o = zeros(output_no,length(t)); % outputs from simulation
-    for i = 1:length(t)
-        [~,o(:,i)] = dXdTOnGL(t(i),y(i,:), params);
-    end
-
-    P_LV = o(1,:)';
-    P_SA = o(2,:)';
-    P_SV = o(3,:)';
-    P_RV = o(4,:)';
-    P_PA = o(5,:)';
-    P_PV = o(6,:)';
-    Vm_LV  = o(7,:)';
-    Vm_SEP = o(8,:)';
-    Vm_RV  = o(9,:)';
-    Am_LV  = o(19,:)';
-    Am_SEP = o(11,:)';
-    Am_RV  = o(12,:)';
-    Cm_LV  = o(13,:)';
-    Cm_SEP = o(14,:)';
-    Cm_RV  = o(15,:)';
-    eps_LV  = o(16,:)';
-    eps_SEP = o(17,:)';
-    eps_RV  = o(18,:)';
-    sigma_pas_LV  = o(19,:)';
-    sigma_pas_SEP = o(20,:)';
-    sigma_pas_RV  = o(21,:)';
-    sigma_act_LV  = o(22,:)';
-    sigma_act_SEP = o(23,:)';
-    sigma_act_RV  = o(24,:)';
-    sigma_LV  = o(25,:)';
-    sigma_SEP = o(26,:)';
-    sigma_RV  = o(27,:)';
-    Q_m = o(28,:)' ;    % Flow across mitral valve (QIN_LV)
-    Q_a = o(29,:)';     % Flow across aortic valve (QOUT_LV)
-    Q_t = o(30,:)' ;    % Flow across tricuspid valve (QIN_RV)
-    Q_p = o(31,:)' ;    % Flow across pulmonary valve (QOUT_RV)
-    Q_SA = o(32,:)' ;
-    Q_PA = o(33,:)' ;
-    Tm_LV  = o(34,:)';
-    Tm_SEP = o(35,:)';
-    Tm_RV  = o(36,:)';
-    Y = o(37,:)';
-    V_RA = o(38,:)';
-    V_LA = o(39,:)';
-    P_RA = o(40,:)';
-    P_LA = o(41,:)';
-    QIN_RA = o(42,:)';
-    d_LW = o(43, :)';
-    d_SW = o(44, :)';
-    d_RW = o(45, :)';
-    act = o(46, :)';
-    r_LV = o(47, :)';
-    r_SEP = o(48, :)';
-    r_RV = o(49, :)';
-    P_external = o(50, :)';
-catch ME1
-    disp(['runSim failed: ', ME1.message]);
-    %% Solve the differential equations using the ODE solver
-    T = params.T;
-    HR = params.HR;
-    init_vec = cell2mat(struct2cell(init))';
-    iniGeo = init_vec(1:4);
-    init_vec  = init_vec(5:end);
-    M = eye(length(init_vec));
-    options = odeset('Mass', M, 'MassSingular', 'yes', 'RelTol', 1e-7, 'AbsTol', 1e-7, 'MaxStep', params.T / 30);
-    maxTime = 100;
-
-    [t, y, ~, ~, ~, o] = odeWithTimeout2(@dXdT, [0, 22 * params.T], init_vec, options, params, iniGeo, maxTime);
-
-    %% Collect simulation outputs from the last two cardiac cycles
-    % Identify the starting index for the last two periods
-    startIndex = find(t >= t(end) - 2*T, 1, 'first');
-    lastTwoPeriodsT = t(startIndex:end);
-    lastTwoPeriodsY = y(startIndex:end, :);
-    lastTwoPeriodsO = o(:,startIndex:end);
-
-    % Shift time to start from zero and update variables
-    t = lastTwoPeriodsT - lastTwoPeriodsT(1);
-    y = lastTwoPeriodsY;        % ODE solutions
-    o = lastTwoPeriodsO;        % Post-processed outputs
-
-    % Extract state variables
-    Lsc_LV  = y(:,1);
-    Lsc_SEP = y(:,2);
-    Lsc_RV  = y(:,3);
-    V_LV    = y(:,4);
-    V_RV    = y(:,5);
-    V_SA    = y(:,6);
-    V_SV    = y(:,7);
-    V_PA    = y(:,8);
-    V_PV    = y(:,9);
-    V_LA    = y(:,10);
-    V_RA    = y(:,11);
-    Vtot    = sum(y(end, 4:11));  % Total blood volume at the final time point
-
-    % Parse each row of `o` into human-readable vectors or matrices
-    % 1–4: Septal geometry
-    xm_LV  = o(1,:)';
-    xm_SEP = o(2,:)';
-    xm_RV  = o(3,:)';
-    ym     = o(4,:)';
-
-    % 5–12: Pressures in different compartments
-    P_LV = o(5,:)';
-    P_SA = o(6,:)';
-    P_SV = o(7,:)';
-    P_RV = o(8,:)';
-    P_PA = o(9,:)';
-    P_PV = o(10,:)';
-    P_RA = o(11,:)';
-    P_LA = o(12,:)';
-
-    % 13–15: Myocardial wall volumes
-    Vm_LV  = o(13,:)';
-    Vm_SEP = o(14,:)';
-    Vm_RV  = o(15,:)';
-
-    % 16–18: Myocardial wall areas
-    Am_LV  = o(16,:)';
-    Am_SEP = o(17,:)';
-    Am_RV  = o(18,:)';
-
-    % 19–21: Wall curvatures
-    Cm_LV  = o(19,:)';
-    Cm_SEP = o(20,:)';
-    Cm_RV  = o(21,:)';
-
-    % 22–24: Fiber strains
-    eps_LV  = o(22,:)';
-    eps_SEP = o(23,:)';
-    eps_RV  = o(24,:)';
-
-    % 25–27: Passive fiber stresses
-    sigma_pas_LV  = o(25,:)';
-    sigma_pas_SEP = o(26,:)';
-    sigma_pas_RV  = o(27,:)';
-
-    % 28–30: Active fiber stresses
-    sigma_act_LV  = o(28,:)';
-    sigma_act_SEP = o(29,:)';
-    sigma_act_RV  = o(30,:)';
-
-    % 31–33: Total fiber stresses (passive + active)
-    sigma_LV  = o(31,:)';
-    sigma_SEP = o(32,:)';
-    sigma_RV  = o(33,:)';
-
-    % 34–37: Valve flows
-    Q_m = o(34,:)';  % Mitral valve
-    Q_a = o(35,:)';  % Aortic valve
-    Q_t = o(36,:)';  % Tricuspid valve
-    Q_p = o(37,:)';  % Pulmonary valve
-
-    % 38–41: Circulatory flows
-    Q_SA  = o(38,:)';  % Systemic arterial flow
-    Q_PA  = o(39,:)';  % Pulmonary arterial flow
-    QIN_RA = o(40,:)'; % Inflow to right atrium
-    QIN_LA = o(41,:)'; % Inflow to left atrium
-
-    % 42–44: Tensions in the x-direction
-    Tx_LV  = o(42,:)';
-    Tx_SEP = o(43,:)';
-    Tx_RV  = o(44,:)';
-
-    % 45–47: Tensions in the y-direction
-    Ty_LV  = o(45,:)';
-    Ty_SEP = o(46,:)';
-    Ty_RV  = o(47,:)';
-
-    % 48–49: Activation functions
-    Y   = o(48,:)';
-    act = o(49,:)';
-
-<<<<<<< Updated upstream:runSim.m
-%% Simulation outputs requiring post-processing for cross-valve flow
-
-end_beat_i = find(t >= 1.02*T, 1) - 1; % index for end of one complete cardiac cycle, sometime flow shift and a wave is in the middle of the T
-[Qm_maxima, Qm_maxima_i,Qm_wid,Qm_prom] = findpeaks(Q_m(1:end_beat_i));
-[Qt_maxima, Qt_maxima_i] = findpeaks(Q_t(1:end_beat_i));
-
-=======
-    % 50–52: Wall thickness
-    d_LW = o(50,:)';
-    d_SW = o(51,:)';
-    d_RW = o(52,:)';
-
-    % 53–55: Curvature radii
-    r_LV  = o(53,:)';
-    r_SEP = o(54,:)';
-    r_RV  = o(55,:)';
-
-=======
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 try
     T = params.T;
     HR = params.HR;
@@ -544,248 +242,6 @@ catch ME1
     r_SEP = o(54,:)';
     r_RV  = o(55,:)';
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
-try
-    T = params.T;
-    HR = params.HR;
-    if init.LAVmin >= 150||init.RAVmin>=100
-        init.LAVmin = init.LAVmin/3;
-        init.RAVmin = init.RAVmin/3;
-    end
-    init_vec = cell2mat(struct2cell(init))';
-    M = eye(length(init_vec));
-    M(1,1) = 0;
-    M(2,2) = 0;
-    M(3,3) = 0;
-    M(4,4) = 0;
-    options = odeset('Mass', M, 'RelTol', 1e-7, 'AbsTol', 1e-7, 'MaxStep', T/30); % set options for ode
-    warning('off', 'all'); % turn off warnings message on the command window
-    maxTime = 10; % maximum time for odeWithTimeout function
-    lastwarn('');   % 清空上一个warning
-    [t, y] = odeWithTimeout1(@dXdTOnGL, [0, 30*T], init_vec, options, params, maxTime);
-    [lastWarnMsg, lastWarnId] = lastwarn;  % 检查warning
-    if ~isempty(lastWarnMsg)
-        error(['ODE solver warning: ', lastWarnMsg]);  % 直接终止，并抛出warning信息
-    end
-
-    % Find the index where t is within the last two periods, which reflects the steady state
-    startIndex = find(t >= t(end) - 2*T, 1, 'first');
-    lastTwoPeriodsT = t(startIndex:end);
-    lastTwoPeriodsY = y(startIndex:end, :);
-    t = lastTwoPeriodsT-lastTwoPeriodsT(1);
-    y = lastTwoPeriodsY; % solutions of ODE
-    xm_LV  = y(:,1);
-    xm_SEP = y(:,2);
-    xm_RV  = y(:,3);
-    ym     = y(:,4);
-    Lsc_LV  = y(:,5);
-    Lsc_SEP = y(:,6);
-    Lsc_RV  = y(:,7);
-    V_LV = y(:,8);
-    V_RV = y(:,9);
-    V_SA = y(:,10);
-    V_SV = y(:,11);
-    V_PA = y(:,12);
-    V_PV = y(:,13);
-    Vtot = sum(y(end,8:13)) ;
-
-    %% Collect simulation outputs
-
-    output_no = 50;
-    o = zeros(output_no,length(t)); % outputs from simulation
-    for i = 1:length(t)
-        [~,o(:,i)] = dXdTOnGL(t(i),y(i,:), params);
-    end
-
-    P_LV = o(1,:)';
-    P_SA = o(2,:)';
-    P_SV = o(3,:)';
-    P_RV = o(4,:)';
-    P_PA = o(5,:)';
-    P_PV = o(6,:)';
-    Vm_LV  = o(7,:)';
-    Vm_SEP = o(8,:)';
-    Vm_RV  = o(9,:)';
-    Am_LV  = o(19,:)';
-    Am_SEP = o(11,:)';
-    Am_RV  = o(12,:)';
-    Cm_LV  = o(13,:)';
-    Cm_SEP = o(14,:)';
-    Cm_RV  = o(15,:)';
-    eps_LV  = o(16,:)';
-    eps_SEP = o(17,:)';
-    eps_RV  = o(18,:)';
-    sigma_pas_LV  = o(19,:)';
-    sigma_pas_SEP = o(20,:)';
-    sigma_pas_RV  = o(21,:)';
-    sigma_act_LV  = o(22,:)';
-    sigma_act_SEP = o(23,:)';
-    sigma_act_RV  = o(24,:)';
-    sigma_LV  = o(25,:)';
-    sigma_SEP = o(26,:)';
-    sigma_RV  = o(27,:)';
-    Q_m = o(28,:)' ;    % Flow across mitral valve (QIN_LV)
-    Q_a = o(29,:)';     % Flow across aortic valve (QOUT_LV)
-    Q_t = o(30,:)' ;    % Flow across tricuspid valve (QIN_RV)
-    Q_p = o(31,:)' ;    % Flow across pulmonary valve (QOUT_RV)
-    Q_SA = o(32,:)' ;
-    Q_PA = o(33,:)' ;
-    Tm_LV  = o(34,:)';
-    Tm_SEP = o(35,:)';
-    Tm_RV  = o(36,:)';
-    Y = o(37,:)';
-    V_RA = o(38,:)';
-    V_LA = o(39,:)';
-    P_RA = o(40,:)';
-    P_LA = o(41,:)';
-    QIN_RA = o(42,:)';
-    d_LW = o(43, :)';
-    d_SW = o(44, :)';
-    d_RW = o(45, :)';
-    act = o(46, :)';
-    r_LV = o(47, :)';
-    r_SEP = o(48, :)';
-    r_RV = o(49, :)';
-    P_external = o(50, :)';
-catch ME1
-    disp(['runSim failed: ', ME1.message]);
-    %% Solve the differential equations using the ODE solver
-    T = params.T;
-    HR = params.HR;
-    init_vec = cell2mat(struct2cell(init))';
-    iniGeo = init_vec(1:4);
-    init_vec  = init_vec(5:end);
-    M = eye(length(init_vec));
-    options = odeset('Mass', M, 'MassSingular', 'yes', 'RelTol', 1e-7, 'AbsTol', 1e-7, 'MaxStep', params.T / 30);
-    maxTime = 100;
-
-    [t, y, ~, ~, ~, o] = odeWithTimeout2(@dXdT, [0, 22 * params.T], init_vec, options, params, iniGeo, maxTime);
-
-    %% Collect simulation outputs from the last two cardiac cycles
-    % Identify the starting index for the last two periods
-    startIndex = find(t >= t(end) - 2*T, 1, 'first');
-    lastTwoPeriodsT = t(startIndex:end);
-    lastTwoPeriodsY = y(startIndex:end, :);
-    lastTwoPeriodsO = o(:,startIndex:end);
-
-    % Shift time to start from zero and update variables
-    t = lastTwoPeriodsT - lastTwoPeriodsT(1);
-    y = lastTwoPeriodsY;        % ODE solutions
-    o = lastTwoPeriodsO;        % Post-processed outputs
-
-    % Extract state variables
-    Lsc_LV  = y(:,1);
-    Lsc_SEP = y(:,2);
-    Lsc_RV  = y(:,3);
-    V_LV    = y(:,4);
-    V_RV    = y(:,5);
-    V_SA    = y(:,6);
-    V_SV    = y(:,7);
-    V_PA    = y(:,8);
-    V_PV    = y(:,9);
-    V_LA    = y(:,10);
-    V_RA    = y(:,11);
-    Vtot    = sum(y(end, 4:11));  % Total blood volume at the final time point
-
-    % Parse each row of `o` into human-readable vectors or matrices
-    % 1–4: Septal geometry
-    xm_LV  = o(1,:)';
-    xm_SEP = o(2,:)';
-    xm_RV  = o(3,:)';
-    ym     = o(4,:)';
-
-    % 5–12: Pressures in different compartments
-    P_LV = o(5,:)';
-    P_SA = o(6,:)';
-    P_SV = o(7,:)';
-    P_RV = o(8,:)';
-    P_PA = o(9,:)';
-    P_PV = o(10,:)';
-    P_RA = o(11,:)';
-    P_LA = o(12,:)';
-
-    % 13–15: Myocardial wall volumes
-    Vm_LV  = o(13,:)';
-    Vm_SEP = o(14,:)';
-    Vm_RV  = o(15,:)';
-
-    % 16–18: Myocardial wall areas
-    Am_LV  = o(16,:)';
-    Am_SEP = o(17,:)';
-    Am_RV  = o(18,:)';
-
-    % 19–21: Wall curvatures
-    Cm_LV  = o(19,:)';
-    Cm_SEP = o(20,:)';
-    Cm_RV  = o(21,:)';
-
-    % 22–24: Fiber strains
-    eps_LV  = o(22,:)';
-    eps_SEP = o(23,:)';
-    eps_RV  = o(24,:)';
-
-    % 25–27: Passive fiber stresses
-    sigma_pas_LV  = o(25,:)';
-    sigma_pas_SEP = o(26,:)';
-    sigma_pas_RV  = o(27,:)';
-
-    % 28–30: Active fiber stresses
-    sigma_act_LV  = o(28,:)';
-    sigma_act_SEP = o(29,:)';
-    sigma_act_RV  = o(30,:)';
-
-    % 31–33: Total fiber stresses (passive + active)
-    sigma_LV  = o(31,:)';
-    sigma_SEP = o(32,:)';
-    sigma_RV  = o(33,:)';
-
-    % 34–37: Valve flows
-    Q_m = o(34,:)';  % Mitral valve
-    Q_a = o(35,:)';  % Aortic valve
-    Q_t = o(36,:)';  % Tricuspid valve
-    Q_p = o(37,:)';  % Pulmonary valve
-
-    % 38–41: Circulatory flows
-    Q_SA  = o(38,:)';  % Systemic arterial flow
-    Q_PA  = o(39,:)';  % Pulmonary arterial flow
-    QIN_RA = o(40,:)'; % Inflow to right atrium
-    QIN_LA = o(41,:)'; % Inflow to left atrium
-
-    % 42–44: Tensions in the x-direction
-    Tx_LV  = o(42,:)';
-    Tx_SEP = o(43,:)';
-    Tx_RV  = o(44,:)';
-
-    % 45–47: Tensions in the y-direction
-    Ty_LV  = o(45,:)';
-    Ty_SEP = o(46,:)';
-    Ty_RV  = o(47,:)';
-
-    % 48–49: Activation functions
-    Y   = o(48,:)';
-    act = o(49,:)';
-
-    % 50–52: Wall thickness
-    d_LW = o(50,:)';
-    d_SW = o(51,:)';
-    d_RW = o(52,:)';
-
-    % 53–55: Curvature radii
-    r_LV  = o(53,:)';
-    r_SEP = o(54,:)';
-    r_RV  = o(55,:)';
-
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
     % 56: Pericardial constraint pressure
     P_external = o(56,:)';
 end
@@ -844,43 +300,12 @@ end_beat_i = find(t >= 1.02*T, 1) - 1; % index for end of one complete cardiac c
 % if ~(length(Qt_maxima) == 2)
 %     error('TV wrong flow')
 % end
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
->>>>>>> Stashed changes:runSimOnGL.m
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 % E/A ratio
 if(length(Qm_maxima) == 2)
     if(Qm_maxima(1) < 0 || Qm_maxima(2) < 0)
         E_A_ratio = -100;
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-    %elseif(find(Qm_wid .* Qm_prom < 100,1))
-     %   E_A_ratio = -100;
-=======
         %elseif(find(Qm_wid .* Qm_prom < 100,1))
         %   E_A_ratio = -100;
->>>>>>> Stashed changes
-=======
-        %elseif(find(Qm_wid .* Qm_prom < 100,1))
-        %   E_A_ratio = -100;
->>>>>>> Stashed changes
-=======
-        %elseif(find(Qm_wid .* Qm_prom < 100,1))
-        %   E_A_ratio = -100;
->>>>>>> Stashed changes
     else
         E_A_ratio = Qm_maxima(1) / Qm_maxima(2);
     end
@@ -891,20 +316,6 @@ elseif(length(Qm_maxima) > 2)
     assert(length(Qm_maxima) == 2, 'EAr bug 1 runSim');
     E_A_ratio = Qm_maxima(1) / Qm_maxima(2);
 else
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-    E_A_ratio = -100; 
-    error('EAr bug 2 runSim');
-end
-
-
-% Mitral Valve 
-=======
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
     % dQm = gradient(Q_m, t);
     % [~,locsNeg] = findpeaks(-dQm,'MinPeakHeight',500);
     % [~,locsPos] = findpeaks(dQm);
@@ -926,13 +337,6 @@ end
 
 
 % Mitral Valve
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 Qm_sign = sign(Q_m);
 if(Qm_sign(1) <= 0)
     Qm_pos_start = find(Qm_sign == 1, 1);
@@ -949,23 +353,8 @@ else
     Qm_sign = Qm_sign(Qm_maxima_i(end) - Qm_neg_start + 1:end);
     Qm_pos_end = find(Qm_sign ~= 1, 1) + Qm_maxima_i(end) - 2;
 end
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-Qm_pos = [Qm_pos_start: Qm_pos_end]; % indices for positive mitral flow
-Qm_neg = [Qm_neg_start: Qm_neg_end]; % indices for negative mitral flow
-=======
 Qm_pos = Qm_pos_start: Qm_pos_end; % indices for positive mitral flow
 Qm_neg = Qm_neg_start: Qm_neg_end; % indices for negative mitral flow
->>>>>>> Stashed changes
-=======
-Qm_pos = Qm_pos_start: Qm_pos_end; % indices for positive mitral flow
-Qm_neg = Qm_neg_start: Qm_neg_end; % indices for negative mitral flow
->>>>>>> Stashed changes
-=======
-Qm_pos = Qm_pos_start: Qm_pos_end; % indices for positive mitral flow
-Qm_neg = Qm_neg_start: Qm_neg_end; % indices for negative mitral flow
->>>>>>> Stashed changes
 
 % Aortic valve
 Qa_sign = sign(Q_a);
@@ -984,23 +373,8 @@ else
     Qa_sign = Qa_sign(Qa_pos_start - Qa_neg_start + 1: end);
     Qa_pos_end = find(Qa_sign ~= 1, 1) + Qa_pos_start - 2;
 end
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-Qa_pos = [Qa_pos_start: Qa_pos_end]; % indices for positive aortic flow
-Qa_neg = [Qa_neg_start: Qa_neg_end]; % indices for negative aortic flow
-=======
 Qa_pos = Qa_pos_start: Qa_pos_end; % indices for positive aortic flow
 Qa_neg = Qa_neg_start: Qa_neg_end; % indices for negative aortic flow
->>>>>>> Stashed changes
-=======
-Qa_pos = Qa_pos_start: Qa_pos_end; % indices for positive aortic flow
-Qa_neg = Qa_neg_start: Qa_neg_end; % indices for negative aortic flow
->>>>>>> Stashed changes
-=======
-Qa_pos = Qa_pos_start: Qa_pos_end; % indices for positive aortic flow
-Qa_neg = Qa_neg_start: Qa_neg_end; % indices for negative aortic flow
->>>>>>> Stashed changes
 DNA = (P_SA(Qa_pos_end)+P_LV(Qa_pos_end))/2;% dicrotic notch for systemic artery
 
 % Tricuspid valve
@@ -1021,23 +395,8 @@ else
     Qt_pos_end = find(Qt_sign ~= 1, 1) + Qt_maxima_i(end) - 2;
 
 end
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-Qt_pos = [Qt_pos_start: Qt_pos_end]; % indices for positive tricuspid flow
-Qt_neg = [Qt_neg_start: Qt_neg_end]; % indices for negative tricuspid flow
-=======
 Qt_pos = Qt_pos_start: Qt_pos_end; % indices for positive tricuspid flow
 Qt_neg = Qt_neg_start: Qt_neg_end; % indices for negative tricuspid flow
->>>>>>> Stashed changes
-=======
-Qt_pos = Qt_pos_start: Qt_pos_end; % indices for positive tricuspid flow
-Qt_neg = Qt_neg_start: Qt_neg_end; % indices for negative tricuspid flow
->>>>>>> Stashed changes
-=======
-Qt_pos = Qt_pos_start: Qt_pos_end; % indices for positive tricuspid flow
-Qt_neg = Qt_neg_start: Qt_neg_end; % indices for negative tricuspid flow
->>>>>>> Stashed changes
 
 % Pulmonary Valve
 Qp_sign = sign(Q_p);
@@ -1056,23 +415,8 @@ else
     Qp_sign = Qp_sign(Qp_pos_start - Qp_neg_start + 1: end);
     Qp_pos_end = find(Qp_sign ~= 1, 1) + Qp_pos_start - 2;
 end
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-Qp_pos = [Qp_pos_start: Qp_pos_end]; % indices for positive pulmonary flow
-Qp_neg = [Qp_neg_start: Qp_neg_end]; % indices for negative pulmonary flow
-=======
 Qp_pos = Qp_pos_start: Qp_pos_end; % indices for positive pulmonary flow
 Qp_neg = Qp_neg_start: Qp_neg_end; % indices for negative pulmonary flow
->>>>>>> Stashed changes
-=======
-Qp_pos = Qp_pos_start: Qp_pos_end; % indices for positive pulmonary flow
-Qp_neg = Qp_neg_start: Qp_neg_end; % indices for negative pulmonary flow
->>>>>>> Stashed changes
-=======
-Qp_pos = Qp_pos_start: Qp_pos_end; % indices for positive pulmonary flow
-Qp_neg = Qp_neg_start: Qp_neg_end; % indices for negative pulmonary flow
->>>>>>> Stashed changes
 DNP = (P_PA(Qp_pos_end)+P_RV(Qp_pos_end))/2;% Dicrotic notch for pulmonary artery
 
 % Quantify valve stenosis
@@ -1095,19 +439,7 @@ Peak_PG_p = max(P_RV(Qp_pos) - P_PA(Qp_pos)); % PVpg
 % MR
 RVol_m = -trapz(t(Qm_neg), Q_m(Qm_neg)); % regurgitant volume over period where Qm is negative
 SV_LA_pos = trapz(t(Qm_pos), Q_m(Qm_pos));
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-SV_LA = max(V_LA) - min(V_LA); 
-=======
 SV_LA = max(V_LA) - min(V_LA);
->>>>>>> Stashed changes
-=======
-SV_LA = max(V_LA) - min(V_LA);
->>>>>>> Stashed changes
-=======
-SV_LA = max(V_LA) - min(V_LA);
->>>>>>> Stashed changes
 RF_m = 100 * (RVol_m / SV_LA_pos);
 
 % AR
@@ -1178,26 +510,6 @@ end
 
 %% Other simulation outputs requiring post-processing
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-SV_LV_tot = max(V_LV) - min(V_LV); 
-SV_RV_tot = max(V_RV) - min(V_RV);
-
-EF_LV = SV_LV_tot / max(V_LV); 
-EF_RV = SV_RV_tot / max(V_RV);
-
-CO = (SV_LV_pos-RVol_a) * HR / 1000; 
-CO_RV = (SV_RV_pos-RVol_p) * HR / 1000; 
-
-MPAP = (1/3) * (max(P_PA)) + (2/3) * (min(P_PA));
-
-[~, LVED_i] = max(V_LV); % index of end diastole. 
-=======
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 SV_LV_tot = max(V_LV) - min(V_LV);
 SV_RV_tot = max(V_RV) - min(V_RV);
 
@@ -1212,13 +524,6 @@ MPAP = (1/3) * (max(P_PA)) + (2/3) * (min(P_PA));
 MAP = (1/3) * (max(P_SA)) + (2/3) * (min(P_SA));
 
 [~, LVED_i] = max(V_LV); % index of end diastole.
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 [~, RVED_i] = max(V_RV);
 [~, LVES_i] = min(V_LV);
 [~, RVES_i] = min(V_RV);
@@ -1263,19 +568,7 @@ end
 rho_myo = 1.0550;
 Hed_LW = d_LW(LVED_i);
 Hed_SW = d_SW(LVED_i);
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-Hed_RW = d_RW(RVED_i); 
-=======
 Hed_RW = d_RW(RVED_i);
->>>>>>> Stashed changes
-=======
-Hed_RW = d_RW(RVED_i);
->>>>>>> Stashed changes
-=======
-Hed_RW = d_RW(RVED_i);
->>>>>>> Stashed changes
 LV_m = rho_myo * (params.Vw_LV+params.Vw_SEP);
 RV_m = rho_myo * (params.Vw_RV);
 
@@ -1347,18 +640,6 @@ else
     PCWP_v = max(P_PV_maxima);
 end
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-
-
-
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 %% Calculate cost function metrics
 
 o_vals = struct(); % Relevant model outputs, to be compared to target values
@@ -1379,53 +660,19 @@ o_vals.RAVmax = max(V_RA);
 o_vals.RAVmin = min(V_RA);
 o_vals.RAPmax = max(P_RA);
 o_vals.RAPmin = min(P_RA);
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-o_vals.RAPmean = trapz(t,P_RA)/(t(end)-t(1)); 
-o_vals.PASP = max(P_PA); 
-=======
 o_vals.RAPmean = trapz(t,P_RA)/(t(end)-t(1));
 o_vals.PASP = max(P_PA);
->>>>>>> Stashed changes
-=======
-o_vals.RAPmean = trapz(t,P_RA)/(t(end)-t(1));
-o_vals.PASP = max(P_PA);
->>>>>>> Stashed changes
-=======
-o_vals.RAPmean = trapz(t,P_RA)/(t(end)-t(1));
-o_vals.PASP = max(P_PA);
->>>>>>> Stashed changes
 o_vals.PADP = min(P_PA);
 o_vals.PCWP = trapz(t,P_PV)/(t(end)-t(1));
 o_vals.PCWPmax = max(P_PV);
 o_vals.PCWPmin = min(P_PV);
 o_vals.CVP = trapz(t,P_SV)/(t(end)-t(1));
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-o_vals.CO = CO_RV;% CO from RHC report is RV
-o_vals.Hed_LW = d_LW(LVED_i);
-o_vals.Hed_SW = d_SW(LVED_i);
-o_vals.Hed_RW = d_RW(RVED_i); 
-=======
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 o_vals.CVPmax = max(P_SV);
 o_vals.CVPmin = min(P_SV);
 o_vals.CO = CO_RV;% CO from RHC report is RV
 o_vals.Hed_LW = d_LW(LVED_i);
 o_vals.Hed_SW = d_SW(LVED_i);
 o_vals.Hed_RW = d_RW(RVED_i);
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 o_vals.RVEDP = P_RV(RVEDP_i); % Activation function beginning coincides with start of pressure development on right side. Beginning of activation function is in the first few indices.
 o_vals.P_RV_min = min(P_RV);
 o_vals.LVEDP = P_LV(RVEDP_i);
@@ -1450,18 +697,7 @@ o_vals.FakeLV_m = LV_m;
 o_vals.Vtot = Vtot;
 o_vals.DNA = DNA;
 o_vals.DNP = DNP;
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-=======
 o_vals.MAP = MAP;
->>>>>>> Stashed changes
-=======
-o_vals.MAP = MAP;
->>>>>>> Stashed changes
-=======
-o_vals.MAP = MAP;
->>>>>>> Stashed changes
 
 % RAP, PCWP a and v wave
 o_vals.RAP_a = RAP_a;
@@ -1478,49 +714,14 @@ g = [1, 2, 3, 4]; % grades: none, mild, moderate, severe.
 
 % Mitral
 gmt_MR = [0, 20, 40, 60];
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-% Aortic
-gmt_AR = [0, 20, 40, 60];
-=======
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 gmt_MS = [2.5, 3.75, 7.5, 12];
 % Aortic
 gmt_AR = [0, 20, 40, 60];
 gmt_AS = [2.25, 10, 30, 50];
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 % Tricuspid
 gmt_TR = [0, 17.5, 35, 52.5];
 % Pulmonary
 gmt_PR = [0, 15, 30 ,45];
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-
-% Interpret RF into grades
-o_vals.MVr = interp1(gmt_MR, g, RF_m, 'linear', 'extrap');
-o_vals.AVr = interp1(gmt_AR, g, RF_a, 'linear', 'extrap');
-o_vals.TVr = interp1(gmt_TR, g, RF_t, 'linear', 'extrap');
-o_vals.PVr = interp1(gmt_PR, g, RF_p, 'linear', 'extrap');
-
-<<<<<<< Updated upstream:runSim.m
-% Calibration and weighting
-=======
-=======
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 gmt_PS = [0.67, 22, 50, 78]; % Peak pressure gradient
 
 % Interpret RF into grades
@@ -1532,13 +733,6 @@ o_vals.TVr = interp1(gmt_TR, g, RF_t, 'linear', 'extrap');
 o_vals.PVr = interp1(gmt_PR, g, RF_p, 'linear', 'extrap');
 o_vals.PS = interp1(gmt_PS, g, Peak_AG_p, 'linear', 'extrap');
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 outputno = struct2array(o_vals);
 if any(~isreal(outputno))
     error('bad guessing')
@@ -1634,16 +828,6 @@ end
 % end
 
 %% Calibration and weighting
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
->>>>>>> Stashed changes:runSimOnGL.m
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 % Since different targets have different ranges and units, which may unequally contribute to the
 % cost function, we calibrated them based on canonical subjects. Additionally, we have varying
 % confidence in the accuracy of different targets. Therefore, we assign different weights to them.
@@ -1743,17 +927,6 @@ elseif inputs.Sex == 2
     c.tPLVmin = 0.55;
     c.RVEF = 60;
 end
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream:runSim.m
-=======
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 c.T2MaxLsc_RV = 0.05;
 c.T2MinLsc_RV = 0.38;
 c.T2maxPPA = 0.25;
@@ -1763,22 +936,6 @@ c.CVPmax = 6;
 c.EJr = 0.4;
 c.FcQS2 = 0.4;
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
->>>>>>> Stashed changes:runSimOnGL.m
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 
 % Weighting
 w = struct();
@@ -1821,38 +978,8 @@ if(isfield(targets,'EAr'))
     w.EAr = 88;
 end
 wt = 1.5; % use to adjust thickness and length
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream:runSim.m
-w.Hed_LW = wt*25*0.3;
-w.Hed_SW = wt*25*0.3;
-=======
 w.Hed_LW = wt*25;
 w.Hed_SW = wt*25;
->>>>>>> Stashed changes:runSimOnGL.m
-=======
-w.Hed_LW = wt*25;
-w.Hed_SW = wt*25;
->>>>>>> Stashed changes
-=======
-w.Hed_LW = wt*25;
-w.Hed_SW = wt*25;
->>>>>>> Stashed changes
-=======
-w.Hed_LW = wt*25;
-w.Hed_SW = wt*25;
->>>>>>> Stashed changes
-=======
-w.Hed_LW = wt*25;
-w.Hed_SW = wt*25;
->>>>>>> Stashed changes
-=======
-w.Hed_LW = wt*25;
-w.Hed_SW = wt*25;
->>>>>>> Stashed changes
 w.Hed_RW = wt*25*0.3;
 w.LVIDd = wt*3;
 w.LVIDs = wt*3;
@@ -1867,24 +994,6 @@ else
     w.AVpg = wg;
 end
 w.TVmg = wg/5;
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream:runSim.m
-w.PVpg = wg/25;
-=======
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 if isfield(targets,'RVSP')
     w.PVpg = wg/5;
 else
@@ -1893,18 +1002,6 @@ end
 w.MS = wg*25;
 w.AS = wg*25;
 w.PS = wg*25;
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
->>>>>>> Stashed changes:runSimOnGL.m
-
-
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 
 
 % The following loop attempts to build a cost function for valve regurgitation. If the difference in
@@ -1916,31 +1013,11 @@ vlv_def = ["MVr",'AVr'];
 for i = 1:length(vlv_def)
     if isfield(targets,vlv_def(i))
         if (targets.(vlv_def(i)) > 3.5) && (o_vals.(vlv_def(i)) > targets.(vlv_def(i)))
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-            w.(vlv_def(i)) = wg;
-        else
-            if targets.(vlv_def(i)) == 1.5
-                if  o_vals.(vlv_def(i)) < targets.(vlv_def(i))
-                    w.(vlv_def(i)) = wg;
-=======
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
             w.(vlv_def(i)) = 5 * wg;
         else
             if targets.(vlv_def(i)) == 1.5
                 if  o_vals.(vlv_def(i)) < targets.(vlv_def(i))
                     w.(vlv_def(i)) =  wg;
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
                 else
                     w.(vlv_def(i)) = 25 * wg;
                 end
@@ -1948,19 +1025,7 @@ for i = 1:length(vlv_def)
                 if abs(targets.(vlv_def(i))-o_vals.(vlv_def(i))) > .5
                     w.(vlv_def(i)) = 25 * wg;
                 else
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-                    w.(vlv_def(i)) = wg;
-=======
                     w.(vlv_def(i)) = 5 * wg;
->>>>>>> Stashed changes
-=======
-                    w.(vlv_def(i)) = 5 * wg;
->>>>>>> Stashed changes
-=======
-                    w.(vlv_def(i)) = 5 * wg;
->>>>>>> Stashed changes
                 end
             end
         end
@@ -1968,107 +1033,39 @@ for i = 1:length(vlv_def)
 end
 if isfield(targets,"TVr")
     if (targets.TVr > 3.5) && (o_vals.TVr > targets.TVr)
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-        w.TVr = wg;
-    else
-        if targets.TVr == 4
-            if abs(o_vals.TVr - targets.TVr) < 0.7143
-                w.TVr = wg;
-=======
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
         w.TVr = 5 * wg;
     else
         if targets.TVr == 4
             if abs(o_vals.TVr - targets.TVr) < 0.7143
                 w.TVr = 5 * wg;
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
             else
                 w.TVr = 25*wg;
             end
         end
         if targets.TVr == 3.5
             if abs(o_vals.TVr - targets.TVr) < 0.5
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-                w.TVr = wg;
-=======
                 w.TVr = 5 * wg;
->>>>>>> Stashed changes
-=======
-                w.TVr = 5 * wg;
->>>>>>> Stashed changes
-=======
-                w.TVr = 5 * wg;
->>>>>>> Stashed changes
             else
                 w.TVr = 25*wg;
             end
         end
         if targets.TVr == 3
             if abs(o_vals.TVr - targets.TVr) < 0.2857
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-                w.TVr = wg;
-=======
                 w.TVr = 5 * wg;
->>>>>>> Stashed changes
-=======
-                w.TVr = 5 * wg;
->>>>>>> Stashed changes
-=======
-                w.TVr = 5 * wg;
->>>>>>> Stashed changes
             else
                 w.TVr = 25*wg;
             end
         end
         if targets.TVr == 2.5
             if abs(o_vals.TVr - targets.TVr) < 0.3571
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-                w.TVr = wg;
-=======
                 w.TVr = 5 * wg;
->>>>>>> Stashed changes
-=======
-                w.TVr = 5 * wg;
->>>>>>> Stashed changes
-=======
-                w.TVr = 5 * wg;
->>>>>>> Stashed changes
             else
                 w.TVr = 25*wg;
             end
         end
         if targets.TVr == 2
             if abs(o_vals.TVr - targets.TVr) <= 0.7143
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-                w.TVr = wg;
-=======
                 w.TVr = 5 * wg;
->>>>>>> Stashed changes
-=======
-                w.TVr = 5 * wg;
->>>>>>> Stashed changes
-=======
-                w.TVr = 5 * wg;
->>>>>>> Stashed changes
             else
                 w.TVr = 25*wg;
             end
@@ -2087,107 +1084,39 @@ if isfield(targets,"TVr")
 end
 if isfield(targets,"PVr")
     if (targets.PVr > 3.5) && (o_vals.PVr > targets.PVr)
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-        w.PVr = wg;
-    else
-        if targets.PVr == 4
-            if abs(o_vals.PVr - targets.PVr) < 0.3333
-                w.PVr = wg;
-=======
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
         w.PVr = 5 * wg;
     else
         if targets.PVr == 4
             if abs(o_vals.PVr - targets.PVr) < 0.3333
                 w.PVr = 5 * wg;
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
             else
                 w.PVr = 25*wg;
             end
         end
         if targets.PVr == 3.5
             if abs(o_vals.PVr - targets.PVr) < .5
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-                w.PVr = wg;
-=======
                 w.PVr = 5 * wg;
->>>>>>> Stashed changes
-=======
-                w.PVr = 5 * wg;
->>>>>>> Stashed changes
-=======
-                w.PVr = 5 * wg;
->>>>>>> Stashed changes
             else
                 w.PVr = 25*wg;
             end
         end
         if targets.PVr == 3
             if abs(o_vals.PVr - targets.PVr) <= 0.6667
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-                w.PVr = wg;
-=======
                 w.PVr = 5 * wg;
->>>>>>> Stashed changes
-=======
-                w.PVr = 5 * wg;
->>>>>>> Stashed changes
-=======
-                w.PVr = 5 * wg;
->>>>>>> Stashed changes
             else
                 w.PVr = 25*wg;
             end
         end
         if targets.PVr == 2.5
             if abs(o_vals.PVr - targets.PVr) < .5
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-                w.PVr = wg;
-=======
                 w.PVr = 5 * wg;
->>>>>>> Stashed changes
-=======
-                w.PVr = 5 * wg;
->>>>>>> Stashed changes
-=======
-                w.PVr = 5 * wg;
->>>>>>> Stashed changes
             else
                 w.PVr = 25*wg;
             end
         end
         if targets.PVr == 2
             if abs(o_vals.PVr - targets.PVr) <= 0.3333
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-                w.PVr = wg;
-=======
                 w.PVr = 5 * wg;
->>>>>>> Stashed changes
-=======
-                w.PVr = 5 * wg;
->>>>>>> Stashed changes
-=======
-                w.PVr = 5 * wg;
->>>>>>> Stashed changes
             else
                 w.PVr = 25*wg;
             end
@@ -2215,21 +1144,8 @@ if(isfield(targets,'RV_m'))
     w.RV_m = 20;
 end
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-=======
 w.EJr = 4e4;
 w.FcQS2 = 4e4;
->>>>>>> Stashed changes
-=======
-w.EJr = 4e4;
-w.FcQS2 = 4e4;
->>>>>>> Stashed changes
-=======
-w.EJr = 4e4;
-w.FcQS2 = 4e4;
->>>>>>> Stashed changes
 % The following part calculates extra costs, referred to as "tax."
 % This ensures that simulation outputs remain within realistic bounds using a quartic function or
 % close to a constant. If the outputs exceed these bounds or off target, a high number is added to
@@ -2240,36 +1156,6 @@ Lsc_target = 2; % target for sarcomere length
 Lsc_ED = [max(Lsc_LV), max(Lsc_SEP), max(Lsc_RV)];
 cost_Lsc = 0;
 for i = 1:length(Lsc_ED)
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-    cost_Lsc = cost_Lsc + 600*(Lsc_target - Lsc_ED(i))^4;
-end
-
-% Add costs of E/A ratio
-cost_EA_fn = @(EA)  25*(0.167066669245687*EA.^4 -1.81349025058486*EA.^3 + 7.21416047093197*EA.^2 -11.6408665836098*EA + 5.50562700516957); % to be included in tax
-cost_EA = cost_EA_fn(o_vals.EAr);
-if(cost_EA < 0)
-    cost_EA = 0;
-end
-
-% Add costs from of LV/RV mass
-cost_Mass_fn = @(M)  25*(1.81128506110855e-08*M.^4 -1.11713451327939e-05*M.^3+0.00267922216978568*M.^2 -0.297667946824409*M + 12.9346600216876); % to be included in tax
-cost_LV_m = cost_Mass_fn(o_vals.LV_m);
-if(cost_LV_m < 0)
-    cost_LV_m = 0;
-end
-cost_RV_m = cost_Mass_fn(o_vals.RV_m);
-if(cost_RV_m < 0)
-    cost_RV_m = 0;
-end
-
-% Cost function
-=======
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
     cost_Lsc = cost_Lsc + 6000*(Lsc_target - Lsc_ED(i))^2;
 end
 
@@ -2285,13 +1171,6 @@ end
 
 
 %% Cost function
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 cost = zeros(1, N);
 if ~exist('print_sim','var')
     print_sim = false;
@@ -2301,136 +1180,12 @@ for i = 1:N
     % Normalized squared difference
     % After conducting experiments, we found that normalizing e^2/target^2 is the best approach.
     % After normalization, the result is multiplied by the corresponding weight.
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-    cost(i) = (o_vals.(targetsfn{i}) - targets.(targetsfn{i}))^2 /c.(targetsfn{i})^2 *w.(targetsfn{i})*EX; 
-=======
     cost(i) = (o_vals.(targetsfn{i}) - targets.(targetsfn{i}))^2 /c.(targetsfn{i})^2 *w.(targetsfn{i})*EX;
->>>>>>> Stashed changes
-=======
-    cost(i) = (o_vals.(targetsfn{i}) - targets.(targetsfn{i}))^2 /c.(targetsfn{i})^2 *w.(targetsfn{i})*EX;
->>>>>>> Stashed changes
-=======
-    cost(i) = (o_vals.(targetsfn{i}) - targets.(targetsfn{i}))^2 /c.(targetsfn{i})^2 *w.(targetsfn{i})*EX;
->>>>>>> Stashed changes
     if print_sim
         fprintf('%i) %s: %1.2f (%1.2f)\t %1.0f%% (%1.2f¥)\n', i, targetsfn{i}, o_vals.(targetsfn{i}), targets.(targetsfn{i}), o_vals.(targetsfn{i})/targets.(targetsfn{i})*100 - 100, cost(i));
     end
 
 end
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-if(exist('cost_EA','var'))
-    tax = cost_Lsc + cost_EA; % add any extra costs that are independent of targets (i.e. constraints or something)
-else
-    tax = cost_Lsc;
-end
-total_cost = sum(cost) + tax;
-
-%% Eliminate out-of-bound parameters and save optimization results
-load AllPatients.mat
-% This part is used for kill out of bound params during optimazation
-if ~exist('GENDER', 'var')
-    height = patients(PatID).snapshots(ModelWin).Height;
-    weight = patients(PatID).snapshots(ModelWin).Weight;
-    BSA = sqrt((height * weight) / 3600);
-    NParams.C_SA = params.C_SA/BSA;
-    NParams.C_SV = params.C_SV/BSA;
-    NParams.C_PA = params.C_PA/BSA;
-    NParams.C_PV = params.C_PV/BSA;
-    % NParams.G_SA = 1/(params.R_SA*BSA);
-    % NParams.G_PA = 1/(params.R_PA*BSA);
-    % NParams.G_tSA = 1/(params.R_tSA*BSA);
-    % NParams.G_tPA = 1/(params.R_tPA*BSA);
-    NParams.k_act_LV = params.k_act_LV;
-    NParams.k_act_RV = params.k_act_RV;
-    NParams.k_pas_LV = params.k_pas_LV;
-    NParams.k_pas_RV = params.k_pas_RV;
-    NParams.Vw_LV = params.Vw_LV/BSA;
-    NParams.Vw_RV = params.Vw_RV/BSA;
-    NParams.Vw_SEP = params.Vw_SEP/BSA;
-    % NParams.RAV0u = params.RAV0u/BSA; NParams.LAV0u = params.RAV0u/BSA;
-    % NParams.RAV0c = params.RAV0c/BSA; NParams.LAV0c = params.RAV0c/BSA;
-    % NParams.G_SV = 1/(params.R_SV*BSA);
-    % NParams.G_PV = 1/(params.R_PV*BSA);
-    NParams.Vh0 = params.Vh0/BSA;NParams.K_P = params.K_P;NParams.B_P = params.B_P;
-    % NParams.G_t_o = 1/(params.R_t_o*BSA);
-    % NParams.G_t_c = 1/(params.R_t_c/BSA);
-    % NParams.G_p_o = 1/(params.R_p_o/BSA);
-    % NParams.G_p_c = 1/(params.R_p_c/BSA);
-    % NParams.G_m_o = 1/(params.R_m_o/BSA);
-    % NParams.G_m_c = 1/(params.R_m_c/BSA);
-    % NParams.G_a_o = 1/(params.R_a_o/BSA);
-    % NParams.G_a_c = 1/(params.R_a_c/BSA);
-    % NParams.V_SV_s = init.V_SV_s/BSA; NParams.V_SA_s = init.V_SA_s/BSA;
-    % NParams.V_PV_s = init.V_PV_s/BSA; NParams.V_PA_s = init.V_PA_s/BSA;
-    paramsname = fieldnames(NParams);
-    for j = 1:length(paramsname)
-        p = NParams.(paramsname{j});
-        load("standardnormalization.mat");
-        if inputs.Sex == 1
-            p = p/standardparamstable.(paramsname{j})(1);
-        elseif inputs.Sex ==2
-            p = p/standardparamstable.(paramsname{j})(2);
-        end
-        RNParams.(paramsname{j}) = p;
-    end
-
-    if ~isfield(targets,'LVEDP')
-        if  RNParams.k_pas_LV < 0.5
-            total_cost = 50000;
-        end
-    end
-    if ~isfield(targets,'RVEDP')
-        if  RNParams.k_pas_RV < 0.5
-            total_cost = 50000;
-        end
-    end
-    
-    % This part is mainly used for saving manually fitted results
-    output.mods = mods;
-    output.modifiers = modifiers;
-    output.params = params;
-    output.init = init;
-    output.targets = targets;
-    output.inputs = inputs;
-    save(sprintf('Sims/P_NO%dWindow%d.mat',PatID,ModelWin),"output");
-
-    FID = fopen(sprintf('Sims/P_NO%dWindow%d.txt',PatID,ModelWin), 'w');
-    for i = 1:length(targetsfn)
-        fprintf(FID,'%i) %s: %1.2f (%1.2f)\t %1.0f%% ($%1.2f)\n', i, targetsfn{i}, o_vals.(targetsfn{i}), targets.(targetsfn{i}), o_vals.(targetsfn{i})/(targets.(targetsfn{i})+0.00000001)*100 - 100, cost(i));
-    end
-    if(exist('cost_EA','var'))
-        tax = cost_Lsc + cost_EA; % add any extra costs that are independent of targets (i.e. constraints or something)
-        fprintf(FID,strcat("\nTax Lsc: $",num2str(cost_Lsc),"\nTax E/A Ratio: $",num2str(cost_EA),"\n"));
-    else
-        tax = cost_Lsc;
-        fprintf(FID,strcat("\nTax Lsc: $",num2str(cost_Lsc),"\n"));
-    end
-    fprintf(FID,'Total cost: $%1.2f \n\n', total_cost);
-    fclose(FID);
-end
-
-<<<<<<< Updated upstream:runSim.m
-if print_sim
-    fprintf('Total cost: %1.2f \n\n', total_cost);
-end
-
-%% Function to kill inf loop of ode15s
-
-function [T,Y,TE,YE,IE] = odeWithTimeout(odefun, tspan, y0, options, params,iniGeo, maxTime)
-ticID = tic; % record time
-evalc('options.Events = @(t, y) eventFunction(t, y, maxTime, ticID);'); % set up event
-% ode
-[T, Y, TE, YE, IE] = ode15s(@(t,y) odefun(t,y,params,iniGeo), tspan, y0, options); % attention passing params is dangerous
-=======
-=======
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 
 if(exist('cost_EA','var'))
     tax = ...cost_RVEF + cost_RVEDV +...
@@ -2456,13 +1211,6 @@ for j = 1:length(paramsname)
     end
 end
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 % fprintf('RVEDV from measurements is %.2f and from simulation is %.2f\n', UWpatients.RVEDV(PATIENT_NO), o_vals.RVEDV);
 % fprintf('TRW from measurements is %.2f and from simulation is %.2f\n',UWpatients.Hed_RW(PATIENT_NO),o_vals.Hed_RW);
 % fprintf('RVEF from measurements is %.2f%% and from simulation is %.2f%%\n',UWpatients.EF_RV(PATIENT_NO),EF_RV*100);
@@ -2554,22 +1302,6 @@ ticID = tic; % record time
 evalc('options.Events = @(t, y) eventFunction(t, y, maxTime, ticID);'); % set up event
 % ode
 [T, Y, TE, YE, IE] = ode15s(@(t,y) odefun(t,y,params), tspan, y0, options); % attention passing params is dangerous
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
->>>>>>> Stashed changes:runSimOnGL.m
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 end
 
 % define time out
@@ -2580,52 +1312,6 @@ isterminal = 1; % stop
 direction = 0; % find all direction 0
 end
 
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream:runSim.m
-function status = myOutputFcn(t, y, flag, params, iniGeo, init_vec)
-% Custom output function to collect outputs at each solver step
-% Stores results in the persistent variable `o_internal` and exports to base at the end
-
-persistent o_internal
-
-switch flag
-    case 'init'
-        % At the beginning of the integration: initialize with output at t = 0
-        [~, output0] = dXdT(0, init_vec, params, iniGeo);  % Initial output
-        o_internal = output0;  % First column is the initial output
-
-    case ''
-        % During each solver step: append output for each time step
-        for i = 1:length(t)
-            [~, output_now] = dXdT(t(i), y(:,i), params, iniGeo);
-            o_internal(:, end+1) = output_now;
-        end
-
-    case 'done'
-        % After solver is finished: assign output to workspace
-        assignin('base', 'o', o_internal);
-end
-
-status = 0;  % Return status to allow solver to continue
-end
-
-
-
-=======
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
-=======
->>>>>>> Stashed changes
 function [T, Y, TE, YE, IE, o] = odeWithTimeout2(odefun, tspan, y0, options, params, iniGeo, maxTime)
 % Function to run ODE solver with timeout and collect custom outputs
 
@@ -2665,25 +1351,4 @@ o = o_internal;
         end
         status = 0;
     end
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
-<<<<<<< Updated upstream
 end
->>>>>>> Stashed changes:runSimOnGL.m
-=======
-end
->>>>>>> Stashed changes
-=======
-end
->>>>>>> Stashed changes
-=======
-end
->>>>>>> Stashed changes
-=======
-end
->>>>>>> Stashed changes
-=======
-end
->>>>>>> Stashed changes
