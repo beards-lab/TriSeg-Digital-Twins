@@ -219,7 +219,7 @@ xlabel(fig7,'time (s)','FontSize',12); ylabel(fig7,'Thickness (cm)','FontSize',1
 
 figtext = nexttile(4, [2 1]);
 text_position = [-0.2 0.95];
-text(figtext,0.1,text_position(2),string(sprintf('PATIENT %i  WINDOW%i',PatID,ModelWin)) + newline,"FontWeight","bold","FontSize",12);
+text(figtext,0.1,text_position(2),string(sprintf('PATIENT %i  WINDOW%i',PATIENT_NO,ModelWin)) + newline,"FontWeight","bold","FontSize",12);
 text_spacing = -0.033;
 
 if Print_cost == 1
@@ -257,12 +257,12 @@ if Print_cost == 1
         end
     end
 else
-    if patients(PatID).snapshots(ModelWin).Sex == 1
+    if patients(PATIENT_NO).snapshots(ModelWin).Sex == 1
         text_position(2) = text_position(2) + text_spacing;
         text(figtext,text_position(1),text_position(2),string(sprintf('%1.0f yrs old',age))...
             +(" Male") + string(sprintf(' %1.0f cm',H)) + string(sprintf(' %1.0f kg',WT))...
             + newline,"FontWeight","bold","FontSize",12);
-    elseif patients(PatID).snapshots(ModelWin).Sex == 2
+    elseif patients(PATIENT_NO).snapshots(ModelWin).Sex == 2
         text_position(2) = text_position(2) + text_spacing;
         text(figtext,text_position(1),text_position(2),string(sprintf('%1.0f yrs old',age))...
             +(" Female") + string(sprintf(' %1.0f cm',H)) + string(sprintf(' %1.0f kg',WT))...
@@ -270,229 +270,229 @@ else
     end
     Pre = readtable("Precondition.xlsx",'VariableNamingRule','preserve');
     text_position(2) = text_position(2) + text_spacing;
-    text(figtext,text_position(1),text_position(2),string(Pre.HFbasedonexam{PatID}) + (" (")+string(Pre.HF{PatID})+(")")+ newline,"FontWeight","bold","FontSize",12);
-    if ~isempty(Pre.BNP{PatID})
+    text(figtext,text_position(1),text_position(2),string(Pre.HFbasedonexam{PATIENT_NO}) + (" (")+string(Pre.HF{PATIENT_NO})+(")")+ newline,"FontWeight","bold","FontSize",12);
+    if ~isempty(Pre.BNP{PATIENT_NO})
         text_position(2) = text_position(2) + text_spacing;
-        text(figtext,text_position(1),text_position(2),string(sprintf('BNP: %1.0f pg/ml (<100 pg/ml)',str2double(Pre.BNP{PatID})))+newline,"FontWeight","bold","FontSize",12);
+        text(figtext,text_position(1),text_position(2),string(sprintf('BNP: %1.0f pg/ml (<100 pg/ml)',str2double(Pre.BNP{PATIENT_NO})))+newline,"FontWeight","bold","FontSize",12);
     end
-    if Pre.HTN(PatID) == 1
+    if Pre.HTN(PATIENT_NO) == 1
         text_position(2) = text_position(2) + text_spacing;
         text(figtext,text_position(1),text_position(2),("Hypertension")+ newline,"FontWeight","bold","FontSize",12);
     end
-    if Pre.PHD(PatID) == 1
+    if Pre.PHD(PATIENT_NO) == 1
         text_position(2) = text_position(2) + text_spacing;
         text(figtext,text_position(1),text_position(2),("Cardiopulmonary disease")+ newline,"FontWeight","bold","FontSize",12);
     end
-    if Pre.PH(PatID) == 1
+    if Pre.PH(PATIENT_NO) == 1
         text_position(2) = text_position(2) + text_spacing;
         text(figtext,text_position(1),text_position(2),("Pulmonary hypertension")+ newline,"FontWeight","bold","FontSize",12);
     end
-    if Pre.CAD(PatID) == 1
+    if Pre.CAD(PATIENT_NO) == 1
         text_position(2) = text_position(2) + text_spacing;
         text(figtext,text_position(1),text_position(2),("Coronary artery disease")+ newline,"FontWeight","bold","FontSize",12);
     end
-    if Pre.MI(PatID) == 1
+    if Pre.MI(PATIENT_NO) == 1
         text_position(2) = text_position(2) + text_spacing;
         text(figtext,text_position(1),text_position(2),("Myocardial infarction")+ newline,"FontWeight","bold","FontSize",12);
     end
-    if Pre.AF(PatID) == 1
+    if Pre.AF(PATIENT_NO) == 1
         text_position(2) = text_position(2) + text_spacing;
         text(figtext,text_position(1),text_position(2),("Atrial fibrillation")+ newline,"FontWeight","bold","FontSize",12);
     end
-    if Pre.Arrhythmia(PatID) == 1
+    if Pre.Arrhythmia(PATIENT_NO) == 1
         text_position(2) = text_position(2) + text_spacing;
         text(figtext,text_position(1),text_position(2),("Arrhythmia")+ newline,"FontWeight","bold","FontSize",12);
     end
-    if Pre.SHD(PatID) == 1
+    if Pre.SHD(PATIENT_NO) == 1
         text_position(2) = text_position(2) + text_spacing;
         text(figtext,text_position(1),text_position(2),("Structural heart disease")+ newline,"FontWeight","bold","FontSize",12);
     end
-    if Pre.("Septal myomectomy")(PatID) == 1
+    if Pre.("Septal myomectomy")(PATIENT_NO) == 1
         text_position(2) = text_position(2) + text_spacing;
         text(figtext,text_position(1),text_position(2),("Septal myomectomy")+ newline,"FontWeight","bold","FontSize",12);
     end
-    if Pre.Shunt(PatID) == 1
+    if Pre.Shunt(PATIENT_NO) == 1
         text_position(2) = text_position(2) + text_spacing;
         text(figtext,text_position(1),text_position(2),("Shunt")+ newline,"FontWeight","bold","FontSize",12);
     end
-    if Pre.("Hypertrophic Cardiomyopathy")(PatID) == 1
+    if Pre.("Hypertrophic Cardiomyopathy")(PATIENT_NO) == 1
         text_position(2) = text_position(2) + text_spacing;
         text(figtext,text_position(1),text_position(2),("Hypertrophic Cardiomyopathy")+ newline,"FontWeight","bold","FontSize",12);
     end
-    if Pre.("Noncompaction Cardiomyopathy")(PatID) == 1
+    if Pre.("Noncompaction Cardiomyopathy")(PATIENT_NO) == 1
         text_position(2) = text_position(2) + text_spacing;
         text(figtext,text_position(1),text_position(2),("Noncompaction Cardiomyopathy")+ newline,"FontWeight","bold","FontSize",12);
     end
-    if Pre.("Cardiomyopathy, restrictive")(PatID) == 1
+    if Pre.("Cardiomyopathy, restrictive")(PATIENT_NO) == 1
         text_position(2) = text_position(2) + text_spacing;
         text(figtext,text_position(1),text_position(2),("Cardiomyopathy, restrictive")+ newline,"FontWeight","bold","FontSize",12);
     end
-    if Pre.("Cardiomyopathy, dilated")(PatID) == 1
+    if Pre.("Cardiomyopathy, dilated")(PATIENT_NO) == 1
         text_position(2) = text_position(2) + text_spacing;
         text(figtext,text_position(1),text_position(2),("Cardiomyopathy, dilated")+ newline,"FontWeight","bold","FontSize",12);
     end
-    if Pre.("Cardiomyopathy of undetermined type")(PatID) == 1
+    if Pre.("Cardiomyopathy of undetermined type")(PATIENT_NO) == 1
         text_position(2) = text_position(2) + text_spacing;
         text(figtext,text_position(1),text_position(2),("Cardiomyopathy of undetermined type")+ newline,"FontWeight","bold","FontSize",12);
     end
-    if Pre.("Amyloidosis")(PatID) == 1
+    if Pre.("Amyloidosis")(PATIENT_NO) == 1
         text_position(2) = text_position(2) + text_spacing;
         text(figtext,text_position(1),text_position(2),("Amyloidosis")+ newline,"FontWeight","bold","FontSize",12);
     end
-    if Pre.("Pericardium disease")(PatID) == 1
+    if Pre.("Pericardium disease")(PATIENT_NO) == 1
         text_position(2) = text_position(2) + text_spacing;
         text(figtext,text_position(1),text_position(2),("Pericardium disease")+ newline,"FontWeight","bold","FontSize",12);
     end
-    if Pre.Pericardiectomy(PatID) == 1
+    if Pre.Pericardiectomy(PATIENT_NO) == 1
         text_position(2) = text_position(2) + text_spacing;
         text(figtext,text_position(1),text_position(2),("Pericardiectomy")+ newline,"FontWeight","bold","FontSize",12);
     end
-    if Pre.HLD(PatID) == 1
+    if Pre.HLD(PATIENT_NO) == 1
         text_position(2) = text_position(2) + text_spacing;
         text(figtext,text_position(1),text_position(2),("Hyperlipidemia")+ newline,"FontWeight","bold","FontSize",12);
     end
-    if Pre.DM(PatID) == 1
+    if Pre.DM(PATIENT_NO) == 1
         text_position(2) = text_position(2) + text_spacing;
         text(figtext,text_position(1),text_position(2),("Diabetes mellitus")+ newline,"FontWeight","bold","FontSize",12);
     end
-    if Pre.COPD(PatID) == 1
+    if Pre.COPD(PATIENT_NO) == 1
         text_position(2) = text_position(2) + text_spacing;
         text(figtext,text_position(1),text_position(2),("Chronic obstructive pulmonary disease")+ newline,"FontWeight","bold","FontSize",12);
     end
-    if Pre.CTD(PatID) == 1
+    if Pre.CTD(PATIENT_NO) == 1
         text_position(2) = text_position(2) + text_spacing;
         text(figtext,text_position(1),text_position(2),("Connective tissue disease")+ newline,"FontWeight","bold","FontSize",12);
     end
-    if Pre.LTh(PatID) == 1
+    if Pre.LTh(PATIENT_NO) == 1
         text_position(2) = text_position(2) + text_spacing;
         text(figtext,text_position(1),text_position(2),("Hypothyroidism")+ newline,"FontWeight","bold","FontSize",12);
     end
-    if Pre.HTh(PatID) == 1
+    if Pre.HTh(PATIENT_NO) == 1
         text_position(2) = text_position(2) + text_spacing;
         text(figtext,text_position(1),text_position(2),("Hyperthyroidism")+ newline,"FontWeight","bold","FontSize",12);
     end
-    if Pre.("Liver failure")(PatID) == 1
+    if Pre.("Liver failure")(PATIENT_NO) == 1
         text_position(2) = text_position(2) + text_spacing;
         text(figtext,text_position(1),text_position(2),("Liver failure")+ newline,"FontWeight","bold","FontSize",12);
     end
-    if Pre.("Renal failure")(PatID) == 1
+    if Pre.("Renal failure")(PATIENT_NO) == 1
         text_position(2) = text_position(2) + text_spacing;
         text(figtext,text_position(1),text_position(2),("Renal failure")+ newline,"FontWeight","bold","FontSize",12);
     end
-    if Pre.("Respiratory failure")(PatID) == 1
+    if Pre.("Respiratory failure")(PATIENT_NO) == 1
         text_position(2) = text_position(2) + text_spacing;
         text(figtext,text_position(1),text_position(2),("Respiratory failure")+ newline,"FontWeight","bold","FontSize",12);
     end
-    if Pre.("AD/AA")(PatID) == 1
+    if Pre.("AD/AA")(PATIENT_NO) == 1
         text_position(2) = text_position(2) + text_spacing;
         text(figtext,text_position(1),text_position(2),("Aortic dissection/Aneurysm")+ newline,"FontWeight","bold","FontSize",12);
     end
-    if Pre.("Heart transplant")(PatID) == 1
+    if Pre.("Heart transplant")(PATIENT_NO) == 1
         text_position(2) = text_position(2) + text_spacing;
         text(figtext,text_position(1),text_position(2),("Post heart tranplant")+ newline,"FontWeight","bold","FontSize",12);
     end
-    if Pre.("Kidney transplant")(PatID) == 1
+    if Pre.("Kidney transplant")(PATIENT_NO) == 1
         text_position(2) = text_position(2) + text_spacing;
         text(figtext,text_position(1),text_position(2),("Post kidney tranplant")+ newline,"FontWeight","bold","FontSize",12);
     end
-    if Pre.("Liver transplant")(PatID) == 1
+    if Pre.("Liver transplant")(PATIENT_NO) == 1
         text_position(2) = text_position(2) + text_spacing;
         text(figtext,text_position(1),text_position(2),("Post liver tranplant")+ newline,"FontWeight","bold","FontSize",12);
     end
-    if Pre.("Lung transplant")(PatID) == 1
+    if Pre.("Lung transplant")(PATIENT_NO) == 1
         text_position(2) = text_position(2) + text_spacing;
         text(figtext,text_position(1),text_position(2),("Post lung tranplant")+ newline,"FontWeight","bold","FontSize",12);
     end
-    if Pre.("Pancreas transplant")(PatID) == 1
+    if Pre.("Pancreas transplant")(PATIENT_NO) == 1
         text_position(2) = text_position(2) + text_spacing;
         text(figtext,text_position(1),text_position(2),("Post pancreas tranplant")+ newline,"FontWeight","bold","FontSize",12);
     end
 
-    if Pre.ICD(PatID) == 1
+    if Pre.ICD(PATIENT_NO) == 1
         text_position(2) = text_position(2) + text_spacing;
         text(figtext,text_position(1),text_position(2),("Presence of ICD")+ newline,"FontWeight","bold","FontSize",12);
     end
-    if Pre.LVAD(PatID) == 1
+    if Pre.LVAD(PATIENT_NO) == 1
         text_position(2) = text_position(2) + text_spacing;
         text(figtext,text_position(1),text_position(2),("Presence of LVAD")+ newline,"FontWeight","bold","FontSize",12);
     end
-    if Pre.Pacemaker(PatID) == 1
+    if Pre.Pacemaker(PATIENT_NO) == 1
         text_position(2) = text_position(2) + text_spacing;
         text(figtext,text_position(1),text_position(2),("Presence of Pacemaker")+ newline,"FontWeight","bold","FontSize",12);
     end
-    if Pre.Hypervolemia(PatID) == 1
+    if Pre.Hypervolemia(PATIENT_NO) == 1
         text_position(2) = text_position(2) + text_spacing;
         text(figtext,text_position(1),text_position(2),("Hypervolemia")+ newline,"FontWeight","bold","FontSize",12);
     end
-    if Pre.Hypovolemia(PatID) == 1
+    if Pre.Hypovolemia(PATIENT_NO) == 1
         text_position(2) = text_position(2) + text_spacing;
         text(figtext,text_position(1),text_position(2),("Hypovolemia")+ newline,"FontWeight","bold","FontSize",12);
     end
-    if Pre.("HFrEF-recovered")(PatID) == 1
+    if Pre.("HFrEF-recovered")(PATIENT_NO) == 1
         text_position(2) = text_position(2) + text_spacing;
         text(figtext,text_position(1),text_position(2),("EF recovered")+ newline,"FontWeight","bold","FontSize",12);
     end
-    if Pre.("Valvular disease")(PatID) == 1
+    if Pre.("Valvular disease")(PATIENT_NO) == 1
         text_position(2) = text_position(2) + text_spacing;
         text(figtext,text_position(1),text_position(2),("Valvular heart disease")+ newline,"FontWeight","bold","FontSize",12);
     end
-    if Pre.("MV repair")(PatID) == 1
+    if Pre.("MV repair")(PATIENT_NO) == 1
         text_position(2) = text_position(2) + text_spacing;
         text(figtext,text_position(1),text_position(2),("MV repair")+ newline,"FontWeight","bold","FontSize",12);
     end
-    if Pre.("AV repair")(PatID) == 1
+    if Pre.("AV repair")(PATIENT_NO) == 1
         text_position(2) = text_position(2) + text_spacing;
         text(figtext,text_position(1),text_position(2),("AV repair")+ newline,"FontWeight","bold","FontSize",12);
     end
-    if Pre.("TV repair")(PatID) == 1
+    if Pre.("TV repair")(PATIENT_NO) == 1
         text_position(2) = text_position(2) + text_spacing;
         text(figtext,text_position(1),text_position(2),("TV repair")+ newline,"FontWeight","bold","FontSize",12);
     end
-    if Pre.("PV repair")(PatID) == 1
+    if Pre.("PV repair")(PATIENT_NO) == 1
         text_position(2) = text_position(2) + text_spacing;
         text(figtext,text_position(1),text_position(2),("PV repair")+ newline,"FontWeight","bold","FontSize",12);
     end
 
     text_position(2) = text_position(2) + text_spacing;
-    text(figtext,text_position(1),text_position(2),string(Pre.Notes{PatID}) ,"FontWeight","bold","FontSize",12);
+    text(figtext,text_position(1),text_position(2),string(Pre.Notes{PATIENT_NO}) ,"FontWeight","bold","FontSize",12);
 end
 
 if isfield(targets,"MVr")
     text_position(2) = text_position(2) + text_spacing;
-    if length(patients(PatID).snapshots(ModelWin).MVr_str) >30
-        description = patients(PatID).snapshots(ModelWin).MVr_str(1:7);
+    if length(patients(PATIENT_NO).snapshots(ModelWin).MVr_str) >30
+        description = patients(PATIENT_NO).snapshots(ModelWin).MVr_str(1:7);
     else
-        description = patients(PatID).snapshots(ModelWin).MVr_str;
+        description = patients(PATIENT_NO).snapshots(ModelWin).MVr_str;
     end
     text_valves = string(sprintf('RF of MV = %1.2f%% (',o_vals.RF_m))+description+")";
     text(figtext, text_position(1), text_position(2) + text_spacing, text_valves, "FontWeight","bold",'FontSize', 12);
 end
 if isfield(targets,"AVr")
     text_position(2) = text_position(2) + text_spacing;
-    if length(patients(PatID).snapshots(ModelWin).AVr_str) >30
-        description = patients(PatID).snapshots(ModelWin).AVr_str(1:7);
+    if length(patients(PATIENT_NO).snapshots(ModelWin).AVr_str) >30
+        description = patients(PATIENT_NO).snapshots(ModelWin).AVr_str(1:7);
     else
-        description = patients(PatID).snapshots(ModelWin).AVr_str;
+        description = patients(PATIENT_NO).snapshots(ModelWin).AVr_str;
     end
     text_valves = string(sprintf('RF of AV = %1.2f%% (',o_vals.RF_a))+description+")";
     text(figtext, text_position(1), text_position(2) + text_spacing, text_valves, "FontWeight","bold",'FontSize', 12);
 end
 if isfield(targets,"TVr")
     text_position(2) = text_position(2) + text_spacing;
-    if length(patients(PatID).snapshots(ModelWin).TVr_str) >30
-        description = patients(PatID).snapshots(ModelWin).TVr_str(1:7);
+    if length(patients(PATIENT_NO).snapshots(ModelWin).TVr_str) >30
+        description = patients(PATIENT_NO).snapshots(ModelWin).TVr_str(1:7);
     else
-        description = patients(PatID).snapshots(ModelWin).TVr_str;
+        description = patients(PATIENT_NO).snapshots(ModelWin).TVr_str;
     end
     text_valves = string(sprintf('RF of TV = %1.2f%% (',o_vals.RF_t))+description+")";
     text(figtext, text_position(1), text_position(2) + text_spacing, text_valves, "FontWeight","bold",'FontSize', 12);
 end
 if isfield(targets,"PVr")
     text_position(2) = text_position(2) + text_spacing;
-    if length(patients(PatID).snapshots(ModelWin).PVr_str) >30
-        description = patients(PatID).snapshots(ModelWin).PVr_str(1:7);
+    if length(patients(PATIENT_NO).snapshots(ModelWin).PVr_str) >30
+        description = patients(PATIENT_NO).snapshots(ModelWin).PVr_str(1:7);
     else
-        description = patients(PatID).snapshots(ModelWin).PVr_str;
+        description = patients(PATIENT_NO).snapshots(ModelWin).PVr_str;
     end
     text_valves = string(sprintf('RF of PV = %1.2f%% (',o_vals.RF_p))+description+")";
     text(figtext, text_position(1), text_position(2) + text_spacing, text_valves, "FontWeight","bold",'FontSize', 12);

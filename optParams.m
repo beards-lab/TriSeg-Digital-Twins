@@ -4,6 +4,7 @@ function [params, init] = optParams(params, init, mods,modifiers)
 % Inputs to this function are the outputs from the estiminiParams.m function. 
 % Outputs of this function include a structure of parameters used in the model and initial
 % conditions for the ODE solver (dXdT.m function).
+% Currently Opt in log space
 
 % Created by Feng Gu
 % Last modified: 03/20/2025

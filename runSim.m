@@ -28,11 +28,11 @@ try
     options = odeset('Mass', M, 'RelTol', 1e-7, 'AbsTol', 1e-7, 'MaxStep', T/30); % set options for ode
     warning('off', 'all'); % turn off warnings message on the command window
     maxTime = 10; % maximum time for odeWithTimeout function
-    lastwarn('');   % 清空上一个warning
-    [t, y] = odeWithTimeout1(@dXdTOnGL, [0, 30*T], init_vec, options, params, maxTime);
-    [lastWarnMsg, lastWarnId] = lastwarn;  % 检查warning
+    lastwarn('');   % clear last warning
+    [t, y] = odeWithTimeout1(@dXdTDAE, [0, 30*T], init_vec, options, params, maxTime);
+    [lastWarnMsg, lastWarnId] = lastwarn;  % check warning
     if ~isempty(lastWarnMsg)
-        error(['ODE solver warning: ', lastWarnMsg]);  % 直接终止，并抛出warning信息
+        error(['ODE solver warning: ', lastWarnMsg]);  
     end
 
     % Find the index where t is within the last two periods, which reflects the steady state
@@ -61,7 +61,7 @@ try
     output_no = 50;
     o = zeros(output_no,length(t)); % outputs from simulation
     for i = 1:length(t)
-        [~,o(:,i)] = dXdTOnGL(t(i),y(i,:), params);
+        [~,o(:,i)] = dXdTDAE(t(i),y(i,:), params);
     end
 
     P_LV = o(1,:)';
@@ -126,7 +126,7 @@ catch ME1
     options = odeset('Mass', M, 'MassSingular', 'yes', 'RelTol', 1e-7, 'AbsTol', 1e-7, 'MaxStep', params.T / 30);
     maxTime = 100;
 
-    [t, y, ~, ~, ~, o] = odeWithTimeout2(@dXdT, [0, 22 * params.T], init_vec, options, params, iniGeo, maxTime);
+    [t, y, ~, ~, ~, o] = odeWithTimeout2(@dXdTode, [0, 22 * params.T], init_vec, options, params, iniGeo, maxTime);
 
     %% Collect simulation outputs from the last two cardiac cycles
     % Identify the starting index for the last two periods
@@ -770,19 +770,19 @@ diff_d_RW = diff(Newd_RW);
 
 [~,locswiredpeakLW]=findpeaks(diff_d_LW,'MinPeakHeight',max(diff_d_LW)/3);
 if ~isempty(locswiredpeakLW)
-    % if locswiredpeakLW(1) > Maggicpoint-round(length(Tint)/2*0.035) &&...
-    %         locswiredpeakLW(1) < Maggicpoint+round(length(Tint)/2*0.015)
-    %     error("Unreal LV Movement")
-    % end
+    if locswiredpeakLW(1) > Maggicpoint-round(length(Tint)/2*0.035) &&...
+            locswiredpeakLW(1) < Maggicpoint+round(length(Tint)/2*0.015)
+        error("Unreal LV Movement")
+    end
 end
 
-% [~,locswiredpeakSW]=findpeaks(diff_d_SW,'MinPeakHeight',max(diff_d_SW)/3);
-% if ~isempty(locswiredpeakSW)
-%     if locswiredpeakSW(1) > Maggicpoint-round(length(Tint)/2*0.035) &&...
-%             locswiredpeakSW(1) < Maggicpoint+round(length(Tint)/2*0.015)
-%         error("Unreal SEP Movement")
-%     end
-% end
+[~,locswiredpeakSW]=findpeaks(diff_d_SW,'MinPeakHeight',max(diff_d_SW)/3);
+if ~isempty(locswiredpeakSW)
+    if locswiredpeakSW(1) > Maggicpoint-round(length(Tint)/2*0.035) &&...
+            locswiredpeakSW(1) < Maggicpoint+round(length(Tint)/2*0.015)
+        error("Unreal SEP Movement")
+    end
+end
 
 if min(xm_SEP) < -1e-3
     numPeaks = length(findpeaks(NewPRV));
@@ -794,10 +794,10 @@ if min(xm_SEP) < -1e-3
 else
     [~,locswiredpeakRW]=findpeaks(diff_d_RW,'MinPeakHeight',max(diff_d_RW)/3);
     if ~isempty(locswiredpeakRW)
-        % if locswiredpeakRW(1) > Maggicpoint-round(length(Tint)/2*0.035) &&...
-        %         locswiredpeakRW(1) < Maggicpoint+round(length(Tint)/2*0.015)
-        %     error("Unreal RV Movement")
-        % end
+        if locswiredpeakRW(1) > Maggicpoint-round(length(Tint)/2*0.035) &&...
+                locswiredpeakRW(1) < Maggicpoint+round(length(Tint)/2*0.015)
+            error("Unreal RV Movement")
+        end
     end
 end
 
@@ -818,14 +818,14 @@ if n_badSA >= max_bad
 end
 
 % Kill Unreal R_tPA
-% TestingPeriodPPA = P_PA(Qp_neg);
-% dPPA = diff(TestingPeriodPPA);
-% PAsignal_range = max(TestingPeriodPPA) - min(TestingPeriodPPA);
-% PAtol = PAsignal_range * 1e-3; 
-% n_badPA = sum(dPPA > PAtol);
-% if n_badPA >= max_bad - 2
-%     error('too big R_tPA');
-% end
+TestingPeriodPPA = P_PA(Qp_neg);
+dPPA = diff(TestingPeriodPPA);
+PAsignal_range = max(TestingPeriodPPA) - min(TestingPeriodPPA);
+PAtol = PAsignal_range * 1e-3; 
+n_badPA = sum(dPPA > PAtol);
+if n_badPA >= max_bad - 2
+    error('too big R_tPA');
+end
 
 %% Calibration and weighting
 % Since different targets have different ranges and units, which may unequally contribute to the
@@ -1211,89 +1211,11 @@ for j = 1:length(paramsname)
     end
 end
 
+%% Only use for UW patient
 % fprintf('RVEDV from measurements is %.2f and from simulation is %.2f\n', UWpatients.RVEDV(PATIENT_NO), o_vals.RVEDV);
 % fprintf('TRW from measurements is %.2f and from simulation is %.2f\n',UWpatients.Hed_RW(PATIENT_NO),o_vals.Hed_RW);
 % fprintf('RVEF from measurements is %.2f%% and from simulation is %.2f%%\n',UWpatients.EF_RV(PATIENT_NO),EF_RV*100);
 
-
-%% Temp Post-processing
-% load('AllPatients_preVAD_data.mat')
-% height = patients(PATIENT_NO).snapshots(ModelWin).Height;
-% weight = patients(PATIENT_NO).snapshots(ModelWin).Weight;
-% BSA = sqrt((height * weight) / 3600);
-% NParams.C_SA = params.C_SA/BSA;
-% NParams.C_SV = params.C_SV/BSA;
-% NParams.C_PA = params.C_PA/BSA;
-% NParams.C_PV = params.C_PV/BSA;
-% NParams.k_act_LV = params.k_act_LV;
-% NParams.k_act_RV = params.k_act_RV;
-% NParams.k_pas_LV = params.k_pas_LV;
-% NParams.k_pas_RV = params.k_pas_RV;
-% NParams.Vw_LV = params.Vw_LV/BSA;
-% NParams.Vw_RV = params.Vw_RV/BSA;
-% NParams.Vw_SEP = params.Vw_SEP/BSA;
-% NParams.Amref_LV = params.Amref_LV/BSA;
-% NParams.Amref_RV = params.Amref_RV/BSA;
-% NParams.Amref_SEP = params.Amref_SEP/BSA;
-% NParams.R_SV = (params.R_SV*BSA);
-% NParams.R_PV = (params.R_PV*BSA);
-% NParams.R_SA = (params.R_SA*BSA);
-% NParams.R_PA = (params.R_PA*BSA);
-% NParams.R_tPA = (params.R_tPA*BSA);
-% NParams.R_tSA = (params.R_tSA*BSA);
-% NParams.Vh0 = params.Vh0/BSA;NParams.K1 = params.K1;NParams.expPeri = params.expPeri;
-%
-% NParams.R_t_c = (params.R_t_c*BSA);
-% NParams.R_p_o = (params.R_p_o*BSA);
-% NParams.R_p_c = (params.R_p_c*BSA);
-% NParams.R_m_o = (params.R_m_o*BSA);
-% NParams.R_m_c = (params.R_m_c*BSA);
-% NParams.R_a_o = (params.R_a_o*BSA);
-% NParams.R_a_c = (params.R_a_c*BSA);
-%
-% paramsname = fieldnames(NParams);
-% for j = 1:length(paramsname)
-%     p = NParams.(paramsname{j});
-%     load standardnormalizationNew.mat;
-%     if inputs.Sex == 1
-%         p = p/standardparamstable.(paramsname{j})(1);
-%     elseif inputs.Sex ==2
-%         p = p/standardparamstable.(paramsname{j})(2);
-%     end
-%     DTTable.(paramsname{j})(PATIENT_NO) = p;
-% end
-%
-% %% Get Power and PV loop figure
-% area1 = polyarea(V_LV,P_LV)/2;
-% LVpower = 1.33322e-4*area1*HR/60; % make power unit as W.
-% LVMD = LVpower/LV_m;
-%
-%
-% area2 = polyarea(V_RV,P_RV)/2;
-% RVpower = 1.33322e-4*area2*HR/60; % make power unit as W.
-% RVMD = RVpower/RV_m;
-%
-% T_pv = (t(1):t(end)/3000:t(end));
-% PV_P_LV = interp1(t,P_LV,T_pv);
-% PV_P_RV = interp1(t,P_RV,T_pv);
-% PV_V_LV = interp1(t,V_LV,T_pv);
-% PV_V_RV = interp1(t,V_RV,T_pv);
-%
-% % Get Prediction table
-% Prediction.StressLV_S = max(sigma_LV);
-% Prediction.StressSEP_S = max(sigma_SEP);
-% Prediction.StressRV_S = max(sigma_RV);
-% Prediction.StrainLV_S = max(eps_LV)-min(eps_LV);
-% Prediction.StrainSEP_S = max(eps_SEP)-min(eps_SEP);
-% Prediction.StrainRV_S = max(eps_RV)-min(eps_RV);
-% Prediction.LVMD_S = LVpower/LV_m;
-% Prediction.RVMD_S = RVpower/RV_m;
-% Prediction.LVpower_S = LVpower;
-% Prediction.RVpower_S = RVpower;
-% Prediction.RVSWI_S = area2/BSA;
-% Prediction.PAC_S = params.C_PA;
-% Prediction.PVR_S = params.R_PA*1000/60*80;
-% Prediction.SVR_S = params.R_SA*1000/60*80;
 
 %% Function to kill inf loop of ode15s
 

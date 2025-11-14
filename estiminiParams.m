@@ -531,14 +531,6 @@ params.R_tSA = 0.08;
 params.R_PA  = R_PA; 
 
 params.R_tPA = round(params.R_tSA/targets.SBP*targets.PASP,2); % All other use this condition
-% MPAP = targets.PADP+(targets.PASP-targets.PADP)/3; % only UW full model use this condition 
-% if MPAP>=50
-%     params.R_tPA = 0.04;
-% elseif MPAP>=35
-%     params.R_tPA = 0.02;
-% else
-%     params.R_tPA = 0.01;
-% end
 params.R_Veins = 0.040; 
 params.R_SV = params.R_Veins; 
 params.R_PV = params.R_Veins; 
