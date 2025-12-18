@@ -2,3 +2,10 @@
 *.zip
 *.mp4
 *.png
+redbluecmap.m
+*.asv
+/PacingSimsUW
+RawPatientInfo1.xlsx
+MRN.xlsx
+cMRI.xlsx
+Figure1chatgpt.m
